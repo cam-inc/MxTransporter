@@ -1,0 +1,7 @@
+.env
+.idea
+
+# for air package *provisional
+tmp
+
+.air.conf
