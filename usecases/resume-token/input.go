@@ -38,13 +38,13 @@ func SaveResumeToken(rt primitive.M) error {
 	fp, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, 0664)
 
 	if err != nil {
-		return errors.InternalServerErrorResumeToken.Wrap("Failed to open file saved resume token.", err)
+		return errors.InternalServerError.Wrap("Failed to open file saved resume token.", err)
 	}
 	defer fp.Close()
 
 	_, err = fp.WriteString(rtValue)
 	if err != nil {
-		return errors.InternalServerErrorResumeToken.Wrap("Failed to write resume token in file.", err)
+		return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
 	}
 
 	fmt.Println("Success to save a resume token in PVC")

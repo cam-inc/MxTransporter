@@ -81,7 +81,7 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 
 	cs, err := coll.Watch(ctx, mongo.Pipeline{}, ops)
 	if err != nil {
-		return errors.InternalServerErrorMongoDb.Wrap("Failed to watch mongodb.", err)
+		return errors.InternalServerErrorMongoDbOperate.Wrap("Failed to watch mongodb.", err)
 	}
 	if err := exportChangeStreams(ctx, cs); err != nil {
 		return err
@@ -130,7 +130,7 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 				return err
 			}
 		}  else {
-			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
+			return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
 		}
 	}
 
@@ -164,7 +164,7 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 						return err
 					}
 				}  else {
-					return errors.InternalServerError.Wrap("The export destination is not set.", fmt.Errorf("You need to set the export destination in the environment variable."))
+					return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
 				}
 				return nil
 			})

@@ -1,9 +1,9 @@
 package config
 
 import (
-	"mxtransporter/pkg/errors"
 	"fmt"
 	"github.com/joho/godotenv"
+	"mxtransporter/pkg/errors"
 	"os"
 )
 
@@ -29,7 +29,7 @@ func init() {
 func PersistentVolume() (string, error) {
 	pvDir, pvDirExistence := os.LookupEnv("PERSISTENT_VOLUME_DIR")
 	if pvDirExistence == false {
-		return "", errors.InternalServerError.New("PERSISTENT_VOLUME_DIR is not existed in environment variables")
+		return "", errors.InternalServerErrorEnvGet.New("PERSISTENT_VOLUME_DIR is not existed in environment variables")
 	}
 	return pvDir, nil
 }
@@ -37,7 +37,7 @@ func PersistentVolume() (string, error) {
 func ExportDestination() (string, error) {
 	exportDestination, exportDestinationExistence := os.LookupEnv("EXPORT_DESTINATION")
 	if exportDestinationExistence == false {
-		return "", errors.InternalServerError.New("EXPORT_DESTINATION is not existed in environment variables")
+		return "", errors.InternalServerErrorEnvGet.New("EXPORT_DESTINATION is not existed in environment variables")
 	}
 	return exportDestination, nil
 }

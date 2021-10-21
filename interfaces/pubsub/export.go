@@ -23,7 +23,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 
 	topicExistence, err := topic.Exists(ctx)
 	if err != nil {
-		return errors.InternalServerErrorPubSub.Wrap("Failed to check topic existence.", err)
+		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
 	}
 	if topicExistence == false {
 		fmt.Println("Topic is not exists. ")
@@ -31,7 +31,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 		var err error
 		topic, err = client.CreateTopic(ctx, topicId)
 		if err != nil {
-			return errors.InternalServerErrorPubSub.Wrap("Failed to create topic.", err)
+			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
 		fmt.Println("Successed to create topic. ")
 	}
@@ -43,7 +43,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 
 	subscriptionExistence, err := subscription.Exists(ctx)
 	if err != nil {
-		return errors.InternalServerErrorPubSub.Wrap("Failed to check subscription existence.", err)
+		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
 	}
 	if subscriptionExistence == false {
 		fmt.Println("Subscription is not exists. ")
@@ -55,7 +55,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 			RetentionDuration: 24 * time.Hour,
 		})
 		if err != nil {
-			return errors.InternalServerErrorPubSub.Wrap("Failed to create subscription.", err)
+			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
 		}
 		fmt.Println("Successed to create subscription. ")
 	}

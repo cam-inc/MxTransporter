@@ -8,17 +8,19 @@ import (
 type ErrorType string
 
 const (
-	InternalServerError = ErrorType("General Error")
+	InternalServerError = ErrorType("500: internal server error")
+	InternalServerErrorEnvGet = ErrorType("500: environment variables get error")
+	InternalServerErrorClientGet = ErrorType("500: client get error")
 	// mongodb
-	InternalServerErrorMongoDb = ErrorType("MongoDB Error")
+	InternalServerErrorMongoDbConnect = ErrorType("500: mongodb connect error")
+	InternalServerErrorMongoDbOperate = ErrorType("500: mongodb operate error")
 	// bigquery
-	InternalServerErrorBigquery = ErrorType("BigQuery Error")
+	InternalServerErrorBigqueryInsert = ErrorType("500: bigquery insert error")
 	// pubsub
-	InternalServerErrorPubSub = ErrorType("PubSub Error")
+	InternalServerErrorPubSubFind = ErrorType("500: pubsub find error")
+	InternalServerErrorPubSubCreate = ErrorType("500: pubsub create error")
 	// kinesis stream
-	InternalServerErrorKinesisStream = ErrorType("Kinesis Stream Error")
-	// resume-token
-	InternalServerErrorResumeToken = ErrorType("Resume Token Error")
+	InternalServerErrorKinesisStreamPut = ErrorType("500: kinesis stream put error")
 )
 
 func (et ErrorType) New(msg string) error {

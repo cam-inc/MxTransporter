@@ -42,7 +42,7 @@ func ExportToKinesisStream(ctx context.Context, cs primitive.M, client *kinesis.
 	})
 
 	if err != nil {
-		return errors.InternalServerErrorBigquery.Wrap("Failed to put message into kinesis stream.", err)
+		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
 	}
 
 	return nil

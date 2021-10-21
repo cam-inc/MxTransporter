@@ -1,13 +1,13 @@
 package bigquery
 
 import (
+	"cloud.google.com/go/bigquery"
 	"context"
 	"encoding/json"
-	"mxtransporter/pkg/errors"
-	"time"
-	"cloud.google.com/go/bigquery"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	config "mxtransporter/config/bigquery"
+	"mxtransporter/pkg/errors"
+	"time"
 )
 
 type changeStreamTableSchema struct {
@@ -45,7 +45,7 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client *bigquery.Clie
 	}
 
 	if err := inserter.Put(ctx, csItems); err != nil {
-		return errors.InternalServerErrorBigquery.Wrap("Failed to insert record to Bigquery.", err)
+		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 
 	return nil

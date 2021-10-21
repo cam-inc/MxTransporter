@@ -12,7 +12,7 @@ import (
 func NewBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
 	client, err := bigquery.NewClient(ctx, projectID)
 	if err != nil {
-		return nil, errors.InternalServerErrorBigquery.Wrap("client connection refused", err)
+		return nil, errors.InternalServerErrorClientGet.Wrap("bigquery client connection refused", err)
 	}
 	return client, nil
 }
@@ -20,7 +20,7 @@ func NewBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client,
 func NewPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
-		return nil, errors.InternalServerErrorPubSub.Wrap("client connection refused", err)
+		return nil, errors.InternalServerErrorClientGet.Wrap("pubsub client connection refused", err)
 	}
 	return client, nil
 }
@@ -35,7 +35,7 @@ func NewKinesisClient(ctx context.Context, projectID string, region string) (*ki
 		config.WithRegion(region),
 	)
 	if err != nil {
-		return nil, errors.InternalServerErrorKinesisStream.Wrap("aws client connection refused", err)
+		return nil, errors.InternalServerErrorClientGet.Wrap("aws client connection refused", err)
 	}
 
 	client := kinesis.NewFromConfig(cfg)
