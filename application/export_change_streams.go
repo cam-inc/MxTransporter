@@ -122,10 +122,7 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 				return err
 			}
 		} else if AwsService(exportDestination) == KinesisStream {
-			awsProfileName := config.FetchAwsProfile().ProfileName
-			region := config.FetchRegion().Region
-
-			kinesisClient, err = NewKinesisClient(ctx, awsProfileName, region)
+			kinesisClient, err = NewKinesisClient(ctx)
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,8 @@
 .env
 .idea
 
+secrets.env
+
 # for air package *provisional
 tmp
 

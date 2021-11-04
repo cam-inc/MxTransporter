@@ -47,15 +47,3 @@ func FetchGcpProject() GcpProject {
 	projectConfig.ProjectID = os.Getenv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
 	return projectConfig
 }
-
-func FetchAwsProfile() AwsProfile {
-	var profileConfig AwsProfile
-	profileConfig.ProfileName = os.Getenv("PROFILE_NAME_TO_EXPORT_CHANGE_STREAMS")
-	return profileConfig
-}
-
-func FetchRegion() Region {
-	var regionConfig Region
-	regionConfig.Region = os.Getenv("AWS_REGION")
-	return regionConfig
-}

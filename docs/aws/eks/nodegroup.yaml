@@ -1,0 +1,22 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: "mxtransporter-cluster"
+  version: "1.21"
+  region: "ap-northeast-1"
+managedNodeGroups:
+  - name: "mxtransporter-node-group"
+    privateNetworking: true
+    labels:
+      role: service
+    instanceType: "t3.medium"
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 5
+    volumeSize: 20
+    ssh:
+      publicKeyName: "mxtransporter"
+    tags:
+      # EC2 tags required for cluster-autoscaler auto-discovery
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/dev-camplat-secure-cluster: "owned"

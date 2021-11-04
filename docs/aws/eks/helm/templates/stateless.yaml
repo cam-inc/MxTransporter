@@ -1,0 +1,86 @@
+{{- range $i, $collection := .Values.targetMongoDBCollections -}}
+{{- if ne $i 0 }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ "cs-for" }}-{{ $collection | lower | kebabcase }}
+  labels:
+    {{- include "helm.labels" $ | nindent 4 }}
+spec:
+  serviceName: {{ $.Chart.Name }}
+  replicas: {{ $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "helm.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "helm.selectorLabels" $ | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ "cs-for" }}-{{ $collection | lower | kebabcase }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          env:
+            - name: MONGODB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: MONGODB_HOST
+            - name: MONGODB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: MONGODB_DATABASE_{{ $collection }}
+            - name: MONGODB_COLLECTION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: MONGODB_COLLECTION_{{ $collection }}
+            - name: PERSISTENT_VOLUME_DIR
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: PERSISTENT_VOLUME_DIR
+            - name: EXPORT_DESTINATION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: EXPORT_DESTINATION
+            - name: KINESIS_STREAM_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: KINESIS_STREAM_NAME
+            - name: KINESIS_STREAM_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: KINESIS_STREAM_REGION
+          resources:
+{{ toYaml $.Values.resources | indent 12 }}
+          ports:
+            - name: http
+              containerPort: 80
+          livenessProbe:
+            exec:
+              command:
+                - "/go/bin/health"
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 10
+            successThreshold : 1
+            failureThreshold : 1
+          volumeMounts:
+            - name: {{ $.Values.containers.volumeMounts.name }}
+              mountPath: {{ $.Values.containers.volumeMounts.mountPath }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ $.Values.containers.volumeMounts.name }}
+      spec:
+        accessModes: {{ $.Values.volume.accessModes }}
+        resources:
+          requests:
+            storage: {{ $.Values.volume.storage }}
+{{- end -}}

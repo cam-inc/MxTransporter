@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesisConfig "mxtransporter/config/kinesis-stream"
 	"mxtransporter/pkg/errors"
 )
 
@@ -29,11 +30,9 @@ func NewPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, err
 ///////////////////////////////
 // 実際にAWS GCPのコンテナ環境で権限を引き継げるのか確認
 /////////////////////////////////
-func NewKinesisClient(ctx context.Context, projectID string, region string) (*kinesis.Client, error) {
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithSharedConfigProfile(projectID),
-		config.WithRegion(region),
-	)
+func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
+	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(kinesisStreamConfig.KinesisStreamRegion))
 	if err != nil {
 		return nil, errors.InternalServerErrorClientGet.Wrap("aws client connection refused", err)
 	}

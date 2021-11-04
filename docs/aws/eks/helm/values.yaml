@@ -1,0 +1,42 @@
+# statefulSet values
+image:
+  repository: 337348257965.dkr.ecr.ap-northeast-1.amazonaws.com/mxtransporter
+  pullPolicy: IfNotPresent
+  tag: "202111011456"
+
+replicaCount: 1
+
+containers:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  volumeMounts:
+    name: dev
+    mountPath: /dsk/pvc/
+
+volume:
+  accessModes: [ "ReadWriteOnce" ]
+  storage: 1Gi
+
+secrets:
+  name: mxtransporter
+
+# autoscaling values
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+
+# service values
+service:
+  clusterIP: None
+
+# Specify the collection for which you want to get change streams.
+targetMongoDBCollections:
+  - MAIN__USER
+  - TEST__TEST

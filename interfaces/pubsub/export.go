@@ -26,7 +26,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
 	}
 	if topicExistence == false {
-		fmt.Println("Topic is not exists. ")
+		fmt.Println("Topic is not exists. Creating a topic.")
 
 		var err error
 		topic, err = client.CreateTopic(ctx, topicId)
@@ -46,7 +46,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) 
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
 	}
 	if subscriptionExistence == false {
-		fmt.Println("Subscription is not exists. ")
+		fmt.Println("Subscription is not exists. Creating a subscription.")
 
 		var err error
 		subscription, err = client.CreateSubscription(ctx, subscriptionId, pubsub.SubscriptionConfig{
