@@ -7,7 +7,6 @@ MxTransporter is a middleware that accurately carries change streams of MongoDB 
 
 # Guide
 
----
 ## Build with samples
 We have prepared a samples to build on AWS and GCP container orchestration services.
 This can be easily constructed by setting environment variables as described and executing commands.
@@ -70,16 +69,12 @@ EXPORT_DESTINATION=
 
 # Architects
 
---- 
-
 ![image](https://user-images.githubusercontent.com/37132477/140257547-fd5417fe-abe3-4bdc-8aad-c08d96e19d0f.png)
 
 
 <br>
 
 # Specification
-
----
 
 ## MongoDB
 
@@ -182,7 +177,5 @@ Change streams are sent to that in a pipe (|) separated CSV.
 <br>
 
 # Copyright
-
----
 
 CAM, Inc. All rights reserved.
