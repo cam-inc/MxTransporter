@@ -26,10 +26,6 @@ func NewPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, err
 	return client, nil
 }
 
-//TODO
-///////////////////////////////
-// 実際にAWS GCPのコンテナ環境で権限を引き継げるのか確認
-/////////////////////////////////
 func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(kinesisStreamConfig.KinesisStreamRegion))

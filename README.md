@@ -49,7 +49,7 @@ PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS=
 BIGQUERY_DATASET=
 BIGQUERY_TABLE=
 
-## You have to specify this environment variable if you want to export Kinesis Stream.
+## You have to specify this environment variable if you want to export Kinesis Data Stream.
 KINESIS_STREAM_NAME=
 KINESIS_STREAM_REGION=
 
@@ -71,6 +71,11 @@ EXPORT_DESTINATION=
 
 ![image](https://user-images.githubusercontent.com/37132477/140257547-fd5417fe-abe3-4bdc-8aad-c08d96e19d0f.png)
 
+1. MxTransporter watches MongoDB Collection.
+2. When the Collection is updated, MxTransporter gets the change streams.
+3. Format change streams according to the export destination.
+4. Put change streams to the export destination.
+5. If the put is successful, the resume Token included in the change streams is taken out and saved in the persistent volume.
 
 <br>
 
@@ -170,9 +175,33 @@ No special preparation is required. Create a Topic with the MongoDB Database nam
 Change streams are sent to that subscription in a pipe (|) separated CSV.
 
 ### Kinesis Data Streams
-No special preparation is required. If you want to separate the data warehouse table for each MongoDB collection for which you want to get change streams, use Kinesis Firehose and devise the output destination.
+No special preparation is required. If you want to separate the data warehouse table for each MongoDB collection for which you want to get change streams, use Kinesis Data Firehose and devise the output destination.
 
 Change streams are sent to that in a pipe (|) separated CSV.
+
+<br>
+
+## Format
+Format before putting change streams to export destination. The format depends on the destination.
+
+### BigQuery
+Format to match the table schema and insert a value into each BigQuery Table field for each change streams.
+
+### Pub/Sub
+It is formatted into a pipe (|) separated CSV and put.
+
+```
+{"_data":"T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
+"}|insert|2021-10-01 23:59:59|{"_id":"6893253plm30db298659298h”,”name”:”xxx”}|{“coll”:”xxx”,”db”:”xxx”}|{“_id":"6893253plm30db298659298h"}|null
+```
+
+### Kinesis Data Streams
+It is formatted into a pipe (|) separated CSV and put.
+
+```
+{"_data":"T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
+"}|insert|2021-10-01 23:59:59|{"_id":"6893253plm30db298659298h”,”name”:”xxx”}|{“coll”:”xxx”,”db”:”xxx”}|{“_id":"6893253plm30db298659298h"}|null
+```
 
 <br>
 

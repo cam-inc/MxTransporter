@@ -147,3 +147,12 @@ Note that if you do not update ```GCR_REPO_TAG```, the new docker image will be 
 ```
 $ make upgrade
 ```
+
+<br>
+
+# Architects
+
+![image](https://user-images.githubusercontent.com/37132477/140288330-8bf37d91-084c-4ec1-afb2-5758d64b8a36.png)
+
+A pod is created for each collection, and a persistent volume is linked to each pod.
+Since the StatefulSet is created, even if the pod stops, you can get the change streams by referring to the resume token saved in the persistent volume again.

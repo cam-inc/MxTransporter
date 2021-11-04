@@ -7,3 +7,8 @@ secrets.env
 tmp
 
 .air.conf
+
+cluster.yaml
+nodegroup.yaml
+values.yaml
+gke.yaml

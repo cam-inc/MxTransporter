@@ -2,18 +2,18 @@
 
 We have prepared a sample for building with the following two container orchestration services.
 
-・Amazon Elastic Kubernetes Service (EKS)<br>
-・Google Kubernetes Engine (GKE)
+- Amazon Elastic Kubernetes Service (EKS)<br>
+- Google Kubernetes Engine (GKE)
 
 <br>
 
 Please see the following for the detailed construction method of each.
 
-・EKS building sample
+- EKS building sample
 
-export to Bigquery<br>
-export to Pub/Sub
+  - export to Bigquery<br>
+  - export to Pub/Sub
 
-・GKE building sample
+- GKE building sample
 
-export to Kinesis Data Streams
+  - export to Kinesis Data Streams
