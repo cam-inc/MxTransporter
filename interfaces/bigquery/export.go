@@ -31,7 +31,6 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client *bigquery.Clie
 	documentKey, _ := json.Marshal(cs["documentKey"])
 	updateDescription, _ := json.Marshal(cs["updateDescription"])
 
-	inserter := client.Dataset(bigqueryConfig.DataSet).Table(bigqueryConfig.Table).Inserter()
 	csItems := []changeStreamTableSchema{
 		{
 			ID:                string(id),
@@ -44,7 +43,7 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client *bigquery.Clie
 		},
 	}
 
-	if err := inserter.Put(ctx, csItems); err != nil {
+	if err := client.Dataset(bigqueryConfig.DataSet).Table(bigqueryConfig.Table).Inserter().Put(ctx, csItems); err != nil {
 		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 

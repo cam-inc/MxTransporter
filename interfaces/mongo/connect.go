@@ -4,7 +4,6 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"mxtransporter/config/mongodb"
 	"mxtransporter/pkg/common"
@@ -14,14 +13,6 @@ import (
 var (
 	mongoConfig = mongodb.MongoConfig()
 )
-
-func Connect(ctx context.Context) (*mongo.Client, error) {
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoConfig.MongoDbConnectionUrl))
-	if err != nil {
-		return nil, errors.InternalServerErrorMongoDbConnect.Wrap("mongodb connection refused.", err)
-	}
-	return client, nil
-}
 
 func Health(ctx context.Context, client *mongo.Client) error {
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {

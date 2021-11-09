@@ -16,6 +16,7 @@ import (
 	interfaceKinesisStream "mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "mxtransporter/interfaces/mongo"
 	interfaceForPubSub "mxtransporter/interfaces/pubsub"
+	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
 	"mxtransporter/usecases/resume-token"
 	"os"
@@ -111,18 +112,18 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 
 		if GcpService(exportDestination) == Bigquery {
 			gcpProjectID := config.FetchGcpProject().ProjectID
-			bigqueryClient, err = NewBigqueryClient(ctx, gcpProjectID)
+			bigqueryClient, err = client.NewBigqueryClient(ctx, gcpProjectID)
 			if err != nil {
 				return err
 			}
 		} else if GcpService(exportDestination) == PubSub {
 			gcpProjectID := config.FetchGcpProject().ProjectID
-			pubSubClient, err = NewPubSubClient(ctx, gcpProjectID)
+			pubSubClient, err = client.NewPubSubClient(ctx, gcpProjectID)
 			if err != nil {
 				return err
 			}
 		} else if AwsService(exportDestination) == KinesisStream {
-			kinesisClient, err = NewKinesisClient(ctx)
+			kinesisClient, err = client.NewKinesisClient(ctx)
 			if err != nil {
 				return err
 			}
