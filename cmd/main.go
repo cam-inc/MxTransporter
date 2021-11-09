@@ -1,10 +1,10 @@
 package main
 
 import (
-	"mxtransporter/application"
-	mongoConnection "mxtransporter/interfaces/mongo"
 	"context"
 	"fmt"
+	"mxtransporter/application"
+	mongoConnection "mxtransporter/interfaces/mongo"
 )
 
 func main() {

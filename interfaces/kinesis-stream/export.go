@@ -12,7 +12,11 @@ import (
 	"time"
 )
 
-func ExportToKinesisStream(ctx context.Context, cs primitive.M, client *kinesis.Client) error{
+type kinesisPutRecordAPI interface {
+	PutRecord(ctx context.Context, params *kinesis.PutRecordInput, optFns ...func(*kinesis.Options)) (*kinesis.PutRecordOutput, error)
+}
+
+func ExportToKinesisStream(ctx context.Context, cs primitive.M, client kinesisPutRecordAPI) error{
 	kinesisStreamConfig := config.KinesisStreamConfig()
 
 	rt := cs["_id"].(primitive.M)["_data"]

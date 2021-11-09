@@ -12,7 +12,14 @@ import (
 	"time"
 )
 
-func ExportToPubSub(ctx context.Context, cs primitive.M, client *pubsub.Client) error {
+type pubsubClient interface {
+	Topic(id string) *pubsub.Topic
+	CreateTopic(ctx context.Context, topicID string) (*pubsub.Topic, error)
+	Subscription(id string) *pubsub.Subscription
+	CreateSubscription(ctx context.Context, id string, cfg pubsub.SubscriptionConfig) (*pubsub.Subscription, error)
+}
+
+func ExportToPubSub(ctx context.Context, cs primitive.M, client pubsubClient) error {
 	pubSubConfig := config.PubSubConfig()
 
 	topicId := pubSubConfig.MongoDbDatabase
