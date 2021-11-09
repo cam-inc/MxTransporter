@@ -20,7 +20,39 @@ type changeStreamTableSchema struct {
 	UpdateDescription string
 }
 
-func ExportToBigquery(ctx context.Context, cs primitive.M, client *bigquery.Client) error {
+//type bigqueryClient interface {
+//	Dataset(id string) datasetClient
+//}
+//
+//type datasetClient interface {
+//	Table(tableID string) tableClient
+//}
+//
+//type tableClient interface {
+//	Inserter() inserterClient
+//}
+//
+//type inserterClient interface {
+//	Put(ctx context.Context, src interface{}) (err error)
+//}
+
+type bigqueryClient interface {
+	Dataset(id string) *bigquery.Dataset
+}
+
+type datasetClient interface {
+	Table(tableID string) *bigquery.Table
+}
+
+type tableClient interface {
+	Inserter() *bigquery.Inserter
+}
+
+type inserterClient interface {
+	Put(ctx context.Context, src interface{}) (err error)
+}
+
+func ExportToBigquery(ctx context.Context, cs primitive.M, client bigqueryClient) error {
 	bigqueryConfig := config.BigqueryConfig()
 
 	id, _ := json.Marshal(cs["_id"])
@@ -31,6 +63,8 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client *bigquery.Clie
 	documentKey, _ := json.Marshal(cs["documentKey"])
 	updateDescription, _ := json.Marshal(cs["updateDescription"])
 
+	test := client.Dataset(bigqueryConfig.DataSet)
+	print(test)
 	inserter := client.Dataset(bigqueryConfig.DataSet).Table(bigqueryConfig.Table).Inserter()
 	csItems := []changeStreamTableSchema{
 		{

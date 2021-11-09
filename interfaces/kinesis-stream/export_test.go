@@ -1,0 +1,1 @@
+package kinesis_stream
