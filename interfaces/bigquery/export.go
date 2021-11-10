@@ -1,16 +1,18 @@
 package bigquery
 
 import (
-	"cloud.google.com/go/bigquery"
 	"context"
 	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	config "mxtransporter/config/bigquery"
-	"mxtransporter/pkg/errors"
 	"time"
 )
 
-type changeStreamTableSchema struct {
+type bigqueryIf interface {
+	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
+}
+
+type ChangeStreamTableSchema struct {
 	ID                string
 	OperationType     string
 	ClusterTime       time.Time
@@ -20,39 +22,10 @@ type changeStreamTableSchema struct {
 	UpdateDescription string
 }
 
-//type bigqueryClient interface {
-//	Dataset(id string) datasetClient
-//}
-//
-//type datasetClient interface {
-//	Table(tableID string) tableClient
-//}
-//
-//type tableClient interface {
-//	Inserter() inserterClient
-//}
-//
-//type inserterClient interface {
-//	Put(ctx context.Context, src interface{}) (err error)
-//}
-
-type bigqueryClient interface {
-	Dataset(id string) *bigquery.Dataset
-}
-
-type datasetClient interface {
-	Table(tableID string) *bigquery.Table
-}
-
-type tableClient interface {
-	Inserter() *bigquery.Inserter
-}
-
-type inserterClient interface {
-	Put(ctx context.Context, src interface{}) (err error)
-}
-
-func ExportToBigquery(ctx context.Context, cs primitive.M, client bigqueryClient) error {
+func ExportToBigquery(
+		ctx context.Context,
+		cs primitive.M,
+		bqif bigqueryIf) error {
 	bigqueryConfig := config.BigqueryConfig()
 
 	id, _ := json.Marshal(cs["_id"])
@@ -63,10 +36,7 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client bigqueryClient
 	documentKey, _ := json.Marshal(cs["documentKey"])
 	updateDescription, _ := json.Marshal(cs["updateDescription"])
 
-	test := client.Dataset(bigqueryConfig.DataSet)
-	print(test)
-	inserter := client.Dataset(bigqueryConfig.DataSet).Table(bigqueryConfig.Table).Inserter()
-	csItems := []changeStreamTableSchema{
+	csItems := []ChangeStreamTableSchema{
 		{
 			ID:                string(id),
 			OperationType:     operationType,
@@ -78,9 +48,10 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, client bigqueryClient
 		},
 	}
 
-	if err := inserter.Put(ctx, csItems); err != nil {
-		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
+	if err := bqif.PutRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems); err != nil {
+		return err
 	}
 
 	return nil
 }
+

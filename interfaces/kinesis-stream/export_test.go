@@ -10,15 +10,13 @@ import (
 	"testing"
 )
 
+// 一旦このテストの形は残しておく
+
 // 重要
 // kinesisifaceはaws sdk ver.2に対応していないので、使えない(ctxを関数の引数として挟めない)
 // あとclientのインターフェースも用意されていないので、自分で定義する必要があり、その自分で定義したものをapplicationのfunctionでも利用する必要がある
 // https://aws.github.io/aws-sdk-go-v2/docs/unit-testing/
 
-// 目的の関数のモックを定義する
-// mockPutRecordAPIがPutRecordのモック
-// 実際にテストで検証する際に動作するのは、このモック
-// モックの中身はcasesの中で入れてあげる
 type mockPutRecordAPI func(ctx context.Context, params *kinesis.PutRecordInput, optFns ...func(*kinesis.Options)) (*kinesis.PutRecordOutput, error)
 
 func (m mockPutRecordAPI) PutRecord(ctx context.Context, params *kinesis.PutRecordInput, optFns ...func(*kinesis.Options)) (*kinesis.PutRecordOutput, error) {
@@ -39,25 +37,14 @@ func Test_ExportToKinesisStream(t *testing.T) {
 	j := "{\"_data\":\"00000\"}|insert|1970-01-01 09:00:00|{\"xxxxx\":\"xxxxx\"}|{\"xxxxx\":\"xxxxx\"}|{\"xxxxx\":\"xxxxx\"}|{\"xxxxx\":\"xxxxx\"}\n"
 	rt := "00000"
 
-	// casesで定義するのはExportToKinesisStreamのmock引数
 	cases := []struct {
 		client func(t *testing.T) kinesisPutRecordAPI
 		cs primitive.M
 	}{
 		{
-			//clientに関数を入れる
-			// 返り値はkinesisClient
 			client: func(t *testing.T) kinesisPutRecordAPI {
-				//mockPutRecordAPIというclientのモックに対して中身(function)を入れてあげる
-				// 実際にExportToKinesisStreamで呼ばれるPutRecord自体clientからよびだされているもので、
-				// client内部の関数のモックをここで定義している
-				// なので後でテストをrunするときにExportToKinesisStreamを呼び出すが
-				// 内部のsdkはこのモックで定義した関数で動作する
 				return mockPutRecordAPI(func(ctx context.Context, params *kinesis.PutRecordInput, optFns ...func(*kinesis.Options)) (*kinesis.PutRecordOutput, error) {
 					t.Helper()
-					//ここでparamsの値に対するアンチパターンを定義していく
-					// TODO
-					// ここのparamsがcsMapを参考にしていないと意味がなくないか？
 					if params.Data == nil {
 						t.Fatal("expect data to not be nil")
 					}

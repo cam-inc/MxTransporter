@@ -1,73 +1,95 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"reflect"
 	"strconv"
 	"testing"
+	"time"
 )
 
-type mockPubsubTopic func(id string) *pubsub.Topic
-type mockPubsubCreatetopic func(ctx context.Context, topicID string) (*pubsub.Topic, error)
-type mockPubsubSubscription func(id string) *pubsub.Subscription
-type mockCreateSubscription func(ctx context.Context, id string, cfg pubsub.SubscriptionConfig) (*pubsub.Subscription, error)
-
-func (m mockPubsubTopic) Topic(id string) *pubsub.Topic {
-	return m(id)
+var csMap = primitive.M{
+	"_id": primitive.M{"_data": "00000"},
+	"operationType": "insert",
+	"clusterTime": primitive.Timestamp{00000, 0},
+	"fullDocument": primitive.M{"xxxxx": "xxxxx"},
+	"ns": primitive.M{"xxxxx": "xxxxx"},
+	"documentKey": primitive.M{"xxxxx": "xxxxx"},
+	"updateDescription": primitive.M{"xxxxx": "xxxxx"},
 }
 
-func (m mockPubsubCreatetopic) CreateTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
-	return m(ctx, topicID)
+type MockPubsubFuncs struct {}
+
+func (m *MockPubsubFuncs) PubsubTopic(ctx context.Context, topicId string) error {
+	_ = func (t *testing.T) error {
+		t.Helper()
+		if topicId == "" {
+			t.Fatal("expect topicId to not be nil")
+		}
+		return nil
+	}
+	return nil
 }
 
-func (m mockPubsubSubscription) Subscription(id string) *pubsub.Subscription {
-	return m(id)
+func (m *MockPubsubFuncs) PubsubSubscription(ctx context.Context, topicId string, subscriptionId string) error {
+	_ = func (t *testing.T) error {
+		t.Helper()
+		if topicId == "" {
+			t.Fatal("expect topicId to not be nil")
+		}
+		if subscriptionId == "" {
+			t.Fatal("expect subscriptionId to not be nil")
+		}
+		return nil
+	}
+	return nil
 }
 
-func (m mockCreateSubscription) CreateSubscription(ctx context.Context, id string, cfg pubsub.SubscriptionConfig) (*pubsub.Subscription, error) {
-	return m(ctx, id, cfg)
+func (m *MockPubsubFuncs) PublishMessage(ctx context.Context, topicId string, csArray []string) error {
+	_ = func (t *testing.T) error {
+		t.Helper()
+
+		testCsArray := []string{
+			"{\"_data\":\"00000\"}",
+			"insert",
+			time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0).Format("2006-01-02 15:04:05"),
+			"{\"xxxxx\":\"xxxxx\"}",
+			"{\"xxxxx\":\"xxxxx\"}",
+			"{\"xxxxx\":\"xxxxx\"}",
+			"{\"xxxxx\":\"xxxxx\"}",
+		}
+
+		if topicId == "" {
+			t.Fatal("expect topicId to not be nil")
+		}
+		if csArray == nil {
+			t.Fatal("expect csItems to not be nil")
+		}
+		if e, a := testCsArray, csArray; !reflect.DeepEqual(e, a) {
+			t.Errorf("expect %v, got %v", e, a)
+		}
+		return nil
+	}
+	return nil
 }
 
 func Test_ExportToPubSub(t *testing.T) {
-	csMap := primitive.M{
-		"_id": primitive.M{"_data": "00000"},
-		"operationType": "insert",
-		"clusterTime": primitive.Timestamp{00000, 0},
-		"fullDocument": primitive.M{"xxxxx": "xxxxx"},
-		"ns": primitive.M{"xxxxx": "xxxxx"},
-		"documentKey": primitive.M{"xxxxx": "xxxxx"},
-		"updateDescription": primitive.M{"xxxxx": "xxxxx"},
-	}
 
 	cases := []struct {
-		client func(t *testing.T) pubsubClient
 		cs primitive.M
 	}{
 		{
-			client: func(t *testing.T) pubsubClient {
-				return {
-					mockPubsubTopic(func(id string) *pubsub.Topic {
-						t.Helper()
-						return nil
-					}),
-					mockPubsubCreatetopic(func(ctx context.Context, topicID string) (*pubsub.Topic, error) {
-						t.Helper()
-						return nil, nil
-					}),
-					mockPubsubSubscription(func(id string) *pubsub.Subscription {
-					}),
-				}
-				return nil
-			},
 			cs: csMap,
 		},
 	}
 
+	function := &MockPubsubFuncs{}
+
 	for i, tt := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			ctx := context.TODO()
-			err := ExportToPubSub(ctx, tt.cs, tt.client(t))
+			err := ExportToPubSub(ctx, tt.cs, function)
 			if err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}

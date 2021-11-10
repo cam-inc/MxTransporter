@@ -4,21 +4,21 @@ import (
 	"context"
 	"fmt"
 	"mxtransporter/application"
-	mongoConnection "mxtransporter/interfaces/mongo"
+	"mxtransporter/pkg/client"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	client, err := mongoConnection.Connect(ctx)
+	mongoClient, err := client.NewMongoClient(ctx)
 	if err != nil {
 		fmt.Println(err)
 		cancel()
 	}
-	defer client.Disconnect(ctx)
+	defer mongoClient.Disconnect(ctx)
 
-	if err := application.WatchChangeStreams(ctx, client); err != nil {
+	if err := application.WatchChangeStreams(ctx, mongoClient); err != nil {
 		fmt.Println(err)
 		cancel()
 	}
