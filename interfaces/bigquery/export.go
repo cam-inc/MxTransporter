@@ -1,16 +1,19 @@
 package bigquery
 
 import (
+	"cloud.google.com/go/bigquery"
 	"context"
 	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	config "mxtransporter/config/bigquery"
+	"mxtransporter/config"
+	bigqueryConfig "mxtransporter/config/bigquery"
+	"mxtransporter/pkg/client"
+	"mxtransporter/pkg/errors"
 	"time"
 )
 
-type bigqueryIf interface {
-	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
-}
+var bigqueryClient *bigquery.Client
+var gcpProjectID = config.FetchGcpProject().ProjectID
 
 type ChangeStreamTableSchema struct {
 	ID                string
@@ -22,11 +25,26 @@ type ChangeStreamTableSchema struct {
 	UpdateDescription string
 }
 
-func ExportToBigquery(
-		ctx context.Context,
-		cs primitive.M,
-		bqif bigqueryIf) error {
-	bigqueryConfig := config.BigqueryConfig()
+type bigqueryIf interface {
+	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
+}
+
+type BigqueryFuncs struct {}
+
+func (b *BigqueryFuncs) PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
+	bigqueryClient, err := client.NewBigqueryClient(ctx, gcpProjectID)
+	if err != nil {
+		return err
+	}
+
+	if err := bigqueryClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
+		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
+	}
+	return nil
+}
+
+func ExportToBigquery(ctx context.Context, cs primitive.M, bqif bigqueryIf) error {
+	bigqueryConfig := bigqueryConfig.BigqueryConfig()
 
 	id, _ := json.Marshal(cs["_id"])
 	operationType := cs["operationType"].(string)

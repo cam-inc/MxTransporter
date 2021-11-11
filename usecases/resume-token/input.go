@@ -9,7 +9,17 @@ import (
 	"time"
 )
 
-func SaveResumeToken(rt primitive.M) error {
+type generalConfig struct {
+	gerneralConfigIf config.GeneralConfigIf
+}
+
+func NewGeneralConfig (gerneralConfigIf config.GeneralConfigIf) *generalConfig {
+	return &generalConfig{
+		gerneralConfigIf: gerneralConfigIf,
+	}
+}
+
+func (c *generalConfig) SaveResumeToken(rt primitive.M) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to load location time.", err)
@@ -20,7 +30,7 @@ func SaveResumeToken(rt primitive.M) error {
 	nowMonth := nowTime.Format("01")
 	nowDay := nowTime.Format("02")
 
-	pv, err := config.PersistentVolume()
+	pv, err := c.gerneralConfigIf.FetchPersistentVolumeDir()
 	if err != nil{
 		return err
 	}

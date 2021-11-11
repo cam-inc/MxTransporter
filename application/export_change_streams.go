@@ -1,11 +1,8 @@
 package application
 
 import (
-	"cloud.google.com/go/bigquery"
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +13,6 @@ import (
 	interfaceKinesisStream "mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "mxtransporter/interfaces/mongo"
 	interfaceForPubSub "mxtransporter/interfaces/pubsub"
-	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
 	"mxtransporter/usecases/resume-token"
 	"os"
@@ -35,10 +31,6 @@ const (
 const (
 	KinesisStream 	AwsService = "kinesisStream"
 )
-
-var pubSubClient *pubsub.Client
-var bigqueryClient *bigquery.Client
-var gcpProjectID = config.FetchGcpProject().ProjectID
 
 func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 	db, err := mongoConnection.FetchDatabase(ctx, client)
@@ -60,7 +52,7 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 	nowMonth := nowTime.Format("01")
 	nowDay := nowTime.Format("02")
 
-	pv, err := config.PersistentVolume()
+	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
@@ -98,36 +90,12 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 	defer cs.Close(ctx)
 
-	exportDestinations, err := config.ExportDestination()
+	exportDestinations, err := config.FetchExportDestination()
 
 	if err != nil {
 		return err
 	}
 	exportDestinationList := strings.Split(exportDestinations, ",")
-
-	//var pubSubClient *pubsub.Client
-	var kinesisClient *kinesis.Client
-
-	//for i := 0; i < len(exportDestinationList); i++ {
-	//	exportDestination := exportDestinationList[i]
-	//
-	//	var err error
-	//    //if GcpService(exportDestination) == PubSub {
-	//	//	gcpProjectID := config.FetchGcpProject().ProjectID
-	//	//	pubSubClient, err = client.NewPubSubClient(ctx, gcpProjectID)
-	//	//	if err != nil {
-	//	//		return err
-	//	//	}
-	//	//} else if AwsService(exportDestination) == KinesisStream {
-	//	if AwsService(exportDestination) == KinesisStream {
-	//		kinesisClient, err = client.NewKinesisClient(ctx)
-	//		if err != nil {
-	//			return err
-	//		}
-	//	} else {
-	//		return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
-	//	}
-	//}
 
 	for cs.Next(ctx) {
 		var csMap bson.M
@@ -147,15 +115,15 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 			exportDestination := exportDestinationList[i]
 			eg.Go(func() error {
 				if GcpService(exportDestination) == Bigquery {
-					if err := interfaceForBigquery.ExportToBigquery(ctx, csMap, &bigqueryFuncs{}); err != nil {
+					if err := interfaceForBigquery.ExportToBigquery(ctx, csMap, &interfaceForBigquery.BigqueryFuncs{}); err != nil {
 						return err
 					}
 				} else if GcpService(exportDestination) == PubSub {
-					if err := interfaceForPubSub.ExportToPubSub(ctx, csMap, &pubsubFuncs{}); err != nil {
+					if err := interfaceForPubSub.ExportToPubSub(ctx, csMap, &interfaceForPubSub.PubsubFuncs{}); err != nil {
 						return err
 					}
 				} else if AwsService(exportDestination) == KinesisStream {
-					if err := interfaceKinesisStream.ExportToKinesisStream(ctx, csMap, kinesisClient); err != nil {
+					if err := interfaceKinesisStream.ExportToKinesisStream(ctx, csMap, &interfaceKinesisStream.KinesisFuncs{}); err != nil {
 						return err
 					}
 				}  else {
@@ -169,108 +137,24 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 			return err
 		}
 
-		if err := resume_token.SaveResumeToken(csMap["_id"].(primitive.M)); err != nil {
+		if err := resume_token.NewGeneralConfig(pvFunction).SaveResumeToken(csMap["_id"].(primitive.M)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-type pubsubFuncs struct {}
-func (p *pubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
-	if err != nil {
-		return err
-	}
-
-	var topic *pubsub.Topic
-	topic = pubSubClient.Topic(topicID)
-	if err != nil {
-		return err
-	}
-	defer topic.Stop()
-
-	topicExistence, err := topic.Exists(ctx)
-	if err != nil {
-		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
-	}
-	if topicExistence == false {
-		fmt.Println("Topic is not exists. Creating a topic.")
-
-		var err error
-		topic, err = pubSubClient.CreateTopic(ctx, topicID)
-		if err != nil {
-			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
-		}
-		fmt.Println("Successed to create topic. ")
-	}
-
-	return nil
-}
-func (p *pubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
-	if err != nil {
-		return err
-	}
-
-	var subscription *pubsub.Subscription
-	subscription = pubSubClient.Subscription(subscriptionID)
-	if err != nil {
-		return err
-	}
-
-
-	subscriptionExistence, err := subscription.Exists(ctx)
-	if err != nil {
-		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
-	}
-	if subscriptionExistence == false {
-		fmt.Println("Subscription is not exists. Creating a subscription.")
-
-		var err error
-		subscription, err = pubSubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
-			Topic: pubSubClient.Topic(topicID),
-			// 確認応答がこの時間帰ってこなければ、再度メッセージ送信
-			AckDeadline:       60 * time.Second,
-			RetentionDuration: 24 * time.Hour,
-		})
-		if err != nil {
-			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
-		}
-		fmt.Println("Successed to create subscription. ")
-	}
-	return nil
+type generalConfig struct {
+	config.GeneralConfigIf
+	persistentVolume func() (string, error)
 }
 
-func (p *pubsubFuncs) PublishMessage(ctx context.Context, topicID string, csArray []string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
-	if err != nil {
-		return err
-	}
-
-	var topic *pubsub.Topic
-	topic = pubSubClient.Topic(topicID)
-	defer topic.Stop()
-
-	topic.Publish(ctx, &pubsub.Message{
-		Data: []byte(strings.Join(csArray, "|")),
-	})
-
-	return nil
+func (m *generalConfig) FetchPersistentVolumeDir() (string, error) {
+	return m.persistentVolume()
 }
 
-type bigqueryFuncs struct {}
-func (b *bigqueryFuncs) PutRecord(ctx context.Context, dataset string, table string, csItems []interfaceForBigquery.ChangeStreamTableSchema) error {
-	bigqueryClient, err := client.NewBigqueryClient(ctx, gcpProjectID)
-	if err != nil {
-		return err
-	}
-
-	if err := bigqueryClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
-		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
-	}
-	return nil
+var pvFunction = &generalConfig{
+	persistentVolume: func() (string, error) {
+		return config.FetchPersistentVolumeDir()
+	},
 }

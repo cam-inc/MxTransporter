@@ -19,6 +19,10 @@ type Region struct {
 	Region string
 }
 
+type GeneralConfigIf interface {
+	FetchPersistentVolumeDir() (string, error)
+}
+
 func init() {
 	m := godotenv.Load()
 	if m != nil {
@@ -26,7 +30,7 @@ func init() {
 	}
 }
 
-func PersistentVolume() (string, error) {
+func FetchPersistentVolumeDir() (string, error) {
 	pvDir, pvDirExistence := os.LookupEnv("PERSISTENT_VOLUME_DIR")
 	if pvDirExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("PERSISTENT_VOLUME_DIR is not existed in environment variables")
@@ -34,7 +38,7 @@ func PersistentVolume() (string, error) {
 	return pvDir, nil
 }
 
-func ExportDestination() (string, error) {
+func FetchExportDestination() (string, error) {
 	exportDestination, exportDestinationExistence := os.LookupEnv("EXPORT_DESTINATION")
 	if exportDestinationExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("EXPORT_DESTINATION is not existed in environment variables")
