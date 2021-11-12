@@ -152,7 +152,7 @@ $ make upgrade
 
 # Architects
 
-![image](https://user-images.githubusercontent.com/37132477/140288330-8bf37d91-084c-4ec1-afb2-5758d64b8a36.png)
+![image](https://user-images.githubusercontent.com/37132477/141406547-41edf9eb-5a17-4191-9ee3-3f13ba17ec07.png)
 
 A pod is created for each collection, and a persistent volume is linked to each pod.
 Since the StatefulSet is created, even if the pod stops, you can get the change streams by referring to the resume token saved in the persistent volume again.
