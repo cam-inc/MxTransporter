@@ -24,12 +24,12 @@ type GcpService string
 type AwsService string
 
 const (
-	Bigquery     	GcpService = "bigquery"
-	PubSub			GcpService = "pubsub"
+	Bigquery GcpService = "bigquery"
+	PubSub   GcpService = "pubsub"
 )
 
 const (
-	KinesisStream 	AwsService = "kinesisStream"
+	KinesisStream AwsService = "kinesisStream"
 )
 
 func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
@@ -114,19 +114,20 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 		for i := 0; i < len(exportDestinationList); i++ {
 			exportDestination := exportDestinationList[i]
 			eg.Go(func() error {
-				if GcpService(exportDestination) == Bigquery {
+				switch {
+				case GcpService(exportDestination) == Bigquery:
 					if err := interfaceForBigquery.ExportToBigquery(ctx, csMap, &interfaceForBigquery.BigqueryFuncs{}); err != nil {
 						return err
 					}
-				} else if GcpService(exportDestination) == PubSub {
+				case GcpService(exportDestination) == PubSub:
 					if err := interfaceForPubSub.ExportToPubSub(ctx, csMap, &interfaceForPubSub.PubsubFuncs{}); err != nil {
 						return err
 					}
-				} else if AwsService(exportDestination) == KinesisStream {
+				case AwsService(exportDestination) == KinesisStream:
 					if err := interfaceKinesisStream.ExportToKinesisStream(ctx, csMap, &interfaceKinesisStream.KinesisFuncs{}); err != nil {
 						return err
 					}
-				}  else {
+				default:
 					return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
 				}
 				return nil

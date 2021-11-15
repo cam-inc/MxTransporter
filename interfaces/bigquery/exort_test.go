@@ -11,27 +11,27 @@ import (
 )
 
 var csMap = primitive.M{
-	"_id": primitive.M{"_data": "00000"},
-	"operationType": "insert",
-	"clusterTime": primitive.Timestamp{00000, 0},
-	"fullDocument": primitive.M{"wwwww": "test full document"},
-	"ns": primitive.M{"xxxxx": "test ns"},
-	"documentKey": primitive.M{"yyyyy": "test document key"},
+	"_id":               primitive.M{"_data": "00000"},
+	"operationType":     "insert",
+	"clusterTime":       primitive.Timestamp{00000, 0},
+	"fullDocument":      primitive.M{"wwwww": "test full document"},
+	"ns":                primitive.M{"xxxxx": "test ns"},
+	"documentKey":       primitive.M{"yyyyy": "test document key"},
 	"updateDescription": primitive.M{"zzzzz": "test update description"},
 }
 
-type mockBigqueryFuncs struct {}
+type mockBigqueryFuncs struct{}
 
 func (m *mockBigqueryFuncs) PutRecord(_ context.Context, _ string, _ string, csItems []ChangeStreamTableSchema) error {
 	testCsItems := []ChangeStreamTableSchema{
 		{
-			ID:                "{\"_data\":\"00000\"}",
+			ID:                `{"_data":"00000"}`,
 			OperationType:     "insert",
 			ClusterTime:       time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0),
-			FullDocument:      "{\"wwwww\":\"test full document\"}",
-			Ns:                "{\"xxxxx\":\"test ns\"}",
-			DocumentKey:       "{\"yyyyy\":\"test document key\"}",
-			UpdateDescription: "{\"zzzzz\":\"test update description\"}",
+			FullDocument:      `{"wwwww":"test full document"}`,
+			Ns:                `{"xxxxx":"test ns"}`,
+			DocumentKey:       `{"yyyyy":"test document key"}`,
+			UpdateDescription: `{"zzzzz":"test update description"}`,
 		},
 	}
 
@@ -44,14 +44,13 @@ func (m *mockBigqueryFuncs) PutRecord(_ context.Context, _ string, _ string, csI
 	return nil
 }
 
-
 func Test_ExportToBigquery(t *testing.T) {
 	cases := []struct {
-		cs primitive.M
+		cs       primitive.M
 		function bigqueryIf
 	}{
 		{
-			cs: csMap,
+			cs:       csMap,
 			function: &mockBigqueryFuncs{},
 		},
 	}
@@ -65,4 +64,3 @@ func Test_ExportToBigquery(t *testing.T) {
 		})
 	}
 }
-

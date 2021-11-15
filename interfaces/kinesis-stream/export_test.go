@@ -11,28 +11,28 @@ import (
 )
 
 var csMap = primitive.M{
-	"_id": primitive.M{"_data": "00000"},
-	"operationType": "insert",
-	"clusterTime": primitive.Timestamp{00000, 0},
-	"fullDocument": primitive.M{"wwwww": "test full document"},
-	"ns": primitive.M{"xxxxx": "test ns"},
-	"documentKey": primitive.M{"yyyyy": "test document key"},
+	"_id":               primitive.M{"_data": "00000"},
+	"operationType":     "insert",
+	"clusterTime":       primitive.Timestamp{00000, 0},
+	"fullDocument":      primitive.M{"wwwww": "test full document"},
+	"ns":                primitive.M{"xxxxx": "test ns"},
+	"documentKey":       primitive.M{"yyyyy": "test document key"},
 	"updateDescription": primitive.M{"zzzzz": "test update description"},
 }
 
-type mockKinesisFuncs struct {}
+type mockKinesisFuncs struct{}
 
 func (m mockKinesisFuncs) PutRecord(_ context.Context, _ string, rt interface{}, csArray []string) error {
 	testRt := "00000"
 
 	testCsArray := []string{
-		"{\"_data\":\"00000\"}",
+		`{"_data":"00000"}`,
 		"insert",
 		time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0).Format("2006-01-02 15:04:05"),
-		"{\"wwwww\":\"test full document\"}",
-		"{\"xxxxx\":\"test ns\"}",
-		"{\"yyyyy\":\"test document key\"}",
-		"{\"zzzzz\":\"test update description\"}",
+		`{"wwwww":"test full document"}`,
+		`{"xxxxx":"test ns"}`,
+		`{"yyyyy":"test document key"}`,
+		`{"zzzzz":"test update description"}`,
 	}
 
 	if csArray == nil {
@@ -49,11 +49,11 @@ func (m mockKinesisFuncs) PutRecord(_ context.Context, _ string, rt interface{},
 
 func Test_ExportToKinesisStream(t *testing.T) {
 	cases := []struct {
-		cs primitive.M
+		cs       primitive.M
 		function kinesisIf
 	}{
 		{
-			cs: csMap,
+			cs:       csMap,
 			function: &mockKinesisFuncs{},
 		},
 	}
@@ -67,4 +67,3 @@ func Test_ExportToKinesisStream(t *testing.T) {
 		})
 	}
 }
-

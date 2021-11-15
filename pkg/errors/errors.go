@@ -8,8 +8,8 @@ import (
 type ErrorType string
 
 const (
-	InternalServerError = ErrorType("500: internal server error")
-	InternalServerErrorEnvGet = ErrorType("500: environment variables get error")
+	InternalServerError          = ErrorType("500: internal server error")
+	InternalServerErrorEnvGet    = ErrorType("500: environment variables get error")
 	InternalServerErrorClientGet = ErrorType("500: client get error")
 	// mongodb
 	InternalServerErrorMongoDbConnect = ErrorType("500: mongodb connect error")
@@ -17,7 +17,7 @@ const (
 	// bigquery
 	InternalServerErrorBigqueryInsert = ErrorType("500: bigquery insert error")
 	// pubsub
-	InternalServerErrorPubSubFind = ErrorType("500: pubsub find error")
+	InternalServerErrorPubSubFind   = ErrorType("500: pubsub find error")
 	InternalServerErrorPubSubCreate = ErrorType("500: pubsub create error")
 	// kinesis stream
 	InternalServerErrorKinesisStreamPut = ErrorType("500: kinesis stream put error")

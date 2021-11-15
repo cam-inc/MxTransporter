@@ -27,18 +27,12 @@ func Test_SaveResumeToken(t *testing.T) {
 	}
 
 	nowTime := time.Now().In(jst)
-	nowYear := nowTime.Format("2006")
-	nowMonth := nowTime.Format("01")
-	nowDay := nowTime.Format("02")
-
-	fileName := nowTime.Format("2006-01-02")
-	filePath := nowYear + "/" + nowMonth + "/" + nowDay + "/"
-	file := filePath + fileName + ".dat"
+	file := nowTime.Format("2006/01/02/2006-01-02.dat")
 
 	rtMap := primitive.M{"_data": "00000"}
 
 	cases := []struct {
-		rt primitive.M
+		rt       primitive.M
 		function config.GeneralConfigIf
 	}{
 		{
@@ -78,9 +72,8 @@ func TestMain(m *testing.M) {
 	}
 
 	nowTime := time.Now().In(jst)
-	nowYear := nowTime.Format("2006")
 
-	err = os.RemoveAll(nowYear)
+	err = os.RemoveAll(nowTime.Format("2006"))
 	if err != nil {
 		fmt.Println("The unnecessary file could not be deleted.")
 	}

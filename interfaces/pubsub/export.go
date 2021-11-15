@@ -20,23 +20,18 @@ var gcpProjectID = config.FetchGcpProject().ProjectID
 type pubsubIf interface {
 	PubsubTopic(ctx context.Context, topicID string) error
 	PubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error
-    PublishMessage(ctx context.Context, topicID string, csArray []string) error
+	PublishMessage(ctx context.Context, topicID string, csArray []string) error
 }
 
-type PubsubFuncs struct {}
+type PubsubFuncs struct{}
 
 func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
 	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
 	if err != nil {
 		return err
 	}
 
-	var topic *pubsub.Topic
-	topic = pubSubClient.Topic(topicID)
-	if err != nil {
-		return err
-	}
+	topic := pubSubClient.Topic(topicID)
 	defer topic.Stop()
 
 	topicExistence, err := topic.Exists(ctx)
@@ -47,7 +42,7 @@ func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
 		fmt.Println("Topic is not exists. Creating a topic.")
 
 		var err error
-		topic, err = pubSubClient.CreateTopic(ctx, topicID)
+		_, err = pubSubClient.CreateTopic(ctx, topicID)
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
@@ -56,19 +51,14 @@ func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
 
 	return nil
 }
+
 func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error {
 	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
 	if err != nil {
 		return err
 	}
 
-	var subscription *pubsub.Subscription
-	subscription = pubSubClient.Subscription(subscriptionID)
-	if err != nil {
-		return err
-	}
-
+	subscription := pubSubClient.Subscription(subscriptionID)
 
 	subscriptionExistence, err := subscription.Exists(ctx)
 	if err != nil {
@@ -78,8 +68,8 @@ func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, su
 		fmt.Println("Subscription is not exists. Creating a subscription.")
 
 		var err error
-		subscription, err = pubSubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
-			Topic: pubSubClient.Topic(topicID),
+		_, err = pubSubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
+			Topic:             pubSubClient.Topic(topicID),
 			AckDeadline:       60 * time.Second,
 			RetentionDuration: 24 * time.Hour,
 		})
@@ -93,13 +83,11 @@ func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, su
 
 func (p *PubsubFuncs) PublishMessage(ctx context.Context, topicID string, csArray []string) error {
 	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-
 	if err != nil {
 		return err
 	}
 
-	var topic *pubsub.Topic
-	topic = pubSubClient.Topic(topicID)
+	topic := pubSubClient.Topic(topicID)
 	defer topic.Stop()
 
 	topic.Publish(ctx, &pubsub.Message{
@@ -125,7 +113,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, psif pubsubIf) error {
 	}
 
 	id, _ := json.Marshal(cs["_id"])
-	operationType := cs["operationType"].(string)
+	operationType, _ := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDocument, _ := json.Marshal(cs["fullDocument"])
 	ns, _ := json.Marshal(cs["ns"])

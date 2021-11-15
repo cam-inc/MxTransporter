@@ -29,7 +29,7 @@ type bigqueryIf interface {
 	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
 }
 
-type BigqueryFuncs struct {}
+type BigqueryFuncs struct{}
 
 func (b *BigqueryFuncs) PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
 	bigqueryClient, err := client.NewBigqueryClient(ctx, gcpProjectID)
@@ -47,7 +47,7 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, bqif bigqueryIf) erro
 	bigqueryConfig := bigqueryConfig.BigqueryConfig()
 
 	id, _ := json.Marshal(cs["_id"])
-	operationType := cs["operationType"].(string)
+	operationType, _ := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDocument, _ := json.Marshal(cs["fullDocument"])
 	ns, _ := json.Marshal(cs["ns"])
@@ -72,4 +72,3 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, bqif bigqueryIf) erro
 
 	return nil
 }
-

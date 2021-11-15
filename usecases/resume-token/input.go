@@ -13,7 +13,7 @@ type generalConfig struct {
 	gerneralConfigIf config.GeneralConfigIf
 }
 
-func NewGeneralConfig (gerneralConfigIf config.GeneralConfigIf) *generalConfig {
+func NewGeneralConfig(gerneralConfigIf config.GeneralConfigIf) *generalConfig {
 	return &generalConfig{
 		gerneralConfigIf: gerneralConfigIf,
 	}
@@ -26,18 +26,14 @@ func (c *generalConfig) SaveResumeToken(rt primitive.M) error {
 	}
 
 	nowTime := time.Now().In(jst)
-	nowYear := nowTime.Format("2006")
-	nowMonth := nowTime.Format("01")
-	nowDay := nowTime.Format("02")
 
 	pv, err := c.gerneralConfigIf.FetchPersistentVolumeDir()
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	fileName := nowTime.Format("2006-01-02")
-	filePath := pv + nowYear + "/" + nowMonth + "/" + nowDay + "/"
-	file := filePath + fileName + ".dat"
+	filePath := pv + nowTime.Format("2006/01/02/")
+	file := filePath + nowTime.Format("2006-01-02.dat")
 
 	rtValue := rt["_data"].(string)
 

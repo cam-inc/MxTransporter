@@ -19,7 +19,7 @@ type kinesisIf interface {
 	PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error
 }
 
-type KinesisFuncs struct {}
+type KinesisFuncs struct{}
 
 func (k *KinesisFuncs) PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error {
 	kinesisClient, err := client.NewKinesisClient(ctx)
@@ -40,13 +40,13 @@ func (k *KinesisFuncs) PutRecord(ctx context.Context, streamName string, rt inte
 	return nil
 }
 
-func ExportToKinesisStream(ctx context.Context, cs primitive.M, ksif kinesisIf) error{
+func ExportToKinesisStream(ctx context.Context, cs primitive.M, ksif kinesisIf) error {
 	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
 
 	rt := cs["_id"].(primitive.M)["_data"]
 
 	id, _ := json.Marshal(cs["_id"])
-	operationType := cs["operationType"].(string)
+	operationType, _ := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDocument, _ := json.Marshal(cs["fullDocument"])
 	ns, _ := json.Marshal(cs["ns"])
@@ -62,7 +62,6 @@ func ExportToKinesisStream(ctx context.Context, cs primitive.M, ksif kinesisIf) 
 		string(documentKey),
 		string(updateDescription),
 	}
-
 
 	if err := ksif.PutRecord(ctx, kinesisStreamConfig.StreamName, rt, r); err != nil {
 		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)

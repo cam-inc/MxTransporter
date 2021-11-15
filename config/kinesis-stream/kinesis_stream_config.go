@@ -5,8 +5,8 @@ import (
 )
 
 type KinesisStream struct {
-	StreamName 	string
-	KinesisStreamRegion		string
+	StreamName          string
+	KinesisStreamRegion string
 }
 
 func KinesisStreamConfig() KinesisStream {
