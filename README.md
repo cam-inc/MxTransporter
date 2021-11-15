@@ -204,6 +204,12 @@ It is formatted into a pipe (|) separated CSV and put.
 
 <br>
 
+# Contributors
+| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   |
+
+<br>
+
+
 # Copyright
 
 CAM, Inc. All rights reserved.
