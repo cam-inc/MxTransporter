@@ -7,27 +7,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	kinesisConfig "mxtransporter/config/kinesis-stream"
-	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
 	"strings"
 	"time"
 )
 
-var kinesisClient *kinesis.Client
-
-type kinesisIf interface {
-	PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error
+type KinesisClient interface {
+	PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error
 }
 
-type KinesisFuncs struct{}
+type KinesisClientImpl struct {
+	kinesisClient KinesisClient
+}
 
-func (k *KinesisFuncs) PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error {
-	kinesisClient, err := client.NewKinesisClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = kinesisClient.PutRecord(ctx, &kinesis.PutRecordInput{
+func PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error {
+	_, err := ksClient.PutRecord(ctx, &kinesis.PutRecordInput{
 		Data:         []byte(strings.Join(csArray, "|") + "\n"),
 		PartitionKey: aws.String(rt.(string)),
 		StreamName:   aws.String(streamName),
@@ -40,7 +34,13 @@ func (k *KinesisFuncs) PutRecord(ctx context.Context, streamName string, rt inte
 	return nil
 }
 
-func ExportToKinesisStream(ctx context.Context, cs primitive.M, ksif kinesisIf) error {
+func NewKinesisClient(kinesisClient KinesisClient) *KinesisClientImpl {
+	return &KinesisClientImpl{
+		kinesisClient: kinesisClient,
+	}
+}
+
+func (k *KinesisClientImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M, ksClient *kinesis.Client) error {
 	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
 
 	rt := cs["_id"].(primitive.M)["_data"]
@@ -63,8 +63,8 @@ func ExportToKinesisStream(ctx context.Context, cs primitive.M, ksif kinesisIf) 
 		string(updateDescription),
 	}
 
-	if err := ksif.PutRecord(ctx, kinesisStreamConfig.StreamName, rt, r); err != nil {
-		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
+	if err := k.kinesisClient.PutRecord(ctx, kinesisStreamConfig.StreamName, rt, r, ksClient); err != nil {
+		return err
 	}
 
 	return nil

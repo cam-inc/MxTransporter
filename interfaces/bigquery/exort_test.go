@@ -1,6 +1,7 @@
 package bigquery
 
 import (
+	"cloud.google.com/go/bigquery"
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,9 +21,16 @@ var csMap = primitive.M{
 	"updateDescription": primitive.M{"zzzzz": "test update description"},
 }
 
-type mockBigqueryFuncs struct{}
+type mockBigqueryClientImpl struct {
+	BigqueryClient
+	fakePutRecord func(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error
+}
 
-func (m *mockBigqueryFuncs) PutRecord(_ context.Context, _ string, _ string, csItems []ChangeStreamTableSchema) error {
+func (m *mockBigqueryClientImpl) PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error {
+	return m.fakePutRecord(ctx, dataset, table, csItems, bqClient)
+}
+
+func Test_ExportToBigquery(t *testing.T) {
 	testCsItems := []ChangeStreamTableSchema{
 		{
 			ID:                `{"_data":"00000"}`,
@@ -35,30 +43,32 @@ func (m *mockBigqueryFuncs) PutRecord(_ context.Context, _ string, _ string, csI
 		},
 	}
 
-	if csItems == nil {
-		return fmt.Errorf("expect csItems to not be nil")
-	}
-	if e, a := testCsItems, csItems; !reflect.DeepEqual(e, a) {
-		return fmt.Errorf("expect %v, got %v", e, a)
-	}
-	return nil
-}
-
-func Test_ExportToBigquery(t *testing.T) {
 	cases := []struct {
 		cs       primitive.M
-		function bigqueryIf
+		client   *bigquery.Client
+		function BigqueryClient
 	}{
 		{
-			cs:       csMap,
-			function: &mockBigqueryFuncs{},
+			cs:     csMap,
+			client: nil,
+			function: &mockBigqueryClientImpl{
+				fakePutRecord: func(_ context.Context, _ string, _ string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error {
+					if csItems == nil {
+						return fmt.Errorf("expect csItems to not be nil")
+					}
+					if e, a := testCsItems, csItems; !reflect.DeepEqual(e, a) {
+						return fmt.Errorf("expect %v, got %v", e, a)
+					}
+					return nil
+				},
+			},
 		},
 	}
 
 	for i, tt := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			ctx := context.TODO()
-			if err := ExportToBigquery(ctx, tt.cs, tt.function); err != nil {
+			if err := NewBigqueryClient(tt.function).ExportToBigquery(ctx, tt.cs, tt.client); err != nil {
 				t.Fatalf("expect no error, got %v", err)
 			}
 		})

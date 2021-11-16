@@ -6,32 +6,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"mxtransporter/config"
 	pubsubConfig "mxtransporter/config/pubsub"
-	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
 	"strings"
 	"time"
 )
 
-var pubSubClient *pubsub.Client
-var gcpProjectID = config.FetchGcpProject().ProjectID
-
-type pubsubIf interface {
-	PubsubTopic(ctx context.Context, topicID string) error
-	PubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error
-	PublishMessage(ctx context.Context, topicID string, csArray []string) error
+type PubsubClient interface {
+	PubsubTopic(ctx context.Context, topicID string, psClient *pubsub.Client) error
+	PubsubSubscription(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error
+	PublishMessage(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
 }
 
-type PubsubFuncs struct{}
+type PubsubClientImple struct {
+	pubsubClient PubsubClient
+}
 
-func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-	if err != nil {
-		return err
-	}
-
-	topic := pubSubClient.Topic(topicID)
+func PubsubTopic(ctx context.Context, topicID string, psClient *pubsub.Client) error {
+	topic := psClient.Topic(topicID)
 	defer topic.Stop()
 
 	topicExistence, err := topic.Exists(ctx)
@@ -42,7 +34,7 @@ func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
 		fmt.Println("Topic is not exists. Creating a topic.")
 
 		var err error
-		_, err = pubSubClient.CreateTopic(ctx, topicID)
+		_, err = psClient.CreateTopic(ctx, topicID)
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
@@ -52,13 +44,8 @@ func (p *PubsubFuncs) PubsubTopic(ctx context.Context, topicID string) error {
 	return nil
 }
 
-func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-	if err != nil {
-		return err
-	}
-
-	subscription := pubSubClient.Subscription(subscriptionID)
+func PubsubSubscription(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error {
+	subscription := psClient.Subscription(subscriptionID)
 
 	subscriptionExistence, err := subscription.Exists(ctx)
 	if err != nil {
@@ -68,8 +55,8 @@ func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, su
 		fmt.Println("Subscription is not exists. Creating a subscription.")
 
 		var err error
-		_, err = pubSubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
-			Topic:             pubSubClient.Topic(topicID),
+		_, err = psClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
+			Topic:             psClient.Topic(topicID),
 			AckDeadline:       60 * time.Second,
 			RetentionDuration: 24 * time.Hour,
 		})
@@ -81,13 +68,8 @@ func (p *PubsubFuncs) PubsubSubscription(ctx context.Context, topicID string, su
 	return nil
 }
 
-func (p *PubsubFuncs) PublishMessage(ctx context.Context, topicID string, csArray []string) error {
-	pubSubClient, err := client.NewPubSubClient(ctx, gcpProjectID)
-	if err != nil {
-		return err
-	}
-
-	topic := pubSubClient.Topic(topicID)
+func PublishMessage(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error {
+	topic := psClient.Topic(topicID)
 	defer topic.Stop()
 
 	topic.Publish(ctx, &pubsub.Message{
@@ -97,18 +79,24 @@ func (p *PubsubFuncs) PublishMessage(ctx context.Context, topicID string, csArra
 	return nil
 }
 
-func ExportToPubSub(ctx context.Context, cs primitive.M, psif pubsubIf) error {
+func NewPubsubClient(pubsubClient PubsubClient) *PubsubClientImple {
+	return &PubsubClientImple{
+		pubsubClient: pubsubClient,
+	}
+}
+
+func (p *PubsubClientImple) ExportToPubSub(ctx context.Context, cs primitive.M, psClient *pubsub.Client) error {
 	pubSubConfig := pubsubConfig.PubSubConfig()
 
 	topicID := pubSubConfig.MongoDbDatabase
 
-	if err := psif.PubsubTopic(ctx, topicID); err != nil {
+	if err := p.pubsubClient.PubsubTopic(ctx, topicID, psClient); err != nil {
 		return err
 	}
 
 	subscriptionID := pubSubConfig.MongoDbCollection
 
-	if err := psif.PubsubSubscription(ctx, topicID, subscriptionID); err != nil {
+	if err := p.pubsubClient.PubsubSubscription(ctx, topicID, subscriptionID, psClient); err != nil {
 		return err
 	}
 
@@ -130,7 +118,7 @@ func ExportToPubSub(ctx context.Context, cs primitive.M, psif pubsubIf) error {
 		string(updateDescription),
 	}
 
-	if err := psif.PublishMessage(ctx, topicID, r); err != nil {
+	if err := p.pubsubClient.PublishMessage(ctx, topicID, r, psClient); err != nil {
 		return err
 	}
 
