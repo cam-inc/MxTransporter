@@ -21,7 +21,7 @@ func NewBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client,
 	return client, nil
 }
 
-func NewPubSubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+func NewPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
 		return nil, errors.InternalServerErrorClientGet.Wrap("pubsub client connection refused", err)

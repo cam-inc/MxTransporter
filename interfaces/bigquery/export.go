@@ -5,15 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"mxtransporter/config"
 	bigqueryConfig "mxtransporter/config/bigquery"
-	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
 	"time"
 )
-
-var bigqueryClient *bigquery.Client
-var gcpProjectID = config.FetchGcpProject().ProjectID
 
 type ChangeStreamTableSchema struct {
 	ID                string
@@ -25,29 +20,32 @@ type ChangeStreamTableSchema struct {
 	UpdateDescription string
 }
 
-type bigqueryIf interface {
-	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
+type BigqueryClient interface {
+	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error
 }
 
-type BigqueryFuncs struct{}
+type BigqueryClientImpl struct {
+	bigqueryClient BigqueryClient
+}
 
-func (b *BigqueryFuncs) PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
-	bigqueryClient, err := client.NewBigqueryClient(ctx, gcpProjectID)
-	if err != nil {
-		return err
-	}
-
-	if err := bigqueryClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
+func PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error {
+	if err := bqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
 		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 	return nil
 }
 
-func ExportToBigquery(ctx context.Context, cs primitive.M, bqif bigqueryIf) error {
+func NewBigqueryClient(bigqueryClient BigqueryClient) *BigqueryClientImpl {
+	return &BigqueryClientImpl{
+		bigqueryClient: bigqueryClient,
+	}
+}
+
+func (b *BigqueryClientImpl) ExportToBigquery(ctx context.Context, cs primitive.M, bqClient *bigquery.Client) error {
 	bigqueryConfig := bigqueryConfig.BigqueryConfig()
 
 	id, _ := json.Marshal(cs["_id"])
-	operationType, _ := cs["operationType"].(string)
+	operationType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDocument, _ := json.Marshal(cs["fullDocument"])
 	ns, _ := json.Marshal(cs["ns"])
@@ -66,7 +64,7 @@ func ExportToBigquery(ctx context.Context, cs primitive.M, bqif bigqueryIf) erro
 		},
 	}
 
-	if err := bqif.PutRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems); err != nil {
+	if err := b.bigqueryClient.PutRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems, bqClient); err != nil {
 		return err
 	}
 

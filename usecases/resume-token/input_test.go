@@ -11,13 +11,13 @@ import (
 	"time"
 )
 
-type MockGeneralConfig struct {
+type mockGeneralConfig struct {
 	config.GeneralConfigIf
-	FakePersistentVolume func() (string, error)
+	fakePersistentVolume func() (string, error)
 }
 
-func (m *MockGeneralConfig) FetchPersistentVolumeDir() (string, error) {
-	return m.FakePersistentVolume()
+func (m *mockGeneralConfig) FetchPersistentVolumeDir() (string, error) {
+	return m.fakePersistentVolume()
 }
 
 func Test_SaveResumeToken(t *testing.T) {
@@ -37,8 +37,8 @@ func Test_SaveResumeToken(t *testing.T) {
 	}{
 		{
 			rt: rtMap,
-			function: &MockGeneralConfig{
-				FakePersistentVolume: func() (string, error) {
+			function: &mockGeneralConfig{
+				fakePersistentVolume: func() (string, error) {
 					return "", nil
 				},
 			},
