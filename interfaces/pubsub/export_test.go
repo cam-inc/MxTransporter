@@ -24,20 +24,20 @@ var csMap = primitive.M{
 //type mockPubsubFuncs struct{}
 type mockPubsubClientImpl struct {
 	PubsubClient
-	fakePubsubTopic func(ctx context.Context, topicID string, psClient *pubsub.Client) error
+	fakePubsubTopic        func(ctx context.Context, topicID string, psClient *pubsub.Client) error
 	fakePubsubSubscription func(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error
-	fakePublishMessage func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
+	fakePublishMessage     func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
 }
 
-func (m *mockPubsubClientImpl) PubsubTopic(ctx context.Context, topicID string, psClient *pubsub.Client) error{
+func (m *mockPubsubClientImpl) PubsubTopic(ctx context.Context, topicID string, psClient *pubsub.Client) error {
 	return m.fakePubsubTopic(ctx, topicID, psClient)
 }
 
-func (m *mockPubsubClientImpl) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error{
+func (m *mockPubsubClientImpl) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error {
 	return m.fakePubsubSubscription(ctx, topicID, subscriptionID, psClient)
 }
 
-func (m *mockPubsubClientImpl) PublishMessage(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error{
+func (m *mockPubsubClientImpl) PublishMessage(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error {
 	return m.fakePublishMessage(ctx, topicID, csArray, psClient)
 }
 
@@ -45,11 +45,11 @@ func Test_ExportToPubSub(t *testing.T) {
 
 	cases := []struct {
 		cs       primitive.M
-		client *pubsub.Client
+		client   *pubsub.Client
 		function PubsubClient
 	}{
 		{
-			cs:       csMap,
+			cs:     csMap,
 			client: nil,
 			function: &mockPubsubClientImpl{
 				fakePubsubTopic: func(_ context.Context, _ string, _ *pubsub.Client) error {

@@ -33,11 +33,11 @@ func (m *mockKinesisClientImpl) PutRecord(ctx context.Context, streamName string
 func Test_ExportToKinesisStream(t *testing.T) {
 	cases := []struct {
 		cs       primitive.M
-		client *kinesis.Client
+		client   *kinesis.Client
 		function KinesisClient
 	}{
 		{
-			cs:       csMap,
+			cs:     csMap,
 			client: nil,
 			function: &mockKinesisClientImpl{
 				fakePutRecord: func(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error {

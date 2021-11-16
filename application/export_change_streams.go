@@ -57,8 +57,8 @@ type (
 	//}
 
 	Exporter struct {
-		bq bqExpFuncs
-		pubsub pubsubExpFuncs
+		bq            bqExpFuncs
+		pubsub        pubsubExpFuncs
 		kinesisStream kinesisStreamExpFuncs
 	}
 )
@@ -97,6 +97,7 @@ func (b *bqExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, bqClient *
 	}
 	return nil
 }
+
 //func (b *bqExpFuncsMock) Exec() {
 //}
 func (p *pubsubExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, psClient *pubsub.Client) error {
@@ -117,6 +118,7 @@ func (p *pubsubExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, psClie
 	}
 	return nil
 }
+
 //func (b *pubsubExpFuncsMock) Exec() {
 //}
 func (k *kinesisStreamExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, ksClient *kinesis.Client) error {
@@ -131,6 +133,7 @@ func (k *kinesisStreamExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M,
 	}
 	return nil
 }
+
 //func (b *kinesisStreamExpFuncsMock) Exec() {
 //}
 
@@ -143,8 +146,8 @@ func createExporter() *Exporter {
 	//	}
 	//}
 	return &Exporter{
-		bq: &bqExpFuncsImpl{},
-		pubsub: &pubsubExpFuncsImpl{},
+		bq:            &bqExpFuncsImpl{},
+		pubsub:        &pubsubExpFuncsImpl{},
 		kinesisStream: &kinesisStreamExpFuncsImpl{},
 	}
 }
@@ -158,9 +161,9 @@ type (
 	}
 	pubsubClientImpl struct {
 		interfaceForPubsub.PubsubClientImple
-		pubsubTopic func(ctx context.Context, topicID string, psClient *pubsub.Client) error
+		pubsubTopic        func(ctx context.Context, topicID string, psClient *pubsub.Client) error
 		pubsubSubscription func(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error
-		publishMessage func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
+		publishMessage     func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
 	}
 
 	kinesisClientImpl struct {
@@ -262,7 +265,7 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 		switch Agent(exportDestination) {
 		case BigQuery:
 			bqClient, err = client.NewBigqueryClient(ctx, projectID)
-			if err != nil{
+			if err != nil {
 				return err
 			}
 		case CloudPubSub:
@@ -270,13 +273,13 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 			if err != nil {
 				return err
 			}
-		case KinesisStream :
+		case KinesisStream:
 			ksClient, err = client.NewKinesisClient(ctx)
 			if err != nil {
 				return err
 			}
 		default:
-				return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
+			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
 
 		}
 	}
@@ -349,4 +352,5 @@ var pvFunction = &generalConfig{
 		return config.FetchPersistentVolumeDir()
 	},
 }
+
 //=======================================================
