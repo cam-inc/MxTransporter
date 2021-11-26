@@ -2,40 +2,48 @@ package resume_token
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"mxtransporter/config"
 	"mxtransporter/pkg/errors"
 	"os"
 	"time"
 )
 
-type generalConfig struct {
-	gerneralConfigIf config.GeneralConfigIf
-}
-
-func NewGeneralConfig(gerneralConfigIf config.GeneralConfigIf) *generalConfig {
-	return &generalConfig{
-		gerneralConfigIf: gerneralConfigIf,
+type (
+	resumeTokenClient interface {
+		fetchPersistentVolumeDir() (string, error)
 	}
+
+	ResumeTokenImpl struct {
+		ResumeToken resumeTokenClient
+	}
+
+	ResumeTokenClientImpl struct{}
+
+	mockResumeTokenClientImpl struct{}
+)
+
+func (_ *ResumeTokenClientImpl) fetchPersistentVolumeDir() (string, error) {
+	pv, err := config.FetchPersistentVolumeDir()
+	if err != nil {
+		return "", err
+	}
+	return pv, nil
 }
 
-func (c *generalConfig) SaveResumeToken(rt primitive.M) error {
+func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to load location time.", err)
 	}
 
-	nowTime := time.Now().In(jst)
-
-	pv, err := c.gerneralConfigIf.FetchPersistentVolumeDir()
+	pv, err := r.ResumeToken.fetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
 
+	nowTime := time.Now().In(jst)
 	filePath := pv + nowTime.Format("2006/01/02/")
 	file := filePath + nowTime.Format("2006-01-02.dat")
-
-	rtValue := rt["_data"].(string)
 
 	if dirStat, err := os.Stat(filePath); os.IsNotExist(err) || dirStat.IsDir() {
 		os.MkdirAll(filePath, 0777)
@@ -48,7 +56,7 @@ func (c *generalConfig) SaveResumeToken(rt primitive.M) error {
 	}
 	defer fp.Close()
 
-	_, err = fp.WriteString(rtValue)
+	_, err = fp.WriteString(rt)
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
 	}

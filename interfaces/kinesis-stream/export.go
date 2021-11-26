@@ -12,16 +12,28 @@ import (
 	"time"
 )
 
-type KinesisClient interface {
-	PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error
-}
+type (
+	kinesisStreamClient interface {
+		putRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error
+	}
 
-type KinesisClientImpl struct {
-	kinesisClient KinesisClient
-}
+	KinesisStreamImpl struct {
+		KinesisStream kinesisStreamClient
+	}
 
-func PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error {
-	_, err := ksClient.PutRecord(ctx, &kinesis.PutRecordInput{
+	KinesisStreamClientImpl struct {
+		KinesisStreamClient *kinesis.Client
+	}
+
+	mockKinesisStreamClientImpl struct {
+		kinesisStreamClient *kinesis.Client
+		rt                  string
+		cs                  []string
+	}
+)
+
+func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error {
+	_, err := k.KinesisStreamClient.PutRecord(ctx, &kinesis.PutRecordInput{
 		Data:         []byte(strings.Join(csArray, "|") + "\n"),
 		PartitionKey: aws.String(rt.(string)),
 		StreamName:   aws.String(streamName),
@@ -34,24 +46,33 @@ func PutRecord(ctx context.Context, streamName string, rt interface{}, csArray [
 	return nil
 }
 
-func NewKinesisClient(kinesisClient KinesisClient) *KinesisClientImpl {
-	return &KinesisClientImpl{
-		kinesisClient: kinesisClient,
-	}
-}
-
-func (k *KinesisClientImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M, ksClient *kinesis.Client) error {
+func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
 
 	rt := cs["_id"].(primitive.M)["_data"]
 
-	id, _ := json.Marshal(cs["_id"])
-	operationType, _ := cs["operationType"].(string)
+	id, err := json.Marshal(cs["_id"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	operationType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
-	fullDocument, _ := json.Marshal(cs["fullDocument"])
-	ns, _ := json.Marshal(cs["ns"])
-	documentKey, _ := json.Marshal(cs["documentKey"])
-	updateDescription, _ := json.Marshal(cs["updateDescription"])
+	fullDocument, err := json.Marshal(cs["fullDocument"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	ns, err := json.Marshal(cs["ns"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	documentKey, err := json.Marshal(cs["documentKey"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	updateDescription, err := json.Marshal(cs["updateDescription"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
 
 	r := []string{
 		string(id),
@@ -63,8 +84,8 @@ func (k *KinesisClientImpl) ExportToKinesisStream(ctx context.Context, cs primit
 		string(updateDescription),
 	}
 
-	if err := k.kinesisClient.PutRecord(ctx, kinesisStreamConfig.StreamName, rt, r, ksClient); err != nil {
-		return err
+	if err := k.KinesisStream.putRecord(ctx, kinesisStreamConfig.StreamName, rt, r); err != nil {
+		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
 	}
 
 	return nil

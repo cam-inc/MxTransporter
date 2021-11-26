@@ -18,7 +18,11 @@ func main() {
 	}
 	defer mongoClient.Disconnect(ctx)
 
-	if err := application.WatchChangeStreams(ctx, mongoClient); err != nil {
+	// CsExporterの実態は後で入れます
+	watcherClient := &application.ChangeStremsWatcherClientImpl{mongoClient, application.ChangeStreamsExporterImpl{}}
+	watcher := application.ChangeStremsWatcherImpl{watcherClient}
+
+	if err := watcher.WatchChangeStreams(ctx); err != nil {
 		fmt.Println(err)
 		cancel()
 	}

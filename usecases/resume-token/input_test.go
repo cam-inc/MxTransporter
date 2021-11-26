@@ -1,24 +1,16 @@
+//go:build test
+// +build test
+
 package resume_token
 
 import (
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"mxtransporter/config"
+	"mxtransporter/pkg/errors"
 	"os"
 	"reflect"
-	"strconv"
 	"testing"
 	"time"
 )
-
-type mockGeneralConfig struct {
-	config.GeneralConfigIf
-	fakePersistentVolume func() (string, error)
-}
-
-func (m *mockGeneralConfig) FetchPersistentVolumeDir() (string, error) {
-	return m.fakePersistentVolume()
-}
 
 func Test_SaveResumeToken(t *testing.T) {
 	jst, err := time.LoadLocation("Asia/Tokyo")
@@ -29,38 +21,23 @@ func Test_SaveResumeToken(t *testing.T) {
 	nowTime := time.Now().In(jst)
 	file := nowTime.Format("2006/01/02/2006-01-02.dat")
 
-	rtMap := primitive.M{"_data": "00000"}
+	rt := "00000"
 
-	cases := []struct {
-		rt       primitive.M
-		function config.GeneralConfigIf
-	}{
-		{
-			rt: rtMap,
-			function: &mockGeneralConfig{
-				fakePersistentVolume: func() (string, error) {
-					return "", nil
-				},
-			},
-		},
-	}
+	t.Run("Test if the resume token is stored in the correct location.", func(t *testing.T) {
+		resumeTokenImpl := ResumeTokenImpl{&mockResumeTokenClientImpl{}}
+		if err := resumeTokenImpl.SaveResumeToken(rt); err != nil {
+			t.Fatalf("Testing Error, ErrorMessage: %v", err)
+		}
 
-	for i, tt := range cases {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			if err := NewGeneralConfig(tt.function).SaveResumeToken(tt.rt); err != nil {
-				t.Fatalf("expect no error, got %v", err)
-			}
+		rtByte, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal("Failed to read file saved test resume token in.")
+		}
 
-			rtByte, err := os.ReadFile(file)
-			if err != nil {
-				t.Fatal("Failed to read file saved test resume token in.")
-			}
-
-			if e, a := rtMap["_data"], string(rtByte); !reflect.DeepEqual(e, a) {
-				t.Errorf("expect %v, got %v", e, a)
-			}
-		})
-	}
+		if e, a := rt, string(rtByte); !reflect.DeepEqual(e, a) {
+			t.Errorf("expect %v, got %v", e, a)
+		}
+	})
 }
 
 func TestMain(m *testing.M) {
@@ -68,14 +45,14 @@ func TestMain(m *testing.M) {
 
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		fmt.Println("Failed to load location time.")
+		fmt.Println(errors.InternalServerError.Wrap("Failed to load location time.", err))
 	}
 
 	nowTime := time.Now().In(jst)
 
 	err = os.RemoveAll(nowTime.Format("2006"))
 	if err != nil {
-		fmt.Println("The unnecessary file could not be deleted.")
+		fmt.Println(errors.InternalServerError.Wrap("The unnecessary file could not be deleted.", err))
 	}
 
 	os.Exit(status)

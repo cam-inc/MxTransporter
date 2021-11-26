@@ -8,9 +8,10 @@ import (
 type ErrorType string
 
 const (
-	InternalServerError          = ErrorType("500: internal server error")
-	InternalServerErrorEnvGet    = ErrorType("500: environment variables get error")
-	InternalServerErrorClientGet = ErrorType("500: client get error")
+	InternalServerError            = ErrorType("500: internal server error")
+	InternalServerErrorEnvGet      = ErrorType("500: environment variables get error")
+	InternalServerErrorClientGet   = ErrorType("500: client get error")
+	InternalServerErrorJsonMarshal = ErrorType("500: json marshal error")
 	// mongodb
 	InternalServerErrorMongoDbConnect = ErrorType("500: mongodb connect error")
 	InternalServerErrorMongoDbOperate = ErrorType("500: mongodb operate error")

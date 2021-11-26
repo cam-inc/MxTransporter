@@ -6,201 +6,140 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/sync/errgroup"
 	"mxtransporter/config"
 	interfaceForBigquery "mxtransporter/interfaces/bigquery"
-	interfaceKinesisStream "mxtransporter/interfaces/kinesis-stream"
+	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "mxtransporter/interfaces/mongo"
 	interfaceForPubsub "mxtransporter/interfaces/pubsub"
 	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
-	"mxtransporter/usecases/resume-token"
+	interfaceForResumeToken "mxtransporter/usecases/resume-token"
 	"os"
 	"strings"
 	"time"
 )
 
-type Agent string
+type agent string
 
 const (
-	BigQuery      Agent = "bigquery"
-	CloudPubSub   Agent = "pubsub"
-	KinesisStream Agent = "kinesisStream"
+	BigQuery      agent = "bigquery"
+	CloudPubSub   agent = "pubsub"
+	KinesisStream agent = "kinesisStream"
 )
+
+type generalConfig struct {
+	exportDestination string
+}
 
 type (
-	bqExpFuncs interface {
-		Exec(ctx context.Context, csMap primitive.M, bqClient *bigquery.Client) error
-	}
-	pubsubExpFuncs interface {
-		Exec(ctx context.Context, csMap primitive.M, psClient *pubsub.Client) error
-	}
-	kinesisStreamExpFuncs interface {
-		Exec(ctx context.Context, csMap primitive.M, ksClient *kinesis.Client) error
+	changeStremsWatcher interface {
+		fetchPersistentVolumeDir() (string, error)
+		fetchExportDestination() (string, error)
+		fetchGcpProject() (string, error)
+		newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
+		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
+		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
+		watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error)
+		setCsExporter(exporter ChangeStreamsExporterImpl)
+		exportChangeStreams(ctx context.Context) error
 	}
 
-	bqExpFuncsImpl struct {
+	ChangeStremsWatcherImpl struct {
+		Watcher changeStremsWatcher
 	}
-	//bqExpFuncsMock struct {
-	//}
-	pubsubExpFuncsImpl struct {
-	}
-	//pubsubExpFuncsMock struct {
-	//}
-	kinesisStreamExpFuncsImpl struct {
-	}
-	//kinesisStreamExpFuncsMock struct {
-	//}
 
-	Exporter struct {
-		bq            bqExpFuncs
-		pubsub        pubsubExpFuncs
-		kinesisStream kinesisStreamExpFuncs
+	ChangeStremsWatcherClientImpl struct {
+		MongoClient *mongo.Client
+		CsExporter  ChangeStreamsExporterImpl
+	}
+
+	mockChangeStremsWatcherClientImpl struct {
+		mongoClient            *mongo.Client
+		csExporter             ChangeStreamsExporterImpl
+		persistentVolumeDir    string
+		exportDestination      string
+		resumeToken            string
+		resumeAfterExistence   bool
+		bqPassCheck            string
+		pubsubPassCheck        string
+		kinesisStreamPassCheck string
 	}
 )
 
-func (e *Exporter) BQ(ctx context.Context, csMap primitive.M, bqClient *bigquery.Client) error {
-	err := e.bq.Exec(ctx, csMap, bqClient)
+// wrapper
+func (_ *ChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
+	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return pv, nil
 }
-func (e *Exporter) PubSub(ctx context.Context, csMap primitive.M, psClient *pubsub.Client) error {
-	err := e.pubsub.Exec(ctx, csMap, psClient)
+
+func (_ *ChangeStremsWatcherClientImpl) fetchExportDestination() (string, error) {
+	exportDestinations, err := config.FetchExportDestination()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return exportDestinations, nil
 }
-func (e *Exporter) KinesisStream(ctx context.Context, csMap primitive.M, ksClient *kinesis.Client) error {
-	err := e.kinesisStream.Exec(ctx, csMap, ksClient)
+
+func (_ *ChangeStremsWatcherClientImpl) fetchGcpProject() (string, error) {
+	projectID, err := config.FetchGcpProject()
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return projectID, nil
 }
 
-func (b *bqExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, bqClient *bigquery.Client) error {
-	var bqFunc = &bigqueryClientImpl{
-		putRecord: func(ctx context.Context, dataset string, table string, csItems []interfaceForBigquery.ChangeStreamTableSchema, bqClient *bigquery.Client) error {
-			return interfaceForBigquery.PutRecord(ctx, dataset, table, csItems, bqClient)
-		},
-	}
-
-	if err := interfaceForBigquery.NewBigqueryClient(bqFunc).ExportToBigquery(ctx, csMap, bqClient); err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (b *bqExpFuncsMock) Exec() {
-//}
-func (p *pubsubExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, psClient *pubsub.Client) error {
-	var pubsubFunc = &pubsubClientImpl{
-		pubsubTopic: func(ctx context.Context, topicID string, psClient *pubsub.Client) error {
-			return interfaceForPubsub.PubsubTopic(ctx, topicID, psClient)
-		},
-		pubsubSubscription: func(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error {
-			return interfaceForPubsub.PubsubSubscription(ctx, topicID, subscriptionID, psClient)
-		},
-		publishMessage: func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error {
-			return interfaceForPubsub.PublishMessage(ctx, topicID, csArray, psClient)
-		},
-	}
-
-	if err := interfaceForPubsub.NewPubsubClient(pubsubFunc).ExportToPubSub(ctx, csMap, psClient); err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (b *pubsubExpFuncsMock) Exec() {
-//}
-func (k *kinesisStreamExpFuncsImpl) Exec(ctx context.Context, csMap primitive.M, ksClient *kinesis.Client) error {
-	var kinesisStreamFunc = &kinesisClientImpl{
-		putRecord: func(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error {
-			return interfaceKinesisStream.PutRecord(ctx, streamName, rt, csArray, ksClient)
-		},
-	}
-
-	if err := interfaceKinesisStream.NewKinesisClient(kinesisStreamFunc).ExportToKinesisStream(ctx, csMap, ksClient); err != nil {
-		return err
-	}
-	return nil
-}
-
-//func (b *kinesisStreamExpFuncsMock) Exec() {
-//}
-
-func createExporter() *Exporter {
-	//if Env == "test" {
-	//	return &Exporter{
-	//		bq:      &bqClientMock{},
-	//		pubsub:  &pubsubClientMock{},
-	//		kinesis: &kinesisClientMock{},
-	//	}
-	//}
-	return &Exporter{
-		bq:            &bqExpFuncsImpl{},
-		pubsub:        &pubsubExpFuncsImpl{},
-		kinesisStream: &kinesisStreamExpFuncsImpl{},
-	}
-}
-
-// export処理(/interface)内で使われているfunctionを定義
-// 実際のaws, gcp clientをmock可能にするため
-type (
-	bigqueryClientImpl struct {
-		interfaceForBigquery.BigqueryClientImpl
-		putRecord func(ctx context.Context, dataset string, table string, csItems []interfaceForBigquery.ChangeStreamTableSchema, bqClient *bigquery.Client) error
-	}
-	pubsubClientImpl struct {
-		interfaceForPubsub.PubsubClientImple
-		pubsubTopic        func(ctx context.Context, topicID string, psClient *pubsub.Client) error
-		pubsubSubscription func(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error
-		publishMessage     func(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error
-	}
-
-	kinesisClientImpl struct {
-		interfaceKinesisStream.KinesisClientImpl
-		putRecord func(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error
-	}
-)
-
-func (b *bigqueryClientImpl) PutRecord(ctx context.Context, dataset string, table string, csItems []interfaceForBigquery.ChangeStreamTableSchema, bqClient *bigquery.Client) error {
-	return b.putRecord(ctx, dataset, table, csItems, bqClient)
-}
-func (p *pubsubClientImpl) PubsubTopic(ctx context.Context, topicID string, psClient *pubsub.Client) error {
-	return p.pubsubTopic(ctx, topicID, psClient)
-}
-func (p *pubsubClientImpl) PubsubSubscription(ctx context.Context, topicID string, subscriptionID string, psClient *pubsub.Client) error {
-	return p.pubsubSubscription(ctx, topicID, subscriptionID, psClient)
-}
-func (p *pubsubClientImpl) PublishMessage(ctx context.Context, topicID string, csArray []string, psClient *pubsub.Client) error {
-	return p.publishMessage(ctx, topicID, csArray, psClient)
-}
-func (k *kinesisClientImpl) PutRecord(ctx context.Context, streamName string, rt interface{}, csArray []string, ksClient *kinesis.Client) error {
-	return k.putRecord(ctx, streamName, rt, csArray, ksClient)
-}
-
-//=======================================================
-// Main function
-//=======================================================
-func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
-	db, err := mongoConnection.FetchDatabase(ctx, client)
+func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
+	bqClient, err := client.NewBigqueryClient(ctx, projectID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	coll, err := mongoConnection.FetchCollection(ctx, db)
-	if err != nil {
-		return err
-	}
+	return bqClient, nil
+}
 
+func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+	psClient, err := client.NewPubsubClient(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	return psClient, nil
+}
+
+func (_ *ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
+	ksClient, err := client.NewKinesisClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ksClient, nil
+}
+
+func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
+	cs, err := mongoConnection.Watch(ctx, c.MongoClient, ops)
+	if err != nil {
+		return nil, err
+	}
+	return cs, nil
+}
+
+// mainに色々と処理を持たせるのが嫌なので、必要な構造体は後入れ
+func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExporterImpl) {
+	c.CsExporter = exporter
+}
+
+func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
+	if err := c.CsExporter.exportChangeStreams(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to load location time.", err)
@@ -208,7 +147,7 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 
 	nowTime := time.Now().In(jst)
 
-	pv, err := config.FetchPersistentVolumeDir()
+	pv, err := c.Watcher.fetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
@@ -220,9 +159,9 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
 	if len(rtByte) == 0 && err == nil {
-		fmt.Println("Failed to get resume-token. File is already existed, but resume-token is not saved in the file.")
+		fmt.Println("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
 	} else if len(rtByte) == 0 && err != nil {
-		fmt.Println("File saved resume-token in is not exists. Get from the current change streams.")
+		fmt.Println("File saved resume token in is not exists. Get from the current change streams.")
 	} else {
 		rtStr := string(rtByte)
 		var rt interface{} = map[string]string{"_data": strings.TrimRight(rtStr, "\n")}
@@ -230,92 +169,189 @@ func WatchChangeStreams(ctx context.Context, client *mongo.Client) error {
 		ops.SetResumeAfter(rt)
 	}
 
-	cs, err := coll.Watch(ctx, mongo.Pipeline{}, ops)
+	cs, err := c.Watcher.watch(ctx, ops)
 	if err != nil {
-		return errors.InternalServerErrorMongoDbOperate.Wrap("Failed to watch mongodb.", err)
+		return err
 	}
-	if err := exportChangeStreams(ctx, cs); err != nil {
+
+	exportDestinations, err := c.Watcher.fetchExportDestination()
+	if err != nil {
+		return err
+	}
+	exportDestinationList := strings.Split(exportDestinations, ",")
+
+	projectID, err := c.Watcher.fetchGcpProject()
+	if err != nil {
+		return err
+	}
+
+	var (
+		pubsubImpl        interfaceForPubsub.PubsubImpl
+		kinesisStreamImpl interfaceForKinesisStream.KinesisStreamImpl
+		bigqueryImpl      interfaceForBigquery.BigqueryImpl
+	)
+
+	for i := 0; i < len(exportDestinationList); i++ {
+		exportDestination := exportDestinationList[i]
+		switch agent(exportDestination) {
+		case BigQuery:
+			bqClient, err := c.Watcher.newBigqueryClient(ctx, projectID)
+			if err != nil {
+				return err
+			}
+			bigqueryClientImpl := &interfaceForBigquery.BigqueryClientImpl{bqClient}
+			bigqueryImpl = interfaceForBigquery.BigqueryImpl{bigqueryClientImpl}
+		case CloudPubSub:
+			psClient, err := c.Watcher.newPubsubClient(ctx, projectID)
+			if err != nil {
+				return err
+			}
+			pubsubClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient}
+			pubsubImpl = interfaceForPubsub.PubsubImpl{pubsubClientImpl}
+		case KinesisStream:
+			ksClient, err := c.Watcher.newKinesisClient(ctx)
+			if err != nil {
+				return err
+			}
+			kinesisStreamClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
+			kinesisStreamImpl = interfaceForKinesisStream.KinesisStreamImpl{kinesisStreamClientImpl}
+		default:
+			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
+		}
+	}
+
+	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{&interfaceForResumeToken.ResumeTokenClientImpl{}}
+
+	exporterClient := &changeStreamsExporterClientImpl{cs, bigqueryImpl, pubsubImpl, kinesisStreamImpl, resumeTokenImpl}
+	exporter := ChangeStreamsExporterImpl{generalConfig{exportDestinations}, exporterClient}
+
+	c.Watcher.setCsExporter(exporter)
+
+	if err := c.Watcher.exportChangeStreams(ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
-	defer cs.Close(ctx)
+type (
+	changeStremsExporter interface {
+		next(ctx context.Context) bool
+		decode() (primitive.M, error)
+		close(ctx context.Context) error
+		exportToBigquery(ctx context.Context, cs primitive.M) error
+		exportToPubsub(ctx context.Context, cs primitive.M) error
+		exportToKinesisStream(ctx context.Context, cs primitive.M) error
+		saveResumeToken(rt string) error
+	}
 
-	exportDestinations, err := config.FetchExportDestination()
+	ChangeStreamsExporterImpl struct {
+		generalConfig generalConfig
+		exporter      changeStremsExporter
+	}
 
-	if err != nil {
+	changeStreamsExporterClientImpl struct {
+		cs            *mongo.ChangeStream
+		bq            interfaceForBigquery.BigqueryImpl
+		pubsub        interfaceForPubsub.PubsubImpl
+		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
+		resumeToken   interfaceForResumeToken.ResumeTokenImpl
+	}
+
+	mockChangeStreamsExporterClientImpl struct {
+		cs                     primitive.M
+		bq                     interfaceForBigquery.BigqueryImpl
+		pubsub                 interfaceForPubsub.PubsubImpl
+		kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
+		resumeToken            interfaceForResumeToken.ResumeTokenImpl
+		bqPassCheck            string
+		pubsubPassCheck        string
+		kinesisStreamPassCheck string
+		csCursorFlag           bool
+	}
+)
+
+func (c *changeStreamsExporterClientImpl) next(ctx context.Context) bool {
+	return c.cs.Next(ctx)
+}
+
+func (c *changeStreamsExporterClientImpl) decode() (primitive.M, error) {
+	var csMap primitive.M
+
+	if err := c.cs.Decode(&csMap); err != nil {
+		return nil, errors.InternalServerError.Wrap("Failed to decode change stream.", err)
+	}
+	return csMap, nil
+}
+
+func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error {
+	return c.cs.Close(ctx)
+}
+
+func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error {
+	if err := c.bq.ExportToBigquery(ctx, cs); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error {
+	if err := c.pubsub.ExportToPubsub(ctx, cs); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
+	if err := c.kinesisStream.ExportToKinesisStream(ctx, cs); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
+	if err := c.resumeToken.SaveResumeToken(rt); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
+	defer c.exporter.close(ctx)
+
+	exportDestinations := c.generalConfig.exportDestination
+
 	exportDestinationList := strings.Split(exportDestinations, ",")
 
-	exporter := createExporter()
-
-	gcpConfig := config.FetchGcpProject()
-	projectID := gcpConfig.ProjectID
-	var bqClient *bigquery.Client
-	var psClient *pubsub.Client
-	var ksClient *kinesis.Client
-
-	for i := 0; i < len(exportDestinationList); i++ {
-		exportDestination := exportDestinationList[i]
-		var err error
-		switch Agent(exportDestination) {
-		case BigQuery:
-			bqClient, err = client.NewBigqueryClient(ctx, projectID)
-			if err != nil {
-				return err
-			}
-		case CloudPubSub:
-			psClient, err = client.NewPubsubClient(ctx, projectID)
-			if err != nil {
-				return err
-			}
-		case KinesisStream:
-			ksClient, err = client.NewKinesisClient(ctx)
-			if err != nil {
-				return err
-			}
-		default:
-			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
-
-		}
-	}
-
-	for cs.Next(ctx) {
-		var csMap bson.M
-		if err := cs.Decode(&csMap); err != nil {
-			return errors.InternalServerError.Wrap("Failed to decode change stream.", err)
+	for c.exporter.next(ctx) {
+		csMap, err := c.exporter.decode()
+		if err != nil {
+			return err
 		}
 
-		csDb := csMap["ns"].(bson.M)["db"]
-		csColl := csMap["ns"].(bson.M)["coll"]
-		csOpType := csMap["operationType"]
-		csClusterTimeInt := csMap["clusterTime"].(primitive.Timestamp)
+		csDb := csMap["ns"].(primitive.M)["db"].(string)
+		csColl := csMap["ns"].(primitive.M)["coll"].(string)
+		csOpType := csMap["operationType"].(string)
+		csClusterTimeInt := time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0)
 
-		fmt.Println(fmt.Sprintf("[INFO] msg: Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, time.Unix(int64(csClusterTimeInt.T), 0)))
+		fmt.Println(fmt.Sprintf("[INFO] msg: Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt))
 
 		var eg errgroup.Group
 		for i := 0; i < len(exportDestinationList); i++ {
 			exportDestination := exportDestinationList[i]
 			eg.Go(func() error {
-				switch Agent(exportDestination) {
+				switch agent(exportDestination) {
 				case BigQuery:
-					err := exporter.BQ(ctx, csMap, bqClient)
-					if err != nil {
-						return nil
+					if err := c.exporter.exportToBigquery(ctx, csMap); err != nil {
+						return err
 					}
 				case CloudPubSub:
-					err := exporter.PubSub(ctx, csMap, psClient)
-					if err != nil {
-						return nil
+					if err := c.exporter.exportToPubsub(ctx, csMap); err != nil {
+						return err
 					}
 				case KinesisStream:
-					err := exporter.KinesisStream(ctx, csMap, ksClient)
-					if err != nil {
-						return nil
+					if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
+						return err
 					}
 				default:
 					return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
@@ -328,29 +364,11 @@ func exportChangeStreams(ctx context.Context, cs *mongo.ChangeStream) error {
 			return err
 		}
 
-		if err := resume_token.NewGeneralConfig(pvFunction).SaveResumeToken(csMap["_id"].(primitive.M)); err != nil {
+		csRt := csMap["_id"].(primitive.M)["_data"].(string)
+
+		if err := c.exporter.saveResumeToken(csRt); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-
-// 下は後々、各exporterの呼び出しと形を合わせます
-// resume token保存処理のパーツ
-//=======================================================
-type generalConfig struct {
-	config.GeneralConfigIf
-	persistentVolume func() (string, error)
-}
-
-func (m *generalConfig) FetchPersistentVolumeDir() (string, error) {
-	return m.persistentVolume()
-}
-
-var pvFunction = &generalConfig{
-	persistentVolume: func() (string, error) {
-		return config.FetchPersistentVolumeDir()
-	},
-}
-
-//=======================================================

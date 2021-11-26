@@ -7,22 +7,6 @@ import (
 	"os"
 )
 
-type GcpProject struct {
-	ProjectID string
-}
-
-type AwsProfile struct {
-	ProfileName string
-}
-
-type Region struct {
-	Region string
-}
-
-type GeneralConfigIf interface {
-	FetchPersistentVolumeDir() (string, error)
-}
-
 func init() {
 	m := godotenv.Load()
 	if m != nil {
@@ -46,8 +30,10 @@ func FetchExportDestination() (string, error) {
 	return exportDestination, nil
 }
 
-func FetchGcpProject() GcpProject {
-	var projectConfig GcpProject
-	projectConfig.ProjectID = os.Getenv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
-	return projectConfig
+func FetchGcpProject() (string, error) {
+	projectID, projectIDExistence := os.LookupEnv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
+	if projectIDExistence == false {
+		return "", errors.InternalServerErrorEnvGet.New("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS is not existed in environment variables")
+	}
+	return projectID, nil
 }

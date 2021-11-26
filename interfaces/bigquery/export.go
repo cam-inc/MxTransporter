@@ -20,37 +20,57 @@ type ChangeStreamTableSchema struct {
 	UpdateDescription string
 }
 
-type BigqueryClient interface {
-	PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error
-}
+type (
+	bigqueryClient interface {
+		putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
+	}
 
-type BigqueryClientImpl struct {
-	bigqueryClient BigqueryClient
-}
+	BigqueryImpl struct {
+		Bq bigqueryClient
+	}
 
-func PutRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema, bqClient *bigquery.Client) error {
-	if err := bqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
+	BigqueryClientImpl struct {
+		BqClient *bigquery.Client
+	}
+
+	mockBigqueryClientImpl struct {
+		bqClient *bigquery.Client
+		csItems  []ChangeStreamTableSchema
+	}
+)
+
+func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
+	if err := b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
 		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 	return nil
 }
 
-func NewBigqueryClient(bigqueryClient BigqueryClient) *BigqueryClientImpl {
-	return &BigqueryClientImpl{
-		bigqueryClient: bigqueryClient,
-	}
-}
-
-func (b *BigqueryClientImpl) ExportToBigquery(ctx context.Context, cs primitive.M, bqClient *bigquery.Client) error {
+func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error {
 	bigqueryConfig := bigqueryConfig.BigqueryConfig()
 
-	id, _ := json.Marshal(cs["_id"])
+	id, err := json.Marshal(cs["_id"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
 	operationType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
-	fullDocument, _ := json.Marshal(cs["fullDocument"])
-	ns, _ := json.Marshal(cs["ns"])
-	documentKey, _ := json.Marshal(cs["documentKey"])
-	updateDescription, _ := json.Marshal(cs["updateDescription"])
+	fullDocument, err := json.Marshal(cs["fullDocument"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	ns, err := json.Marshal(cs["ns"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	documentKey, err := json.Marshal(cs["documentKey"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
+	updateDescription, err := json.Marshal(cs["updateDescription"])
+	if err != nil {
+		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+	}
 
 	csItems := []ChangeStreamTableSchema{
 		{
@@ -64,7 +84,7 @@ func (b *BigqueryClientImpl) ExportToBigquery(ctx context.Context, cs primitive.
 		},
 	}
 
-	if err := b.bigqueryClient.PutRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems, bqClient); err != nil {
+	if err := b.Bq.putRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems); err != nil {
 		return err
 	}
 
