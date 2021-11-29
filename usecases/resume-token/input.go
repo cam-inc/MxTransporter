@@ -15,7 +15,7 @@ type (
 
 	ResumeTokenImpl struct {
 		ResumeToken resumeTokenClient
-		Log logger.Logger
+		Log         logger.Logger
 	}
 
 	ResumeTokenClientImpl struct{}

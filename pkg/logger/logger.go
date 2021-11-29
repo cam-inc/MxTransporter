@@ -13,15 +13,15 @@ var l Logger
 
 func New() Logger {
 	config := zap.Config{
-		Level: zap.NewAtomicLevel(),
+		Level:       zap.NewAtomicLevel(),
 		Development: false,
-		Encoding: "json",
+		Encoding:    "json",
 		EncoderConfig: zapcore.EncoderConfig{
-			TimeKey:        "time",
-			LevelKey:       "level",
-			MessageKey:     "msg",
-			EncodeLevel:    zapcore.CapitalLevelEncoder,
-			EncodeTime:     zapcore.ISO8601TimeEncoder,
+			TimeKey:     "time",
+			LevelKey:    "level",
+			MessageKey:  "msg",
+			EncodeLevel: zapcore.CapitalLevelEncoder,
+			EncodeTime:  zapcore.ISO8601TimeEncoder,
 		},
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
@@ -29,5 +29,5 @@ func New() Logger {
 	logger, _ := config.Build()
 
 	l.ZLogger = logger.Sugar()
-	return  l
+	return l
 }

@@ -44,7 +44,7 @@ func saveResumeToken(pvDir string, rt string) error {
 	return nil
 }
 
-func deleteFileSavedResumeToken() error{
+func deleteFileSavedResumeToken() error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to load location time.", err)

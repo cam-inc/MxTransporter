@@ -25,7 +25,7 @@ type (
 
 	PubsubClientImpl struct {
 		PubsubClient *pubsub.Client
-		Log logger.Logger
+		Log          logger.Logger
 	}
 
 	mockPubsubClientImpl struct {

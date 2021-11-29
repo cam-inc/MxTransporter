@@ -51,7 +51,7 @@ type (
 
 	ChangeStremsWatcherImpl struct {
 		Watcher changeStremsWatcher
-		Log logger.Logger
+		Log     logger.Logger
 	}
 
 	ChangeStremsWatcherClientImpl struct {
@@ -250,7 +250,7 @@ type (
 	ChangeStreamsExporterImpl struct {
 		generalConfig generalConfig
 		exporter      changeStremsExporter
-		log logger.Logger
+		log           logger.Logger
 	}
 
 	changeStreamsExporterClientImpl struct {
