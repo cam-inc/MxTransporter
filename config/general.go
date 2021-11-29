@@ -1,16 +1,18 @@
 package config
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
 	"mxtransporter/pkg/errors"
+	"mxtransporter/pkg/logger"
 	"os"
 )
 
 func init() {
+	l := logger.New()
+
 	m := godotenv.Load()
 	if m != nil {
-		fmt.Println("[Warning] If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
+		l.ZLogger.Warn("If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
 	}
 }
 

@@ -4,10 +4,10 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	pubsubConfig "mxtransporter/config/pubsub"
 	"mxtransporter/pkg/errors"
+	"mxtransporter/pkg/logger"
 	"strings"
 	"time"
 )
@@ -25,6 +25,7 @@ type (
 
 	PubsubClientImpl struct {
 		PubsubClient *pubsub.Client
+		Log logger.Logger
 	}
 
 	mockPubsubClientImpl struct {
@@ -42,14 +43,14 @@ func (p *PubsubClientImpl) pubsubTopic(ctx context.Context, topicID string) erro
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
 	}
 	if topicExistence == false {
-		fmt.Println("Topic is not exists. Creating a topic.")
+		p.Log.ZLogger.Info("Topic is not exists. Creating a topic.")
 
 		var err error
 		_, err = p.PubsubClient.CreateTopic(ctx, topicID)
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
-		fmt.Println("Successed to create topic. ")
+		p.Log.ZLogger.Info("Successed to create topic. ")
 	}
 
 	return nil
@@ -63,7 +64,7 @@ func (p *PubsubClientImpl) pubsubSubscription(ctx context.Context, topicID strin
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
 	}
 	if subscriptionExistence == false {
-		fmt.Println("Subscription is not exists. Creating a subscription.")
+		p.Log.ZLogger.Info("Subscription is not exists. Creating a subscription.")
 
 		var err error
 		_, err = p.PubsubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
@@ -74,7 +75,7 @@ func (p *PubsubClientImpl) pubsubSubscription(ctx context.Context, topicID strin
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
 		}
-		fmt.Println("Successed to create subscription. ")
+		p.Log.ZLogger.Info("Successed to create subscription. ")
 	}
 	return nil
 }

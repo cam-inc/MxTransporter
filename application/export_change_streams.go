@@ -17,6 +17,7 @@ import (
 	interfaceForPubsub "mxtransporter/interfaces/pubsub"
 	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/errors"
+	"mxtransporter/pkg/logger"
 	interfaceForResumeToken "mxtransporter/usecases/resume-token"
 	"os"
 	"strings"
@@ -50,6 +51,7 @@ type (
 
 	ChangeStremsWatcherImpl struct {
 		Watcher changeStremsWatcher
+		Log logger.Logger
 	}
 
 	ChangeStremsWatcherClientImpl struct {
@@ -159,9 +161,9 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
 	if len(rtByte) == 0 && err == nil {
-		fmt.Println("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
+		c.Log.ZLogger.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
 	} else if len(rtByte) == 0 && err != nil {
-		fmt.Println("File saved resume token in is not exists. Get from the current change streams.")
+		c.Log.ZLogger.Info("File saved resume token in is not exists. Get from the current change streams.")
 	} else {
 		rtStr := string(rtByte)
 		var rt interface{} = map[string]string{"_data": strings.TrimRight(rtStr, "\n")}
@@ -206,7 +208,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 			if err != nil {
 				return err
 			}
-			pubsubClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient}
+			pubsubClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
 			pubsubImpl = interfaceForPubsub.PubsubImpl{pubsubClientImpl}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
@@ -220,10 +222,10 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		}
 	}
 
-	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{&interfaceForResumeToken.ResumeTokenClientImpl{}}
+	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{&interfaceForResumeToken.ResumeTokenClientImpl{}, c.Log}
 
 	exporterClient := &changeStreamsExporterClientImpl{cs, bigqueryImpl, pubsubImpl, kinesisStreamImpl, resumeTokenImpl}
-	exporter := ChangeStreamsExporterImpl{generalConfig{exportDestinations}, exporterClient}
+	exporter := ChangeStreamsExporterImpl{generalConfig{exportDestinations}, exporterClient, c.Log}
 
 	c.Watcher.setCsExporter(exporter)
 
@@ -248,6 +250,7 @@ type (
 	ChangeStreamsExporterImpl struct {
 		generalConfig generalConfig
 		exporter      changeStremsExporter
+		log logger.Logger
 	}
 
 	changeStreamsExporterClientImpl struct {
@@ -334,7 +337,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		csOpType := csMap["operationType"].(string)
 		csClusterTimeInt := time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0)
 
-		fmt.Println(fmt.Sprintf("[INFO] msg: Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt))
+		c.log.ZLogger.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
 
 		var eg errgroup.Group
 		for i := 0; i < len(exportDestinationList); i++ {

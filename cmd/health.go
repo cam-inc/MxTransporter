@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
 	mongoConnection "mxtransporter/interfaces/mongo"
 	"mxtransporter/pkg/client"
+	"mxtransporter/pkg/logger"
 	"os"
 )
 
@@ -14,9 +14,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	l := logger.New()
+
 	mongoClient, err := client.NewMongoClient(ctx)
 	if err != nil {
-		fmt.Println(err)
+		l.ZLogger.Error(err)
 		cancel()
 	}
 	defer mongoClient.Disconnect(ctx)
@@ -30,7 +32,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fmt.Println("Status OK.")
+	l.ZLogger.Info("Status OK.")
 	os.Exit(0)
 }
 

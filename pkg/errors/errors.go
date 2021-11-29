@@ -5,31 +5,31 @@ import (
 	"runtime"
 )
 
-type ErrorType string
+type errType string
 
 const (
-	InternalServerError            = ErrorType("500: internal server error")
-	InternalServerErrorEnvGet      = ErrorType("500: environment variables get error")
-	InternalServerErrorClientGet   = ErrorType("500: client get error")
-	InternalServerErrorJsonMarshal = ErrorType("500: json marshal error")
+	InternalServerError            = errType("500: internal server error")
+	InternalServerErrorEnvGet      = errType("500: environment variables get error")
+	InternalServerErrorClientGet   = errType("500: client get error")
+	InternalServerErrorJsonMarshal = errType("500: json marshal error")
 	// mongodb
-	InternalServerErrorMongoDbConnect = ErrorType("500: mongodb connect error")
-	InternalServerErrorMongoDbOperate = ErrorType("500: mongodb operate error")
+	InternalServerErrorMongoDbConnect = errType("500: mongodb connect error")
+	InternalServerErrorMongoDbOperate = errType("500: mongodb operate error")
 	// bigquery
-	InternalServerErrorBigqueryInsert = ErrorType("500: bigquery insert error")
+	InternalServerErrorBigqueryInsert = errType("500: bigquery insert error")
 	// pubsub
-	InternalServerErrorPubSubFind   = ErrorType("500: pubsub find error")
-	InternalServerErrorPubSubCreate = ErrorType("500: pubsub create error")
+	InternalServerErrorPubSubFind   = errType("500: pubsub find error")
+	InternalServerErrorPubSubCreate = errType("500: pubsub create error")
 	// kinesis stream
-	InternalServerErrorKinesisStreamPut = ErrorType("500: kinesis stream put error")
+	InternalServerErrorKinesisStreamPut = errType("500: kinesis stream put error")
 )
 
-func (et ErrorType) New(msg string) error {
+func (e errType) New(msg string) error {
 	_, file, line, _ := runtime.Caller(1)
-	return fmt.Errorf("[ERROR] file: %s, line: %d, errorType: %s, originalErrorMessage: %s", file, line, et, msg)
+	return fmt.Errorf("file: %s, line: %d, errType: %s, orgErrMsg: %s", file, line, e, msg)
 }
 
-func (et ErrorType) Wrap(msg string, err error) error {
+func (e errType) Wrap(msg string, err error) error {
 	_, file, line, _ := runtime.Caller(1)
-	return fmt.Errorf("[ERROR] file: %s, line: %d, errorType: %s, originalErrorMessage: %s, errorMessage: %s", file, line, et, msg, err)
+	return fmt.Errorf("file: %s, line: %d, errType: %s, orgErrMsg: %s, errMsg: %s", file, line, e, msg, err)
 }

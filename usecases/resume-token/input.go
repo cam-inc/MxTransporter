@@ -1,9 +1,9 @@
 package resume_token
 
 import (
-	"fmt"
 	"mxtransporter/config"
 	"mxtransporter/pkg/errors"
+	"mxtransporter/pkg/logger"
 	"os"
 	"time"
 )
@@ -15,6 +15,7 @@ type (
 
 	ResumeTokenImpl struct {
 		ResumeToken resumeTokenClient
+		Log logger.Logger
 	}
 
 	ResumeTokenClientImpl struct{}
@@ -61,7 +62,7 @@ func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
 		return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
 	}
 
-	fmt.Println("Success to save a resume token in PVC")
+	r.Log.ZLogger.Info("Success to save a resume token in PVC")
 
 	return nil
 }
