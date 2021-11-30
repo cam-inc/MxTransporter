@@ -19,8 +19,6 @@ type (
 	}
 
 	ResumeTokenClientImpl struct{}
-
-	mockResumeTokenClientImpl struct{}
 )
 
 func (_ *ResumeTokenClientImpl) fetchPersistentVolumeDir() (string, error) {

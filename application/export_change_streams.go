@@ -58,18 +58,6 @@ type (
 		MongoClient *mongo.Client
 		CsExporter  ChangeStreamsExporterImpl
 	}
-
-	mockChangeStremsWatcherClientImpl struct {
-		mongoClient            *mongo.Client
-		csExporter             ChangeStreamsExporterImpl
-		persistentVolumeDir    string
-		exportDestination      string
-		resumeToken            string
-		resumeAfterExistence   bool
-		bqPassCheck            string
-		pubsubPassCheck        string
-		kinesisStreamPassCheck string
-	}
 )
 
 // wrapper
@@ -259,18 +247,6 @@ type (
 		pubsub        interfaceForPubsub.PubsubImpl
 		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
 		resumeToken   interfaceForResumeToken.ResumeTokenImpl
-	}
-
-	mockChangeStreamsExporterClientImpl struct {
-		cs                     primitive.M
-		bq                     interfaceForBigquery.BigqueryImpl
-		pubsub                 interfaceForPubsub.PubsubImpl
-		kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
-		resumeToken            interfaceForResumeToken.ResumeTokenImpl
-		bqPassCheck            string
-		pubsubPassCheck        string
-		kinesisStreamPassCheck string
-		csCursorFlag           bool
 	}
 )
 

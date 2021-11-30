@@ -32,11 +32,6 @@ type (
 	BigqueryClientImpl struct {
 		BqClient *bigquery.Client
 	}
-
-	mockBigqueryClientImpl struct {
-		bqClient *bigquery.Client
-		csItems  []ChangeStreamTableSchema
-	}
 )
 
 func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {

@@ -13,6 +13,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type mockChangeStremsWatcherClientImpl struct {
+	mongoClient            *mongo.Client
+	csExporter             ChangeStreamsExporterImpl
+	persistentVolumeDir    string
+	exportDestination      string
+	resumeToken            string
+	resumeAfterExistence   bool
+	bqPassCheck            string
+	pubsubPassCheck        string
+	kinesisStreamPassCheck string
+}
+
 // for Test_watchChangeStreams
 func (m *mockChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
 	return m.persistentVolumeDir, nil
@@ -58,6 +70,18 @@ func (c *mockChangeStremsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporte
 
 func (c *mockChangeStremsWatcherClientImpl) exportChangeStreams(_ context.Context) error {
 	return nil
+}
+
+type mockChangeStreamsExporterClientImpl struct {
+	cs                     primitive.M
+	bq                     interfaceForBigquery.BigqueryImpl
+	pubsub                 interfaceForPubsub.PubsubImpl
+	kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
+	resumeToken            interfaceForResumeToken.ResumeTokenImpl
+	bqPassCheck            string
+	pubsubPassCheck        string
+	kinesisStreamPassCheck string
+	csCursorFlag           bool
 }
 
 // for Test_exportChangeStreams()

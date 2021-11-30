@@ -9,6 +9,11 @@ import (
 	"reflect"
 )
 
+type mockPubsubClientImpl struct {
+	pubsubClient *pubsub.Client
+	cs           []string
+}
+
 func (_ *mockPubsubClientImpl) pubsubTopic(_ context.Context, _ string) error {
 	return nil
 }

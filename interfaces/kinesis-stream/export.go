@@ -24,12 +24,6 @@ type (
 	KinesisStreamClientImpl struct {
 		KinesisStreamClient *kinesis.Client
 	}
-
-	mockKinesisStreamClientImpl struct {
-		kinesisStreamClient *kinesis.Client
-		rt                  string
-		cs                  []string
-	}
 )
 
 func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error {

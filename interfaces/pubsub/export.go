@@ -27,11 +27,6 @@ type (
 		PubsubClient *pubsub.Client
 		Log          logger.Logger
 	}
-
-	mockPubsubClientImpl struct {
-		pubsubClient *pubsub.Client
-		cs           []string
-	}
 )
 
 func (p *PubsubClientImpl) pubsubTopic(ctx context.Context, topicID string) error {
