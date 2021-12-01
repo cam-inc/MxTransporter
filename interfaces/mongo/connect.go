@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	mongoConfig = mongodb.MongoConfig()
+	mongoCfg = mongodb.MongoConfig()
 )
 
 func Health(ctx context.Context, client *mongo.Client) error {
@@ -28,10 +28,10 @@ func fetchDatabase(ctx context.Context, client *mongo.Client) (*mongo.Database, 
 		return nil, errors.InternalServerErrorMongoDbOperate.Wrap("Failed to list databases.", err)
 	}
 
-	if !common.Contains(dbList, mongoConfig.MongoDbDatabase) {
+	if !common.Contains(dbList, mongoCfg.MongoDbDatabase) {
 		return nil, errors.InternalServerErrorMongoDbOperate.New("The specified mongodb database does not exist.")
 	}
-	db := client.Database(mongoConfig.MongoDbDatabase)
+	db := client.Database(mongoCfg.MongoDbDatabase)
 	return db, nil
 }
 
@@ -41,10 +41,10 @@ func fetchCollection(ctx context.Context, db *mongo.Database) (*mongo.Collection
 		return nil, errors.InternalServerErrorMongoDbOperate.Wrap("Failed to list collections.", err)
 	}
 
-	if !common.Contains(collList, mongoConfig.MongoDbCollection) {
+	if !common.Contains(collList, mongoCfg.MongoDbCollection) {
 		return nil, errors.InternalServerErrorMongoDbOperate.New("The specified mongodb collection does not exist.")
 	}
-	cl := db.Collection(mongoConfig.MongoDbCollection)
+	cl := db.Collection(mongoCfg.MongoDbCollection)
 	return cl, nil
 }
 

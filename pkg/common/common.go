@@ -1,5 +1,10 @@
 package common
 
+import (
+	"mxtransporter/config"
+	"time"
+)
+
 // Check if the array has the specified string
 func Contains(s []string, e string) bool {
 	for _, a := range s {
@@ -8,4 +13,18 @@ func Contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func FetchNowTime() (time.Time, error) {
+	timeZone, err := config.FetchTimeZone()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	tl, err := time.LoadLocation(timeZone)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return time.Now().In(tl), nil
 }

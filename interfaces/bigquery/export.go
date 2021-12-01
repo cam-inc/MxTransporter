@@ -42,7 +42,7 @@ func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, tabl
 }
 
 func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error {
-	bigqueryConfig := bigqueryConfig.BigqueryConfig()
+	bqCfg := bigqueryConfig.BigqueryConfig()
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
@@ -79,7 +79,7 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 		},
 	}
 
-	if err := b.Bq.putRecord(ctx, bigqueryConfig.DataSet, bigqueryConfig.Table, csItems); err != nil {
+	if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil {
 		return err
 	}
 

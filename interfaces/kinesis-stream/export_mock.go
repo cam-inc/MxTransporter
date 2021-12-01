@@ -6,6 +6,7 @@ package kinesis_stream
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"reflect"
 )
 

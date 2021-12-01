@@ -1,9 +1,10 @@
 package resume_token
 
 import (
+	"go.uber.org/zap"
 	"mxtransporter/config"
+	"mxtransporter/pkg/common"
 	"mxtransporter/pkg/errors"
-	"mxtransporter/pkg/logger"
 	"os"
 	"time"
 )
@@ -11,11 +12,12 @@ import (
 type (
 	resumeTokenClient interface {
 		fetchPersistentVolumeDir() (string, error)
+		fetchNowTime() (time.Time, error)
 	}
 
 	ResumeTokenImpl struct {
 		ResumeToken resumeTokenClient
-		Log         logger.Logger
+		Log         *zap.SugaredLogger
 	}
 
 	ResumeTokenClientImpl struct{}
@@ -29,18 +31,25 @@ func (_ *ResumeTokenClientImpl) fetchPersistentVolumeDir() (string, error) {
 	return pv, nil
 }
 
-func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
+func (_ *ResumeTokenClientImpl) fetchNowTime() (time.Time, error) {
+	nowTime, err := common.FetchNowTime()
 	if err != nil {
-		return errors.InternalServerError.Wrap("Failed to load location time.", err)
+		return time.Time{}, nil
 	}
+	return nowTime, nil
+}
 
+func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
 	pv, err := r.ResumeToken.fetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
 
-	nowTime := time.Now().In(jst)
+	nowTime, err := r.ResumeToken.fetchNowTime()
+	if err != nil {
+		return err
+	}
+
 	filePath := pv + nowTime.Format("2006/01/02/")
 	file := filePath + nowTime.Format("2006-01-02.dat")
 
@@ -60,7 +69,7 @@ func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
 		return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
 	}
 
-	r.Log.ZLogger.Info("Success to save a resume token in PVC")
+	r.Log.Info("Success to save a resume token in PVC")
 
 	return nil
 }

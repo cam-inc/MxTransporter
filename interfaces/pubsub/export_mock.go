@@ -4,6 +4,7 @@
 package pubsub
 
 import (
+	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
 	"reflect"

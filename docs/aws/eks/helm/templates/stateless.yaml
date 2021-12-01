@@ -48,6 +48,11 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.secrets.name }}
                   key: EXPORT_DESTINATION
+            - name: TIME_ZONE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: TIME_ZONE
             - name: KINESIS_STREAM_NAME
               valueFrom:
                 secretKeyRef:

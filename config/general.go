@@ -12,7 +12,7 @@ func init() {
 
 	m := godotenv.Load()
 	if m != nil {
-		l.ZLogger.Warn("If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
+		l.Warn("If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
 	}
 }
 
@@ -38,4 +38,12 @@ func FetchGcpProject() (string, error) {
 		return "", errors.InternalServerErrorEnvGet.New("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS is not existed in environment variables")
 	}
 	return projectID, nil
+}
+
+func FetchTimeZone() (string, error) {
+	timeZone, timeZoneExistence := os.LookupEnv("TIME_ZONE")
+	if timeZoneExistence == false {
+		return "", errors.InternalServerErrorEnvGet.New("TIME_ZONE is not existed in environment variables")
+	}
+	return timeZone, nil
 }

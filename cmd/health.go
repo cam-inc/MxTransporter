@@ -18,7 +18,7 @@ func main() {
 
 	mongoClient, err := client.NewMongoClient(ctx)
 	if err != nil {
-		l.ZLogger.Error(err)
+		l.Error(err)
 		cancel()
 	}
 	defer mongoClient.Disconnect(ctx)
@@ -32,7 +32,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	l.ZLogger.Info("Status OK.")
+	l.Info("Status OK.")
 	os.Exit(0)
 }
 

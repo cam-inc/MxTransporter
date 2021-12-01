@@ -57,6 +57,10 @@ PERSISTENT_VOLUME_DIR=
 
 ## Specify the location you want to export. (ex. EXPORT_DESTINATION=bigquery )
 EXPORT_DESTINATION=
+
+## Specify the time zone you run this middleware by referring to the following. (ex. TIME_ZONE=Asia/Tokyo)
+## https://cs.opensource.google/go/go/+/master:src/time/zoneinfo_abbrs_windows.go;drc=72ab424bc899735ec3c1e2bd3301897fc11872ba;l=15
+TIME_ZONE=
 ```
 
 - Allow access from the IP of the local machine on the mongoDB.

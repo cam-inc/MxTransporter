@@ -30,8 +30,8 @@ func NewPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, err
 }
 
 func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
-	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
-	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(kinesisStreamConfig.KinesisStreamRegion))
+	ksCfg := kinesisConfig.KinesisStreamConfig()
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(ksCfg.KinesisStreamRegion))
 	if err != nil {
 		return nil, errors.InternalServerErrorClientGet.Wrap("aws client connection refused", err)
 	}
@@ -42,8 +42,8 @@ func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 }
 
 func NewMongoClient(ctx context.Context) (*mongo.Client, error) {
-	mongoDbConfig := mongoConfig.MongoConfig()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoDbConfig.MongoDbConnectionUrl))
+	mongoCfg := mongoConfig.MongoConfig()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoCfg.MongoDbConnectionUrl))
 	if err != nil {
 		return nil, errors.InternalServerErrorMongoDbConnect.Wrap("mongodb connection refused.", err)
 	}

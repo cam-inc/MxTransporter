@@ -11,6 +11,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	interfaceForBigquery "mxtransporter/interfaces/bigquery"
+	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
+	interfaceForPubsub "mxtransporter/interfaces/pubsub"
+	interfaceForResumeToken "mxtransporter/usecases/resume-token"
+	"time"
 )
 
 type mockChangeStremsWatcherClientImpl struct {
@@ -26,6 +31,12 @@ type mockChangeStremsWatcherClientImpl struct {
 }
 
 // for Test_watchChangeStreams
+func (_ *mockChangeStremsWatcherClientImpl) fetchNowTime() (time.Time, error) {
+	// default time zone
+	nowTime := time.Now()
+	return nowTime, nil
+}
+
 func (m *mockChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
 	return m.persistentVolumeDir, nil
 }

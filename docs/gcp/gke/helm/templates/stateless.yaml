@@ -63,6 +63,11 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.secrets.name }}
                   key: EXPORT_DESTINATION
+            - name: TIME_ZONE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.secrets.name }}
+                  key: TIME_ZONE
           resources: {{ toYaml $.Values.resources | indent 12 }}
           ports:
             - name: http

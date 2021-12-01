@@ -16,12 +16,8 @@ import (
 func Test_SaveResumeToken(t *testing.T) {
 	l := logger.New()
 
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		t.Fatal("Failed to load location time.")
-	}
-
-	nowTime := time.Now().In(jst)
+	// default time zone
+	nowTime := time.Now()
 	file := nowTime.Format("2006/01/02/2006-01-02.dat")
 
 	rt := "00000"
@@ -46,14 +42,9 @@ func Test_SaveResumeToken(t *testing.T) {
 func TestMain(m *testing.M) {
 	status := m.Run()
 
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		fmt.Println(errors.InternalServerError.Wrap("Failed to load location time.", err))
-	}
+	nowTime := time.Now()
 
-	nowTime := time.Now().In(jst)
-
-	err = os.RemoveAll(nowTime.Format("2006"))
+	err := os.RemoveAll(nowTime.Format("2006"))
 	if err != nil {
 		fmt.Println(errors.InternalServerError.Wrap("The unnecessary file could not be deleted.", err))
 	}

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"mxtransporter/config"
 	interfaceForBigquery "mxtransporter/interfaces/bigquery"
@@ -16,8 +17,8 @@ import (
 	mongoConnection "mxtransporter/interfaces/mongo"
 	interfaceForPubsub "mxtransporter/interfaces/pubsub"
 	"mxtransporter/pkg/client"
+	"mxtransporter/pkg/common"
 	"mxtransporter/pkg/errors"
-	"mxtransporter/pkg/logger"
 	interfaceForResumeToken "mxtransporter/usecases/resume-token"
 	"os"
 	"strings"
@@ -38,6 +39,7 @@ type generalConfig struct {
 
 type (
 	changeStremsWatcher interface {
+		fetchNowTime() (time.Time, error)
 		fetchPersistentVolumeDir() (string, error)
 		fetchExportDestination() (string, error)
 		fetchGcpProject() (string, error)
@@ -51,7 +53,7 @@ type (
 
 	ChangeStremsWatcherImpl struct {
 		Watcher changeStremsWatcher
-		Log     logger.Logger
+		Log     *zap.SugaredLogger
 	}
 
 	ChangeStremsWatcherClientImpl struct {
@@ -61,6 +63,14 @@ type (
 )
 
 // wrapper
+func (_ *ChangeStremsWatcherClientImpl) fetchNowTime() (time.Time, error) {
+	nowTime, err := common.FetchNowTime()
+	if err != nil {
+		return time.Time{}, nil
+	}
+	return nowTime, nil
+}
+
 func (_ *ChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
 	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
@@ -130,12 +140,10 @@ func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
+	nowTime, err := c.Watcher.fetchNowTime()
 	if err != nil {
-		return errors.InternalServerError.Wrap("Failed to load location time.", err)
+		return err
 	}
-
-	nowTime := time.Now().In(jst)
 
 	pv, err := c.Watcher.fetchPersistentVolumeDir()
 	if err != nil {
@@ -149,9 +157,9 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
 	if len(rtByte) == 0 && err == nil {
-		c.Log.ZLogger.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
+		c.Log.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
 	} else if len(rtByte) == 0 && err != nil {
-		c.Log.ZLogger.Info("File saved resume token in is not exists. Get from the current change streams.")
+		c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
 	} else {
 		rtStr := string(rtByte)
 		var rt interface{} = map[string]string{"_data": strings.TrimRight(rtStr, "\n")}
@@ -238,7 +246,7 @@ type (
 	ChangeStreamsExporterImpl struct {
 		generalConfig generalConfig
 		exporter      changeStremsExporter
-		log           logger.Logger
+		log           *zap.SugaredLogger
 	}
 
 	changeStreamsExporterClientImpl struct {
@@ -313,7 +321,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		csOpType := csMap["operationType"].(string)
 		csClusterTimeInt := time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0)
 
-		c.log.ZLogger.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
+		c.log.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
 
 		var eg errgroup.Group
 		for i := 0; i < len(exportDestinationList); i++ {

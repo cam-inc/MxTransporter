@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 	pubsubConfig "mxtransporter/config/pubsub"
 	"mxtransporter/pkg/errors"
-	"mxtransporter/pkg/logger"
 	"strings"
 	"time"
 )
@@ -25,7 +25,7 @@ type (
 
 	PubsubClientImpl struct {
 		PubsubClient *pubsub.Client
-		Log          logger.Logger
+		Log          *zap.SugaredLogger
 	}
 )
 
@@ -38,14 +38,14 @@ func (p *PubsubClientImpl) pubsubTopic(ctx context.Context, topicID string) erro
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
 	}
 	if topicExistence == false {
-		p.Log.ZLogger.Info("Topic is not exists. Creating a topic.")
+		p.Log.Info("Topic is not exists. Creating a topic.")
 
 		var err error
 		_, err = p.PubsubClient.CreateTopic(ctx, topicID)
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
-		p.Log.ZLogger.Info("Successed to create topic. ")
+		p.Log.Info("Successed to create topic. ")
 	}
 
 	return nil
@@ -59,7 +59,7 @@ func (p *PubsubClientImpl) pubsubSubscription(ctx context.Context, topicID strin
 		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
 	}
 	if subscriptionExistence == false {
-		p.Log.ZLogger.Info("Subscription is not exists. Creating a subscription.")
+		p.Log.Info("Subscription is not exists. Creating a subscription.")
 
 		var err error
 		_, err = p.PubsubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
@@ -70,7 +70,7 @@ func (p *PubsubClientImpl) pubsubSubscription(ctx context.Context, topicID strin
 		if err != nil {
 			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
 		}
-		p.Log.ZLogger.Info("Successed to create subscription. ")
+		p.Log.Info("Successed to create subscription. ")
 	}
 	return nil
 }
@@ -87,15 +87,15 @@ func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, c
 }
 
 func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
-	pubSubConfig := pubsubConfig.PubSubConfig()
+	psCfg := pubsubConfig.PubSubConfig()
 
-	topicID := pubSubConfig.MongoDbDatabase
+	topicID := psCfg.MongoDbDatabase
 
 	if err := p.Pubsub.pubsubTopic(ctx, topicID); err != nil {
 		return err
 	}
 
-	subscriptionID := pubSubConfig.MongoDbCollection
+	subscriptionID := psCfg.MongoDbCollection
 
 	if err := p.Pubsub.pubsubSubscription(ctx, topicID, subscriptionID); err != nil {
 		return err

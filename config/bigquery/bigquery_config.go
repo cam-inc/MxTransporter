@@ -10,8 +10,8 @@ type Bigquery struct {
 }
 
 func BigqueryConfig() Bigquery {
-	var bigqueryConfig Bigquery
-	bigqueryConfig.DataSet = os.Getenv("BIGQUERY_DATASET")
-	bigqueryConfig.Table = os.Getenv("BIGQUERY_TABLE")
-	return bigqueryConfig
+	var bqCfg Bigquery
+	bqCfg.DataSet = os.Getenv("BIGQUERY_DATASET")
+	bqCfg.Table = os.Getenv("BIGQUERY_TABLE")
+	return bqCfg
 }

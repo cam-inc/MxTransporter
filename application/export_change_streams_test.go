@@ -18,11 +18,8 @@ import (
 )
 
 func saveResumeToken(pvDir string, rt string) error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		return errors.InternalServerError.Wrap("Failed to load location time.", err)
-	}
-	nowTime := time.Now().In(jst)
+	// default time zone
+	nowTime := time.Now()
 
 	filePath := pvDir + nowTime.Format("2006/01/02/")
 	file := filePath + nowTime.Format("2006-01-02.dat")
@@ -45,14 +42,10 @@ func saveResumeToken(pvDir string, rt string) error {
 }
 
 func deleteFileSavedResumeToken() error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
-	if err != nil {
-		return errors.InternalServerError.Wrap("Failed to load location time.", err)
-	}
+	// default time zone
+	nowTime := time.Now()
 
-	nowTime := time.Now().In(jst)
-
-	err = os.RemoveAll(nowTime.Format("2006"))
+	err := os.RemoveAll(nowTime.Format("2006"))
 	if err != nil {
 		return errors.InternalServerError.Wrap("The unnecessary file could not be deleted.", err)
 	}

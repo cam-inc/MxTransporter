@@ -15,7 +15,7 @@ func main() {
 
 	mongoClient, err := client.NewMongoClient(ctx)
 	if err != nil {
-		l.ZLogger.Error(err)
+		l.Error(err)
 		cancel()
 	}
 	defer mongoClient.Disconnect(ctx)
@@ -24,7 +24,7 @@ func main() {
 	watcher := application.ChangeStremsWatcherImpl{watcherClient, l}
 
 	if err := watcher.WatchChangeStreams(ctx); err != nil {
-		l.ZLogger.Error(err)
+		l.Error(err)
 		cancel()
 	}
 }

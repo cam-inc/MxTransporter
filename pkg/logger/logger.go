@@ -5,13 +5,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type Logger struct {
-	ZLogger *zap.SugaredLogger
-}
-
-var l Logger
-
-func New() Logger {
+func New() *zap.SugaredLogger {
 	config := zap.Config{
 		Level:       zap.NewAtomicLevel(),
 		Development: false,
@@ -28,6 +22,5 @@ func New() Logger {
 	}
 	logger, _ := config.Build()
 
-	l.ZLogger = logger.Sugar()
-	return l
+	return logger.Sugar()
 }

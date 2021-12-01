@@ -41,7 +41,7 @@ func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName stri
 }
 
 func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error {
-	kinesisStreamConfig := kinesisConfig.KinesisStreamConfig()
+	ksCfg := kinesisConfig.KinesisStreamConfig()
 
 	rt := cs["_id"].(primitive.M)["_data"]
 
@@ -78,7 +78,7 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 		string(updateDescription),
 	}
 
-	if err := k.KinesisStream.putRecord(ctx, kinesisStreamConfig.StreamName, rt, r); err != nil {
+	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {
 		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
 	}
 
