@@ -7,10 +7,10 @@ import (
 )
 
 type Log struct {
-	Level      string
-	Format     string
+	Level           string
+	Format          string
 	OutputDirectory string
-	OutputFile string
+	OutputFile      string
 }
 
 func New(logCfg Log) *zap.SugaredLogger {
