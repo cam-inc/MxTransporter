@@ -8,12 +8,8 @@ import (
 )
 
 func init() {
-	l := logger.New()
-
-	m := godotenv.Load()
-	if m != nil {
-		l.Warn("If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
-	}
+	// for runing locally
+	godotenv.Load()
 }
 
 func FetchPersistentVolumeDir() (string, error) {
@@ -46,4 +42,13 @@ func FetchTimeZone() (string, error) {
 		return "", errors.InternalServerErrorEnvGet.New("TIME_ZONE is not existed in environment variables")
 	}
 	return timeZone, nil
+}
+
+func LogConfig() logger.Log {
+	var l logger.Log
+	l.Level = os.Getenv("LOG_LEVEL")
+	l.Format = os.Getenv("LOG_FORMAT")
+	l.OutputDirectory = os.Getenv("LOG_OUTPUT_DIRECTORY")
+	l.OutputFile = os.Getenv("LOG_OUTPUT_FILE")
+	return l
 }

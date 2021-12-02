@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
+	"mxtransporter/config"
 	mongoConnection "mxtransporter/interfaces/mongo"
 	"mxtransporter/pkg/client"
 	"mxtransporter/pkg/logger"
@@ -14,7 +15,8 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	l := logger.New()
+	logConfig := config.LogConfig()
+	l := logger.New(logConfig)
 
 	mongoClient, err := client.NewMongoClient(ctx)
 	if err != nil {

@@ -6,6 +6,8 @@ package application
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
+	"mxtransporter/config"
 	interfaceForBigquery "mxtransporter/interfaces/bigquery"
 	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
 	interfaceForPubsub "mxtransporter/interfaces/pubsub"
@@ -55,7 +57,10 @@ func deleteFileSavedResumeToken() error {
 func Test_watchChangeStreams(t *testing.T) {
 	ctx := context.TODO()
 
-	l := logger.New()
+	var l *zap.SugaredLogger
+
+	logConfig := config.LogConfig()
+	l = logger.New(logConfig)
 
 	tests := []struct {
 		name   string
@@ -163,7 +168,10 @@ func Test_watchChangeStreams(t *testing.T) {
 func Test_exportChangeStreams(t *testing.T) {
 	ctx := context.TODO()
 
-	l := logger.New()
+	var l *zap.SugaredLogger
+
+	logConfig := config.LogConfig()
+	l = logger.New(logConfig)
 
 	csMap := primitive.M{
 		"ns": primitive.M{

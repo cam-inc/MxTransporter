@@ -5,6 +5,8 @@ package resume_token
 
 import (
 	"fmt"
+	"go.uber.org/zap"
+	"mxtransporter/config"
 	"mxtransporter/pkg/errors"
 	"mxtransporter/pkg/logger"
 	"os"
@@ -14,7 +16,10 @@ import (
 )
 
 func Test_SaveResumeToken(t *testing.T) {
-	l := logger.New()
+	var l *zap.SugaredLogger
+
+	logConfig := config.LogConfig()
+	l = logger.New(logConfig)
 
 	// default time zone
 	nowTime := time.Now()
