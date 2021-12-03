@@ -143,8 +143,8 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	}
 
 	var (
-		bqImpl      interfaceForBigquery.BigqueryImpl
-		psImpl        interfaceForPubsub.PubsubImpl
+		bqImpl interfaceForBigquery.BigqueryImpl
+		psImpl interfaceForPubsub.PubsubImpl
 		ksImpl interfaceForKinesisStream.KinesisStreamImpl
 	)
 
@@ -285,7 +285,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 
 		var eg errgroup.Group
 		for i := 0; i < len(expDstList); i++ {
-			eDst:= expDstList[i]
+			eDst := expDstList[i]
 			eg.Go(func() error {
 				switch agent(eDst) {
 				case BigQuery:
