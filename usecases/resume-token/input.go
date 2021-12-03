@@ -1,35 +1,30 @@
 package resume_token
 
 import (
-	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 	"mxtransporter/config"
+	"mxtransporter/pkg/common"
 	"mxtransporter/pkg/errors"
 	"os"
-	"time"
 )
 
-func SaveResumeToken(rt primitive.M) error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
+type ResumeTokenImpl struct {
+	Log *zap.SugaredLogger
+}
+
+func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
+	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
-		return errors.InternalServerError.Wrap("Failed to load location time.", err)
-	}
-
-	nowTime := time.Now().In(jst)
-	nowYear := nowTime.Format("2006")
-	nowMonth := nowTime.Format("01")
-	nowDay := nowTime.Format("02")
-
-	pv, err := config.PersistentVolume()
-	if err != nil{
 		return err
 	}
 
-	fileName := nowTime.Format("2006-01-02")
-	filePath := pv + nowYear + "/" + nowMonth + "/" + nowDay + "/"
-	file := filePath + fileName + ".dat"
+	nowTime, err := common.FetchNowTime()
+	if err != nil {
+		return err
+	}
 
-	rtValue := rt["_data"].(string)
+	filePath := pv + nowTime.Format("2006/01/02/")
+	file := filePath + nowTime.Format("2006-01-02.dat")
 
 	if dirStat, err := os.Stat(filePath); os.IsNotExist(err) || dirStat.IsDir() {
 		os.MkdirAll(filePath, 0777)
@@ -42,12 +37,12 @@ func SaveResumeToken(rt primitive.M) error {
 	}
 	defer fp.Close()
 
-	_, err = fp.WriteString(rtValue)
+	_, err = fp.WriteString(rt)
 	if err != nil {
 		return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
 	}
 
-	fmt.Println("Success to save a resume token in PVC")
+	r.Log.Info("Success to save a resume token in PVC")
 
 	return nil
 }
