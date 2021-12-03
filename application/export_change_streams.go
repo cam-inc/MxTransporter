@@ -33,16 +33,8 @@ const (
 	KinesisStream agent = "kinesisStream"
 )
 
-type generalConfig struct {
-	exportDestination string
-}
-
 type (
 	changeStremsWatcher interface {
-		fetchNowTime() (time.Time, error)
-		fetchPersistentVolumeDir() (string, error)
-		fetchExportDestination() (string, error)
-		fetchGcpProject() (string, error)
 		newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
 		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
 		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
@@ -61,39 +53,6 @@ type (
 		CsExporter  ChangeStreamsExporterImpl
 	}
 )
-
-// wrapper
-func (_ *ChangeStremsWatcherClientImpl) fetchNowTime() (time.Time, error) {
-	nowTime, err := common.FetchNowTime()
-	if err != nil {
-		return time.Time{}, nil
-	}
-	return nowTime, nil
-}
-
-func (_ *ChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
-	pv, err := config.FetchPersistentVolumeDir()
-	if err != nil {
-		return "", err
-	}
-	return pv, nil
-}
-
-func (_ *ChangeStremsWatcherClientImpl) fetchExportDestination() (string, error) {
-	exportDestinations, err := config.FetchExportDestination()
-	if err != nil {
-		return "", err
-	}
-	return exportDestinations, nil
-}
-
-func (_ *ChangeStremsWatcherClientImpl) fetchGcpProject() (string, error) {
-	projectID, err := config.FetchGcpProject()
-	if err != nil {
-		return "", err
-	}
-	return projectID, nil
-}
 
 func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
 	bqClient, err := client.NewBigqueryClient(ctx, projectID)
@@ -140,12 +99,12 @@ func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
-	nowTime, err := c.Watcher.fetchNowTime()
+	nowTime, err := common.FetchNowTime()
 	if err != nil {
 		return err
 	}
 
-	pv, err := c.Watcher.fetchPersistentVolumeDir()
+	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
@@ -172,13 +131,13 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		return err
 	}
 
-	exportDestinations, err := c.Watcher.fetchExportDestination()
+	exportDestinations, err := config.FetchExportDestination()
 	if err != nil {
 		return err
 	}
 	exportDestinationList := strings.Split(exportDestinations, ",")
 
-	projectID, err := c.Watcher.fetchGcpProject()
+	projectID, err := config.FetchGcpProject()
 	if err != nil {
 		return err
 	}
@@ -218,10 +177,10 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		}
 	}
 
-	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{&interfaceForResumeToken.ResumeTokenClientImpl{}, c.Log}
+	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{c.Log}
 
 	exporterClient := &changeStreamsExporterClientImpl{cs, bigqueryImpl, pubsubImpl, kinesisStreamImpl, resumeTokenImpl}
-	exporter := ChangeStreamsExporterImpl{generalConfig{exportDestinations}, exporterClient, c.Log}
+	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
 
 	c.Watcher.setCsExporter(exporter)
 
@@ -244,9 +203,8 @@ type (
 	}
 
 	ChangeStreamsExporterImpl struct {
-		generalConfig generalConfig
-		exporter      changeStremsExporter
-		log           *zap.SugaredLogger
+		exporter changeStremsExporter
+		log      *zap.SugaredLogger
 	}
 
 	changeStreamsExporterClientImpl struct {
@@ -306,8 +264,10 @@ func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
 	defer c.exporter.close(ctx)
 
-	exportDestinations := c.generalConfig.exportDestination
-
+	exportDestinations, err := config.FetchExportDestination()
+	if err != nil {
+		return err
+	}
 	exportDestinationList := strings.Split(exportDestinations, ",")
 
 	for c.exporter.next(ctx) {

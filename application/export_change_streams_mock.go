@@ -15,38 +15,16 @@ import (
 	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
 	interfaceForPubsub "mxtransporter/interfaces/pubsub"
 	interfaceForResumeToken "mxtransporter/usecases/resume-token"
-	"time"
 )
 
 type mockChangeStremsWatcherClientImpl struct {
 	mongoClient            *mongo.Client
 	csExporter             ChangeStreamsExporterImpl
-	persistentVolumeDir    string
-	exportDestination      string
 	resumeToken            string
 	resumeAfterExistence   bool
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
-}
-
-// for Test_watchChangeStreams
-func (_ *mockChangeStremsWatcherClientImpl) fetchNowTime() (time.Time, error) {
-	// default time zone
-	nowTime := time.Now()
-	return nowTime, nil
-}
-
-func (m *mockChangeStremsWatcherClientImpl) fetchPersistentVolumeDir() (string, error) {
-	return m.persistentVolumeDir, nil
-}
-
-func (m *mockChangeStremsWatcherClientImpl) fetchExportDestination() (string, error) {
-	return m.exportDestination, nil
-}
-
-func (_ *mockChangeStremsWatcherClientImpl) fetchGcpProject() (string, error) {
-	return "", nil
 }
 
 func (m *mockChangeStremsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {

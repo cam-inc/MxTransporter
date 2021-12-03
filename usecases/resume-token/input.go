@@ -6,46 +6,19 @@ import (
 	"mxtransporter/pkg/common"
 	"mxtransporter/pkg/errors"
 	"os"
-	"time"
 )
 
-type (
-	resumeTokenClient interface {
-		fetchPersistentVolumeDir() (string, error)
-		fetchNowTime() (time.Time, error)
-	}
-
-	ResumeTokenImpl struct {
-		ResumeToken resumeTokenClient
-		Log         *zap.SugaredLogger
-	}
-
-	ResumeTokenClientImpl struct{}
-)
-
-func (_ *ResumeTokenClientImpl) fetchPersistentVolumeDir() (string, error) {
-	pv, err := config.FetchPersistentVolumeDir()
-	if err != nil {
-		return "", err
-	}
-	return pv, nil
-}
-
-func (_ *ResumeTokenClientImpl) fetchNowTime() (time.Time, error) {
-	nowTime, err := common.FetchNowTime()
-	if err != nil {
-		return time.Time{}, nil
-	}
-	return nowTime, nil
+type ResumeTokenImpl struct {
+	Log *zap.SugaredLogger
 }
 
 func (r *ResumeTokenImpl) SaveResumeToken(rt string) error {
-	pv, err := r.ResumeToken.fetchPersistentVolumeDir()
+	pv, err := config.FetchPersistentVolumeDir()
 	if err != nil {
 		return err
 	}
 
-	nowTime, err := r.ResumeToken.fetchNowTime()
+	nowTime, err := common.FetchNowTime()
 	if err != nil {
 		return err
 	}

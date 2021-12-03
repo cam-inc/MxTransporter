@@ -39,12 +39,12 @@ func Test_New(t *testing.T) {
 					t.Fatal("Failed to make directory.")
 				}
 
-				lf:= logCfg.OutputDirectory + logCfg.OutputFile
+				lf := logCfg.OutputDirectory + logCfg.OutputFile
 				if _, err := os.Stat(lf); err != nil {
 					t.Fatal("Failed to make file.")
 				}
 
-				if lb , _ := os.ReadFile(lf); len(lb) == 0 {
+				if lb, _ := os.ReadFile(lf); len(lb) == 0 {
 					t.Fatal("Failed to save info log to log file.")
 				}
 			},
@@ -60,12 +60,12 @@ func Test_New(t *testing.T) {
 					t.Fatal("Failed to make directory.")
 				}
 
-				lf:= logCfg.OutputDirectory + logCfg.OutputFile
+				lf := logCfg.OutputDirectory + logCfg.OutputFile
 				if _, err := os.Stat(lf); err != nil {
 					t.Fatal("Failed to make file.")
 				}
 
-				if lb , _ := os.ReadFile(lf); len(lb) == 0 {
+				if lb, _ := os.ReadFile(lf); len(lb) == 0 {
 					t.Fatal("Failed to save info log to log file.")
 				}
 			},
@@ -81,17 +81,17 @@ func Test_New(t *testing.T) {
 					t.Fatal("Failed to make directory.")
 				}
 
-				lf:= logCfg.OutputDirectory + logCfg.OutputFile
+				lf := logCfg.OutputDirectory + logCfg.OutputFile
 				if _, err := os.Stat(lf); err != nil {
 					t.Fatal("Failed to make file.")
 				}
 
-				if lb , _ := os.ReadFile(lf); len(lb) != 0 {
+				if lb, _ := os.ReadFile(lf); len(lb) != 0 {
 					t.Fatal("Failed to output log. Info level logs should not be output in this test case.")
 				}
 
 				l.Error("test log")
-				if lb , _ := os.ReadFile(lf); len(lb) == 0 {
+				if lb, _ := os.ReadFile(lf); len(lb) == 0 {
 					t.Fatal("Failed to save error log to log file.")
 				}
 			},
@@ -102,4 +102,3 @@ func Test_New(t *testing.T) {
 		deleteFileSavedLog()
 	}
 }
-
