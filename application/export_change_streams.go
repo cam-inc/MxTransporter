@@ -86,7 +86,6 @@ func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.
 	return cs, nil
 }
 
-// mainに色々と処理を持たせるのが嫌なので、必要な構造体は後入れ
 func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExporterImpl) {
 	c.CsExporter = exporter
 }

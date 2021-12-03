@@ -73,7 +73,6 @@ type mockChangeStreamsExporterClientImpl struct {
 	csCursorFlag           bool
 }
 
-// for Test_exportChangeStreams()
 func (m *mockChangeStreamsExporterClientImpl) next(_ context.Context) bool {
 	return m.csCursorFlag
 }
