@@ -131,11 +131,11 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		return err
 	}
 
-	exportDestinations, err := config.FetchExportDestination()
+	expDst, err := config.FetchExportDestination()
 	if err != nil {
 		return err
 	}
-	exportDestinationList := strings.Split(exportDestinations, ",")
+	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
 	if err != nil {
@@ -143,43 +143,43 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	}
 
 	var (
-		pubsubImpl        interfaceForPubsub.PubsubImpl
-		kinesisStreamImpl interfaceForKinesisStream.KinesisStreamImpl
-		bigqueryImpl      interfaceForBigquery.BigqueryImpl
+		bqImpl      interfaceForBigquery.BigqueryImpl
+		psImpl        interfaceForPubsub.PubsubImpl
+		ksImpl interfaceForKinesisStream.KinesisStreamImpl
 	)
 
-	for i := 0; i < len(exportDestinationList); i++ {
-		exportDestination := exportDestinationList[i]
-		switch agent(exportDestination) {
+	for i := 0; i < len(expDstList); i++ {
+		eDst := expDstList[i]
+		switch agent(eDst) {
 		case BigQuery:
 			bqClient, err := c.Watcher.newBigqueryClient(ctx, projectID)
 			if err != nil {
 				return err
 			}
-			bigqueryClientImpl := &interfaceForBigquery.BigqueryClientImpl{bqClient}
-			bigqueryImpl = interfaceForBigquery.BigqueryImpl{bigqueryClientImpl}
+			bqClientImpl := &interfaceForBigquery.BigqueryClientImpl{bqClient}
+			bqImpl = interfaceForBigquery.BigqueryImpl{bqClientImpl}
 		case CloudPubSub:
 			psClient, err := c.Watcher.newPubsubClient(ctx, projectID)
 			if err != nil {
 				return err
 			}
-			pubsubClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
-			pubsubImpl = interfaceForPubsub.PubsubImpl{pubsubClientImpl}
+			psClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
+			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
 			if err != nil {
 				return err
 			}
-			kinesisStreamClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
-			kinesisStreamImpl = interfaceForKinesisStream.KinesisStreamImpl{kinesisStreamClientImpl}
+			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
+			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
 		default:
 			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
 		}
 	}
 
-	resumeTokenImpl := interfaceForResumeToken.ResumeTokenImpl{c.Log}
+	rtImpl := interfaceForResumeToken.ResumeTokenImpl{c.Log}
 
-	exporterClient := &changeStreamsExporterClientImpl{cs, bigqueryImpl, pubsubImpl, kinesisStreamImpl, resumeTokenImpl}
+	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, rtImpl}
 	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
 
 	c.Watcher.setCsExporter(exporter)
@@ -264,11 +264,11 @@ func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
 	defer c.exporter.close(ctx)
 
-	exportDestinations, err := config.FetchExportDestination()
+	expDst, err := config.FetchExportDestination()
 	if err != nil {
 		return err
 	}
-	exportDestinationList := strings.Split(exportDestinations, ",")
+	expDstList := strings.Split(expDst, ",")
 
 	for c.exporter.next(ctx) {
 		csMap, err := c.exporter.decode()
@@ -284,10 +284,10 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		c.log.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
 
 		var eg errgroup.Group
-		for i := 0; i < len(exportDestinationList); i++ {
-			exportDestination := exportDestinationList[i]
+		for i := 0; i < len(expDstList); i++ {
+			eDst:= expDstList[i]
 			eg.Go(func() error {
-				switch agent(exportDestination) {
+				switch agent(eDst) {
 				case BigQuery:
 					if err := c.exporter.exportToBigquery(ctx, csMap); err != nil {
 						return err

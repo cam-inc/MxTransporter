@@ -105,9 +105,9 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	operationType := cs["operationType"].(string)
+	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
-	fullDocument, err := json.Marshal(cs["fullDocument"])
+	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
@@ -115,23 +115,23 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	documentKey, err := json.Marshal(cs["documentKey"])
+	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	updateDescription, err := json.Marshal(cs["updateDescription"])
+	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 
 	r := []string{
 		string(id),
-		operationType,
+		opType,
 		time.Unix(int64(clusterTime), 0).Format("2006-01-02 15:04:05"),
-		string(fullDocument),
+		string(fullDoc),
 		string(ns),
-		string(documentKey),
-		string(updateDescription),
+		string(docKey),
+		string(updDesc),
 	}
 
 	if err := p.Pubsub.publishMessage(ctx, topicID, r); err != nil {

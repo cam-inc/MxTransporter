@@ -11,9 +11,9 @@ type Mongo struct {
 }
 
 func MongoConfig() Mongo {
-	var mongoCfg Mongo
-	mongoCfg.MongoDbConnectionUrl = os.Getenv("MONGODB_HOST")
-	mongoCfg.MongoDbDatabase = os.Getenv("MONGODB_DATABASE")
-	mongoCfg.MongoDbCollection = os.Getenv("MONGODB_COLLECTION")
-	return mongoCfg
+	var mCfg Mongo
+	mCfg.MongoDbConnectionUrl = os.Getenv("MONGODB_HOST")
+	mCfg.MongoDbDatabase = os.Getenv("MONGODB_DATABASE")
+	mCfg.MongoDbCollection = os.Getenv("MONGODB_COLLECTION")
+	return mCfg
 }

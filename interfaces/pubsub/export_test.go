@@ -33,9 +33,9 @@ func Test_ExportToPubSub(t *testing.T) {
 
 	t.Run("Test if the format of change streams works.", func(t *testing.T) {
 		ctx := context.TODO()
-		pubsubClientImpl := &mockPubsubClientImpl{nil, testCsArray}
-		mockPubsubImpl := PubsubImpl{pubsubClientImpl}
-		if err := mockPubsubImpl.ExportToPubsub(ctx, csMap); err != nil {
+		psClientImpl := &mockPubsubClientImpl{nil, testCsArray}
+		mockPsImpl := PubsubImpl{psClientImpl}
+		if err := mockPsImpl.ExportToPubsub(ctx, csMap); err != nil {
 			t.Fatalf("Testing Error, ErrorMessage: %v", err)
 		}
 	})

@@ -72,8 +72,8 @@ func Test_watchChangeStreams(t *testing.T) {
 
 	var l *zap.SugaredLogger
 
-	logConfig := config.LogConfig()
-	l = logger.New(logConfig)
+	logCfg := config.LogConfig()
+	l = logger.New(logCfg)
 
 	if err := os.Setenv("TIME_ZONE", "Asia/Tokyo"); err != nil {
 		t.Fatalf("Failed to set file TIME_ZONE environment variables.")
@@ -207,8 +207,8 @@ func Test_exportChangeStreams(t *testing.T) {
 
 	var l *zap.SugaredLogger
 
-	logConfig := config.LogConfig()
-	l = logger.New(logConfig)
+	logCfg := config.LogConfig()
+	l = logger.New(logCfg)
 
 	csMap := primitive.M{
 		"ns": primitive.M{

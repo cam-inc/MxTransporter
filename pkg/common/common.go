@@ -16,12 +16,12 @@ func Contains(s []string, e string) bool {
 }
 
 func FetchNowTime() (time.Time, error) {
-	timeZone, err := config.FetchTimeZone()
+	tz, err := config.FetchTimeZone()
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	tl, err := time.LoadLocation(timeZone)
+	tl, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}, err
 	}

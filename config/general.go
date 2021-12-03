@@ -21,11 +21,11 @@ func FetchPersistentVolumeDir() (string, error) {
 }
 
 func FetchExportDestination() (string, error) {
-	exportDestination, exportDestinationExistence := os.LookupEnv("EXPORT_DESTINATION")
-	if exportDestinationExistence == false {
+	expDst, expDstExistence := os.LookupEnv("EXPORT_DESTINATION")
+	if expDstExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("EXPORT_DESTINATION is not existed in environment variables")
 	}
-	return exportDestination, nil
+	return expDst, nil
 }
 
 func FetchGcpProject() (string, error) {
@@ -37,11 +37,11 @@ func FetchGcpProject() (string, error) {
 }
 
 func FetchTimeZone() (string, error) {
-	timeZone, timeZoneExistence := os.LookupEnv("TIME_ZONE")
-	if timeZoneExistence == false {
+	tz, tzExistence := os.LookupEnv("TIME_ZONE")
+	if tzExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("TIME_ZONE is not existed in environment variables")
 	}
-	return timeZone, nil
+	return tz, nil
 }
 
 func LogConfig() logger.Log {

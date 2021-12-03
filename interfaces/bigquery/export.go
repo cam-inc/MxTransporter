@@ -48,9 +48,9 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	operationType := cs["operationType"].(string)
+	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
-	fullDocument, err := json.Marshal(cs["fullDocument"])
+	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
@@ -58,11 +58,11 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	documentKey, err := json.Marshal(cs["documentKey"])
+	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
-	updateDescription, err := json.Marshal(cs["updateDescription"])
+	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
 		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
@@ -70,12 +70,12 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	csItems := []ChangeStreamTableSchema{
 		{
 			ID:                string(id),
-			OperationType:     operationType,
+			OperationType:     opType,
 			ClusterTime:       time.Unix(int64(clusterTime), 0),
-			FullDocument:      string(fullDocument),
+			FullDocument:      string(fullDoc),
 			Ns:                string(ns),
-			DocumentKey:       string(documentKey),
-			UpdateDescription: string(updateDescription),
+			DocumentKey:       string(docKey),
+			UpdateDescription: string(updDesc),
 		},
 	}
 

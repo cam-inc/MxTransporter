@@ -15,19 +15,19 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	logConfig := config.LogConfig()
-	l := logger.New(logConfig)
+	logCfg := config.LogConfig()
+	l := logger.New(logCfg)
 
-	mongoClient, err := client.NewMongoClient(ctx)
+	mClient, err := client.NewMongoClient(ctx)
 	if err != nil {
 		l.Error(err)
 		cancel()
 	}
-	defer mongoClient.Disconnect(ctx)
+	defer mClient.Disconnect(ctx)
 
 	c := &cobra.Command{}
 	c.RunE = func(c *cobra.Command, args []string) error {
-		return mongoDbConnectionCheck(ctx, mongoClient)
+		return mongoDbConnectionCheck(ctx, mClient)
 	}
 
 	if err := c.Execute(); err != nil {

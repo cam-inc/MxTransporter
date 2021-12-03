@@ -35,9 +35,9 @@ func Test_ExportToKinesisStream(t *testing.T) {
 
 	t.Run("Test if the format of change streams works.", func(t *testing.T) {
 		ctx := context.TODO()
-		kinesisStreamClientImpl := &mockKinesisStreamClientImpl{nil, testRt, testCsArray}
-		mockKinesisStreamImpl := KinesisStreamImpl{kinesisStreamClientImpl}
-		if err := mockKinesisStreamImpl.ExportToKinesisStream(ctx, csMap); err != nil {
+		ksClientImpl := &mockKinesisStreamClientImpl{nil, testRt, testCsArray}
+		mockKsImpl := KinesisStreamImpl{ksClientImpl}
+		if err := mockKsImpl.ExportToKinesisStream(ctx, csMap); err != nil {
 			t.Fatalf("Testing Error, ErrorMessage: %v", err)
 		}
 	})

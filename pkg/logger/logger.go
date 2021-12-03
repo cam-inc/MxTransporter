@@ -43,7 +43,7 @@ func New(logCfg Log) *zap.SugaredLogger {
 		logOutputPath = "stdout"
 	}
 
-	config := zap.Config{
+	cfg := zap.Config{
 		Level:    level,
 		Encoding: logFormat,
 		EncoderConfig: zapcore.EncoderConfig{
@@ -57,7 +57,7 @@ func New(logCfg Log) *zap.SugaredLogger {
 		// zap internal error output destination
 		ErrorOutputPaths: []string{"stderr"},
 	}
-	logger, _ := config.Build()
+	l, _ := cfg.Build()
 
-	return logger.Sugar()
+	return l.Sugar()
 }

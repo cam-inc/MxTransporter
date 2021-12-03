@@ -15,17 +15,17 @@ func main() {
 
 	var l *zap.SugaredLogger
 
-	logConfig := config.LogConfig()
-	l = logger.New(logConfig)
+	logCfg := config.LogConfig()
+	l = logger.New(logCfg)
 
-	mongoClient, err := client.NewMongoClient(ctx)
+	mClient, err := client.NewMongoClient(ctx)
 	if err != nil {
 		l.Error(err)
 		cancel()
 	}
-	defer mongoClient.Disconnect(ctx)
+	defer mClient.Disconnect(ctx)
 
-	watcherClient := &application.ChangeStremsWatcherClientImpl{mongoClient, application.ChangeStreamsExporterImpl{}}
+	watcherClient := &application.ChangeStremsWatcherClientImpl{mClient, application.ChangeStreamsExporterImpl{}}
 	watcher := application.ChangeStremsWatcherImpl{watcherClient, l}
 
 	if err := watcher.WatchChangeStreams(ctx); err != nil {
