@@ -9,7 +9,7 @@ Need to use following commands. The version listed is the verified version.
 ```
 aws      v2.1.30
 docker   v20.10.8
-eksstl   v0.70.0
+eksctl   v0.70.0
 helm     v3.6.3
 kubectl  v1.22.1
 make     v3.81
