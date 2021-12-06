@@ -18,7 +18,7 @@ make     v3.81
 ### Environment variables files
 Before starting the construction, create ```.env``` and ```.secrets.env``` in the current directory by referring to ```.env.template``` and ```secrets.env.template```.
 
-If you want to export change streams to Kinesis Data Streams, write the following description in ```.env```.
+If you want to export change streams to Kinesis Data Streams, write the following description in ```.secrets.env```.
 
 ```
 EXPORT_DESTINATION=kinesisStream
@@ -72,7 +72,12 @@ $ make secrets
 
 **6. Deploy kubernetes resources.**
 
-This command creates a StatefulSet, HeadlessService, Horizontal Pod Autoscaler, and PVC.
+If you have set an Optional environment variable in .secrets.env, edit the container env in ./templates/stateless.yaml.
+Set only the environment variables required for the container running on kubernetes.
+
+Create kubernetes resources with helm.
+
+Following command creates a StatefulSet, HeadlessService, Horizontal Pod Autoscaler, and PVC.
 
 ```
 $ make deploy

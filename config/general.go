@@ -1,32 +1,18 @@
 package config
 
 import (
-	"fmt"
 	"github.com/joho/godotenv"
 	"mxtransporter/pkg/errors"
+	"mxtransporter/pkg/logger"
 	"os"
 )
 
-type GcpProject struct {
-	ProjectID string
-}
-
-type AwsProfile struct {
-	ProfileName string
-}
-
-type Region struct {
-	Region string
-}
-
 func init() {
-	m := godotenv.Load()
-	if m != nil {
-		fmt.Println("[Warning] If this environment is local machine, you have to create .env file, and set env variables with reference to .env.template .")
-	}
+	// for runing locally
+	godotenv.Load()
 }
 
-func PersistentVolume() (string, error) {
+func FetchPersistentVolumeDir() (string, error) {
 	pvDir, pvDirExistence := os.LookupEnv("PERSISTENT_VOLUME_DIR")
 	if pvDirExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("PERSISTENT_VOLUME_DIR is not existed in environment variables")
@@ -34,16 +20,35 @@ func PersistentVolume() (string, error) {
 	return pvDir, nil
 }
 
-func ExportDestination() (string, error) {
-	exportDestination, exportDestinationExistence := os.LookupEnv("EXPORT_DESTINATION")
-	if exportDestinationExistence == false {
+func FetchExportDestination() (string, error) {
+	expDst, expDstExistence := os.LookupEnv("EXPORT_DESTINATION")
+	if expDstExistence == false {
 		return "", errors.InternalServerErrorEnvGet.New("EXPORT_DESTINATION is not existed in environment variables")
 	}
-	return exportDestination, nil
+	return expDst, nil
 }
 
-func FetchGcpProject() GcpProject {
-	var projectConfig GcpProject
-	projectConfig.ProjectID = os.Getenv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
-	return projectConfig
+func FetchGcpProject() (string, error) {
+	projectID, projectIDExistence := os.LookupEnv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
+	if projectIDExistence == false {
+		return "", errors.InternalServerErrorEnvGet.New("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS is not existed in environment variables")
+	}
+	return projectID, nil
+}
+
+func FetchTimeZone() (string, error) {
+	tz, tzExistence := os.LookupEnv("TIME_ZONE")
+	if tzExistence == false {
+		return "", errors.InternalServerErrorEnvGet.New("TIME_ZONE is not existed in environment variables")
+	}
+	return tz, nil
+}
+
+func LogConfig() logger.Log {
+	var l logger.Log
+	l.Level = os.Getenv("LOG_LEVEL")
+	l.Format = os.Getenv("LOG_FORMAT")
+	l.OutputDirectory = os.Getenv("LOG_OUTPUT_DIRECTORY")
+	l.OutputFile = os.Getenv("LOG_OUTPUT_FILE")
+	return l
 }

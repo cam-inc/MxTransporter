@@ -5,13 +5,13 @@ import (
 )
 
 type KinesisStream struct {
-	StreamName 	string
-	KinesisStreamRegion		string
+	StreamName          string
+	KinesisStreamRegion string
 }
 
 func KinesisStreamConfig() KinesisStream {
-	var kinesisStreamConfig KinesisStream
-	kinesisStreamConfig.StreamName = os.Getenv("KINESIS_STREAM_NAME")
-	kinesisStreamConfig.KinesisStreamRegion = os.Getenv("KINESIS_STREAM_REGION")
-	return kinesisStreamConfig
+	var ksCfg KinesisStream
+	ksCfg.StreamName = os.Getenv("KINESIS_STREAM_NAME")
+	ksCfg.KinesisStreamRegion = os.Getenv("KINESIS_STREAM_REGION")
+	return ksCfg
 }

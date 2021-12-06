@@ -2,24 +2,34 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"go.uber.org/zap"
 	"mxtransporter/application"
+	"mxtransporter/config"
 	"mxtransporter/pkg/client"
+	"mxtransporter/pkg/logger"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	mongoClient, err := client.NewMongoClient(ctx)
+	var l *zap.SugaredLogger
+
+	logCfg := config.LogConfig()
+	l = logger.New(logCfg)
+
+	mClient, err := client.NewMongoClient(ctx)
 	if err != nil {
-		fmt.Println(err)
+		l.Error(err)
 		cancel()
 	}
-	defer mongoClient.Disconnect(ctx)
+	defer mClient.Disconnect(ctx)
 
-	if err := application.WatchChangeStreams(ctx, mongoClient); err != nil {
-		fmt.Println(err)
+	watcherClient := &application.ChangeStremsWatcherClientImpl{mClient, application.ChangeStreamsExporterImpl{}}
+	watcher := application.ChangeStremsWatcherImpl{watcherClient, l}
+
+	if err := watcher.WatchChangeStreams(ctx); err != nil {
+		l.Error(err)
 		cancel()
 	}
 }
