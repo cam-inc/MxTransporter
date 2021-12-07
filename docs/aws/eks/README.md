@@ -35,6 +35,10 @@ It is used to do ssh to EC2 instance.
 
 It is used to encrypt kubernetes secrets.
 
+```
+$ make kms
+```
+
 <br>
 
 **3. Create EKS cluster and node group.**

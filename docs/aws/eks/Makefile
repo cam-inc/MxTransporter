@@ -1,6 +1,7 @@
 include .env
 
 .PHONY: all help \
+			create-kms-key \
 			build create-cluster create-nodegroup \
 			secret create-secret \
 			deploy build-image login-ecr push-to-ecr build-helm-variables deploy-eks-resources
@@ -27,6 +28,8 @@ help:
 ##########################
 # main command
 ##########################
+kms: create-kms-key
+
 build: build-eks-variables build-cluster \
 			create-namespace \
 			build-eks-node-group-variables build-nodegroup
@@ -54,6 +57,9 @@ upgrade: build-image \
 ##########################
 # sub command
 ##########################
+create-kms-key:
+	aws kms create-alias --alias-name alias/mxtransporter-key-for-eks-cluster --target-key-id `aws kms create-key | jq -r '.KeyMetadata.KeyId'`
+
 build-eks-variables:
 	@echo  "create eks variables template..."
 	sh ./cluster.sh
