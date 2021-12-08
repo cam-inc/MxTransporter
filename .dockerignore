@@ -1,10 +1,8 @@
-Makefile
 README.md
+LICENSE
+
+docs
+logo
 
 .env
-.env.template
 .gitignore
-
-.air.conf
-
-tmp
