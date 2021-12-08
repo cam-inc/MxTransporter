@@ -1,0 +1,14 @@
+.env
+.idea
+
+secrets.env
+
+# for air package *provisional
+tmp
+
+.air.conf
+
+cluster.yaml
+nodegroup.yaml
+values.yaml
+gke.yaml
