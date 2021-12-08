@@ -24,5 +24,5 @@ managedNodeGroups:
     tags:
       # EC2 tags required for cluster-autoscaler auto-discovery
       k8s.io/cluster-autoscaler/enabled: "true"
-      k8s.io/cluster-autoscaler/dev-camplat-secure-cluster: "owned"
+      k8s.io/cluster-autoscaler/mxtransporter-cluster: "owned"
 _EOF_

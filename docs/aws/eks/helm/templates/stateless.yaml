@@ -63,30 +63,30 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.secrets.name }}
                   key: KINESIS_STREAM_REGION
-            # Optional
-            - name: LOG_LEVEL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.secrets.name }}
-                  key: LOG_LEVEL
-            # Optional
-            - name: LOG_FORMAT
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.secrets.name }}
-                  key: LOG_FORMAT
-            # Optional
-            - name: LOG_OUTPUT_DIRECTORY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.secrets.name }}
-                  key: LOG_OUTPUT_DIRECTORY
-            # Optional
-            - name: LOG_OUTPUT_FILE
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $.Values.secrets.name }}
-                  key: LOG_OUTPUT_FILE
+#            # Optional
+#            - name: LOG_LEVEL
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: LOG_LEVEL
+#            # Optional
+#            - name: LOG_FORMAT
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: LOG_FORMAT
+#            # Optional
+#            - name: LOG_OUTPUT_DIRECTORY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: LOG_OUTPUT_DIRECTORY
+#            # Optional
+#            - name: LOG_OUTPUT_FILE
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: LOG_OUTPUT_FILE
           resources:
 {{ toYaml $.Values.resources | indent 12 }}
           ports:

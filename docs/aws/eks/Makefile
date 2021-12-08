@@ -124,13 +124,13 @@ pods-stop:
 	@kubectl config view | grep current-context
 	@read -p "Are you sure you want to stop the pod? (y/N): " yn; \
 	case "$$yn" in \
-	  [yY]*) kubectl scale statefulset --all --replicas=0 -n change-streams-exporter;; \
+	  [yY]*) kubectl scale statefulset --all --replicas=0 -n mxtransporter;; \
 	  *) echo "Rejected to stop pods in the specified cluster.";; \
 	esac
 
 pods-start:
 	@echo "start pods..."
-	kubectl scale statefulset --all --replicas=1 -n change-streams-exporter
+	kubectl scale statefulset --all --replicas=1 -n mxtransporter
 
 upgrade-eks-resources:
 	@echo "deploy eks resources..."
