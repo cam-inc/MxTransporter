@@ -74,7 +74,7 @@ Table schema
 ```
 
 ## Procedure
-**Setup BigQuery (optional)**
+**Optional: Setup BigQuery**
 
 You need to create a dataset and a collection.
 

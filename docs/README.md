@@ -1,4 +1,4 @@
-# Build infrastructure　sample
+# Build infrastructure sample
 
 We have prepared a sample for building with the following two container orchestration services.
 

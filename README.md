@@ -2,7 +2,7 @@
 
 MxTransporter is a middleware that accurately carries change streams of MongoDB in real time. For infrastructure, you can easily use this middleware by creating a container image with Dockerfile on any platform and deploying it.
 
-[![APACHE License](http://img.shields.io/badge/license-APACHE-blue.svg?style=flat)](LICENSE)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 
 <br>
 
@@ -23,7 +23,7 @@ With the Dockerfile provided, you can easily run MxTransporter by simply buildin
 
 - Build a Dockerfile, create an image, and create a container based on that image.
 
-- Mount the persistent volume on the container to store the resume token. See the Change streams section of this README for more information.
+- Mount the persistent volume on the container to store the resume token. See the change streams section of this README for more information.
 
 - Allow access from the container to MongoDB
 
@@ -64,7 +64,8 @@ PERSISTENT_VOLUME_DIR=
 
 # Require 
 ## Specify the location you want to export. 
-## e.g. EXPORT_DESTINATION=bigquery 
+## e.g. EXPORT_DESTINATION=bigquery
+## e.g. EXPORT_DESTINATION=bigquery,pubsub,kinesisStream
 EXPORT_DESTINATION=
 
 # Require 
@@ -117,13 +118,13 @@ LOG_OUTPUT_FILE=
 Allow the public IP of the MxTransporter container on the mongoDB side. This allows you to watch the changed streams that occur.
 
 ### Change streams
-change streams output the change events that occurred in the database and are the same as the logs stored in oplog. And it has a unique token called resume token, which can be used to get events after a specific event.
+Change streams output the change events that occurred in the database and are the same as the logs stored in oplog. And it has a unique token called resume token, which can be used to get events after a specific event.
 
 In this system, resume token is saved in Persistent Volume associated with the container, and when a new container is started, the resume token is referenced and change streams acquisition starts from that point.
 
 The resume token of the change streams just before the container stopped is stored in the persistent volume, so you can refer to it and get again the change streams that you missed while the container stopped and the new container started again.
 
-The resume token is stored in the directory where the PVC is mounted.
+The resume token is stored in the directory where the persistent volume is mounted.
 
 ```PERSISTENT_VOLUME_DIR``` is an environment variable given to the container.
 
@@ -200,7 +201,7 @@ Table schema
 ```
 
 ### Pub/Sub
-No special preparation is required. Create a Topic with the MongoDB Database name, and a Subscription with the MongoDB Collection name from which the change streams originated.
+No special preparation is required. Automaticaly, create a Topic with the MongoDB Database name, and a Subscription with the MongoDB Collection name from which the change streams originated.
 
 Change streams are sent to that subscription in a pipe (|) separated CSV.
 
