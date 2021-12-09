@@ -1,17 +1,9 @@
----
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
-## Overview (Required)
+## What happened? (Required)
 -
 
-## Links
+## What did you expect to happen? (Required)
 -
 
-## Screenshot
+## Environment running MxTransporter
 -
+
