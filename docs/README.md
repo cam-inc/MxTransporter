@@ -2,8 +2,8 @@
 
 We have prepared a sample for building with the following two container orchestration services.
 
-- Amazon Elastic Kubernetes Service (EKS)<br>
-- Google Kubernetes Engine (GKE)
+- [Amazon Elastic Kubernetes Service (EKS)](/aws/eks/README.md)<br>
+- [Google Kubernetes Engine (GKE)](/gcp/gke/README.md)
 
 <br>
 
