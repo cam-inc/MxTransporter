@@ -13,14 +13,17 @@ import (
 )
 
 type (
-	pubsubClient interface {
-		pubsubTopic(ctx context.Context, topicID string) error
-		pubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error
+	IPubsub interface {
+		topicExists(ctx context.Context, topicID string) (bool, error)
+		createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error)
+		subscriptionExists(ctx context.Context, subscriptionID string) (bool, error)
+		createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error)
 		publishMessage(ctx context.Context, topicID string, csArray []string) error
 	}
 
 	PubsubImpl struct {
-		Pubsub pubsubClient
+		Pubsub IPubsub
+		Log *zap.SugaredLogger
 	}
 
 	PubsubClientImpl struct {
@@ -29,50 +32,28 @@ type (
 	}
 )
 
-func (p *PubsubClientImpl) pubsubTopic(ctx context.Context, topicID string) error {
+func (p *PubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
 	topic := p.PubsubClient.Topic(topicID)
 	defer topic.Stop()
 
-	topicExistence, err := topic.Exists(ctx)
-	if err != nil {
-		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
-	}
-	if topicExistence == false {
-		p.Log.Info("Topic is not exists. Creating a topic.")
-
-		var err error
-		_, err = p.PubsubClient.CreateTopic(ctx, topicID)
-		if err != nil {
-			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
-		}
-		p.Log.Info("Successed to create topic. ")
-	}
-
-	return nil
+	return topic.Exists(ctx)
 }
 
-func (p *PubsubClientImpl) pubsubSubscription(ctx context.Context, topicID string, subscriptionID string) error {
+func (p *PubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
+	return p.PubsubClient.CreateTopic(ctx, topicID)
+}
+
+func (p *PubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
 	subscription := p.PubsubClient.Subscription(subscriptionID)
+	return subscription.Exists(ctx)
+}
 
-	subscriptionExistence, err := subscription.Exists(ctx)
-	if err != nil {
-		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
-	}
-	if subscriptionExistence == false {
-		p.Log.Info("Subscription is not exists. Creating a subscription.")
-
-		var err error
-		_, err = p.PubsubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
-			Topic:             p.PubsubClient.Topic(topicID),
-			AckDeadline:       60 * time.Second,
-			RetentionDuration: 24 * time.Hour,
-		})
-		if err != nil {
-			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
-		}
-		p.Log.Info("Successed to create subscription. ")
-	}
-	return nil
+func (p *PubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+	return p.PubsubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
+		Topic:             p.PubsubClient.Topic(topicID),
+		AckDeadline:       60 * time.Second,
+		RetentionDuration: 24 * time.Hour,
+	})
 }
 
 func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, csArray []string) error {
@@ -90,38 +71,59 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 	psCfg := pubsubConfig.PubSubConfig()
 
 	topicID := psCfg.MongoDbDatabase
+	topicExistence, err := p.Pubsub.topicExists(ctx, topicID)
+	if err != nil {
+		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
+	}
+	if topicExistence == false {
+		p.Log.Info("Topic is not exists. Creating a topic.")
 
-	if err := p.Pubsub.pubsubTopic(ctx, topicID); err != nil {
-		return err
+		var err error
+		_, err = p.Pubsub.createTopic(ctx, topicID)
+		if err != nil {
+			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
+		}
+		p.Log.Info("Successed to create topic. ")
 	}
 
 	subscriptionID := psCfg.MongoDbCollection
+	subscriptionExistence, err := p.Pubsub.subscriptionExists(ctx, subscriptionID)
+	if err != nil {
+		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
+	}
 
-	if err := p.Pubsub.pubsubSubscription(ctx, topicID, subscriptionID); err != nil {
-		return err
+	if subscriptionExistence == false {
+		p.Log.Info("Subscription is not exists. Creating a subscription.")
+
+		var err error
+		_, err = p.Pubsub.createSubscription(ctx, topicID, subscriptionID)
+		if err != nil {
+			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
+		}
+		p.Log.Info("Successed to create subscription. ")
 	}
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 
 	r := []string{

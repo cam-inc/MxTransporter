@@ -47,25 +47,25 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 
 	r := []string{
@@ -79,7 +79,7 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 	}
 
 	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {
-		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
+		return err
 	}
 
 	return nil

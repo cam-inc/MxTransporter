@@ -6,6 +6,9 @@ package pubsub
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
+	"mxtransporter/config"
+	"mxtransporter/pkg/logger"
 	"testing"
 	"time"
 )
@@ -21,6 +24,10 @@ var csMap = primitive.M{
 }
 
 func Test_ExportToPubSub(t *testing.T) {
+	var l *zap.SugaredLogger
+	logConfig := config.LogConfig()
+	l = logger.New(logConfig)
+
 	testCsArray := []string{
 		`{"_data":"00000"}`,
 		"insert",
@@ -34,7 +41,7 @@ func Test_ExportToPubSub(t *testing.T) {
 	t.Run("Test if the format of change streams works.", func(t *testing.T) {
 		ctx := context.TODO()
 		psClientImpl := &mockPubsubClientImpl{nil, testCsArray}
-		mockPsImpl := PubsubImpl{psClientImpl}
+		mockPsImpl := PubsubImpl{psClientImpl, l}
 		if err := mockPsImpl.ExportToPubsub(ctx, csMap); err != nil {
 			t.Fatalf("Testing Error, ErrorMessage: %v", err)
 		}

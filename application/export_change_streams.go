@@ -163,7 +163,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 				return err
 			}
 			psClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
-			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl}
+			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
 			if err != nil {
