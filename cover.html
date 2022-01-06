@@ -1,0 +1,1105 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>application: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">mxtransporter/application/export_change_streams.go (54.0%)</option>
+				
+				<option value="file1">mxtransporter/application/export_change_streams_mock.go (100.0%)</option>
+				
+				<option value="file2">mxtransporter/interfaces/bigquery/export.go (84.0%)</option>
+				
+				<option value="file3">mxtransporter/interfaces/bigquery/export_mock.go (66.7%)</option>
+				
+				<option value="file4">mxtransporter/interfaces/kinesis-stream/export.go (81.5%)</option>
+				
+				<option value="file5">mxtransporter/interfaces/kinesis-stream/export_mock.go (57.1%)</option>
+				
+				<option value="file6">mxtransporter/interfaces/pubsub/export.go (69.0%)</option>
+				
+				<option value="file7">mxtransporter/interfaces/pubsub/export_mock.go (77.8%)</option>
+				
+				<option value="file8">mxtransporter/pkg/logger/logger.go (89.5%)</option>
+				
+				<option value="file9">mxtransporter/usecases/resume-token/input.go (78.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package application
+
+import (
+        "cloud.google.com/go/bigquery"
+        "cloud.google.com/go/pubsub"
+        "context"
+        "fmt"
+        "github.com/aws/aws-sdk-go-v2/service/kinesis"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        "go.mongodb.org/mongo-driver/mongo"
+        "go.mongodb.org/mongo-driver/mongo/options"
+        "go.uber.org/zap"
+        "golang.org/x/sync/errgroup"
+        "mxtransporter/config"
+        interfaceForBigquery "mxtransporter/interfaces/bigquery"
+        interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
+        mongoConnection "mxtransporter/interfaces/mongo"
+        interfaceForPubsub "mxtransporter/interfaces/pubsub"
+        "mxtransporter/pkg/client"
+        "mxtransporter/pkg/common"
+        "mxtransporter/pkg/errors"
+        interfaceForResumeToken "mxtransporter/usecases/resume-token"
+        "os"
+        "strings"
+        "time"
+)
+
+type agent string
+
+const (
+        BigQuery      agent = "bigquery"
+        CloudPubSub   agent = "pubsub"
+        KinesisStream agent = "kinesisStream"
+)
+
+type (
+        changeStremsWatcher interface {
+                newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
+                newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
+                newKinesisClient(ctx context.Context) (*kinesis.Client, error)
+                watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error)
+                setCsExporter(exporter ChangeStreamsExporterImpl)
+                exportChangeStreams(ctx context.Context) error
+        }
+
+        ChangeStremsWatcherImpl struct {
+                Watcher changeStremsWatcher
+                Log     *zap.SugaredLogger
+        }
+
+        ChangeStremsWatcherClientImpl struct {
+                MongoClient *mongo.Client
+                CsExporter  ChangeStreamsExporterImpl
+        }
+)
+
+func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) <span class="cov0" title="0">{
+        bqClient, err := client.NewBigqueryClient(ctx, projectID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return bqClient, nil</span>
+}
+
+func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) <span class="cov0" title="0">{
+        psClient, err := client.NewPubsubClient(ctx, projectID)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return psClient, nil</span>
+}
+
+func (_ *ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) <span class="cov0" title="0">{
+        ksClient, err := client.NewKinesisClient(ctx)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return ksClient, nil</span>
+}
+
+func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) <span class="cov0" title="0">{
+        cs, err := mongoConnection.Watch(ctx, c.MongoClient, ops)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return cs, nil</span>
+}
+
+func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExporterImpl) <span class="cov0" title="0">{
+        c.CsExporter = exporter
+}</span>
+
+func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error <span class="cov0" title="0">{
+        if err := c.CsExporter.exportChangeStreams(ctx); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error <span class="cov8" title="1">{
+        nowTime, err := common.FetchNowTime()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">pv, err := config.FetchPersistentVolumeDir()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">file := pv + nowTime.Format("2006/01/02/2006-01-02.dat")
+
+        rtByte, err := os.ReadFile(file)
+
+        ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
+
+        if len(rtByte) == 0 &amp;&amp; err == nil </span><span class="cov0" title="0">{
+                c.Log.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
+        }</span> else<span class="cov8" title="1"> if len(rtByte) == 0 &amp;&amp; err != nil </span><span class="cov8" title="1">{
+                c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
+        }</span> else<span class="cov8" title="1"> {
+                rtStr := string(rtByte)
+                var rt interface{} = map[string]string{"_data": strings.TrimRight(rtStr, "\n")}
+
+                ops.SetResumeAfter(rt)
+        }</span>
+
+        <span class="cov8" title="1">cs, err := c.Watcher.watch(ctx, ops)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">expDst, err := config.FetchExportDestination()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">expDstList := strings.Split(expDst, ",")
+
+        projectID, err := config.FetchGcpProject()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">var (
+                bqImpl interfaceForBigquery.BigqueryImpl
+                psImpl interfaceForPubsub.PubsubImpl
+                ksImpl interfaceForKinesisStream.KinesisStreamImpl
+        )
+
+        for i := 0; i &lt; len(expDstList); i++ </span><span class="cov8" title="1">{
+                eDst := expDstList[i]
+                switch agent(eDst) </span>{
+                case BigQuery:<span class="cov8" title="1">
+                        bqClient, err := c.Watcher.newBigqueryClient(ctx, projectID)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                        <span class="cov8" title="1">bqClientImpl := &amp;interfaceForBigquery.BigqueryClientImpl{bqClient}
+                        bqImpl = interfaceForBigquery.BigqueryImpl{bqClientImpl}</span>
+                case CloudPubSub:<span class="cov8" title="1">
+                        psClient, err := c.Watcher.newPubsubClient(ctx, projectID)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                        <span class="cov8" title="1">psClientImpl := &amp;interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
+                        psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log}</span>
+                case KinesisStream:<span class="cov8" title="1">
+                        ksClient, err := c.Watcher.newKinesisClient(ctx)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return err
+                        }</span>
+                        <span class="cov8" title="1">ksClientImpl := &amp;interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
+                        ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}</span>
+                default:<span class="cov0" title="0">
+                        return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))</span>
+                }
+        }
+
+        <span class="cov8" title="1">rtImpl := interfaceForResumeToken.ResumeTokenImpl{c.Log}
+
+        exporterClient := &amp;changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, rtImpl}
+        exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
+
+        c.Watcher.setCsExporter(exporter)
+
+        if err := c.Watcher.exportChangeStreams(ctx); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+type (
+        changeStremsExporter interface {
+                next(ctx context.Context) bool
+                decode() (primitive.M, error)
+                close(ctx context.Context) error
+                exportToBigquery(ctx context.Context, cs primitive.M) error
+                exportToPubsub(ctx context.Context, cs primitive.M) error
+                exportToKinesisStream(ctx context.Context, cs primitive.M) error
+                saveResumeToken(rt string) error
+        }
+
+        ChangeStreamsExporterImpl struct {
+                exporter changeStremsExporter
+                log      *zap.SugaredLogger
+        }
+
+        changeStreamsExporterClientImpl struct {
+                cs            *mongo.ChangeStream
+                bq            interfaceForBigquery.BigqueryImpl
+                pubsub        interfaceForPubsub.PubsubImpl
+                kinesisStream interfaceForKinesisStream.KinesisStreamImpl
+                resumeToken   interfaceForResumeToken.ResumeTokenImpl
+        }
+)
+
+func (c *changeStreamsExporterClientImpl) next(ctx context.Context) bool <span class="cov0" title="0">{
+        return c.cs.Next(ctx)
+}</span>
+
+func (c *changeStreamsExporterClientImpl) decode() (primitive.M, error) <span class="cov0" title="0">{
+        var csMap primitive.M
+
+        if err := c.cs.Decode(&amp;csMap); err != nil </span><span class="cov0" title="0">{
+                return nil, errors.InternalServerError.Wrap("Failed to decode change stream.", err)
+        }</span>
+        <span class="cov0" title="0">return csMap, nil</span>
+}
+
+func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error <span class="cov0" title="0">{
+        return c.cs.Close(ctx)
+}</span>
+
+func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
+        if err := c.bq.ExportToBigquery(ctx, cs); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
+        if err := c.pubsub.ExportToPubsub(ctx, cs); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
+        if err := c.kinesisStream.ExportToKinesisStream(ctx, cs); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error <span class="cov0" title="0">{
+        if err := c.resumeToken.SaveResumeToken(rt); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error <span class="cov8" title="1">{
+        defer c.exporter.close(ctx)
+
+        expDst, err := config.FetchExportDestination()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">expDstList := strings.Split(expDst, ",")
+
+        for c.exporter.next(ctx) </span><span class="cov8" title="1">{
+                csMap, err := c.exporter.decode()
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">csDb := csMap["ns"].(primitive.M)["db"].(string)
+                csColl := csMap["ns"].(primitive.M)["coll"].(string)
+                csOpType := csMap["operationType"].(string)
+                csClusterTimeInt := time.Unix(int64(csMap["clusterTime"].(primitive.Timestamp).T), 0)
+
+                c.log.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
+
+                var eg errgroup.Group
+                for i := 0; i &lt; len(expDstList); i++ </span><span class="cov8" title="1">{
+                        eDst := expDstList[i]
+                        eg.Go(func() error </span><span class="cov8" title="1">{
+                                switch agent(eDst) </span>{
+                                case BigQuery:<span class="cov8" title="1">
+                                        if err := c.exporter.exportToBigquery(ctx, csMap); err != nil </span><span class="cov0" title="0">{
+                                                return err
+                                        }</span>
+                                case CloudPubSub:<span class="cov8" title="1">
+                                        if err := c.exporter.exportToPubsub(ctx, csMap); err != nil </span><span class="cov0" title="0">{
+                                                return err
+                                        }</span>
+                                case KinesisStream:<span class="cov8" title="1">
+                                        if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil </span><span class="cov0" title="0">{
+                                                return err
+                                        }</span>
+                                default:<span class="cov0" title="0">
+                                        return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")</span>
+                                }
+                                <span class="cov8" title="1">return nil</span>
+                        })
+                }
+
+                <span class="cov8" title="1">if err := eg.Wait(); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+
+                <span class="cov8" title="1">csRt := csMap["_id"].(primitive.M)["_data"].(string)
+
+                if err := c.exporter.saveResumeToken(csRt); err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">//go:build test
+// +build test
+
+package application
+
+import (
+        "cloud.google.com/go/bigquery"
+        "cloud.google.com/go/pubsub"
+        "context"
+        "github.com/aws/aws-sdk-go-v2/service/kinesis"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        "go.mongodb.org/mongo-driver/mongo"
+        "go.mongodb.org/mongo-driver/mongo/options"
+        interfaceForBigquery "mxtransporter/interfaces/bigquery"
+        interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
+        interfaceForPubsub "mxtransporter/interfaces/pubsub"
+        interfaceForResumeToken "mxtransporter/usecases/resume-token"
+)
+
+type mockChangeStremsWatcherClientImpl struct {
+        mongoClient            *mongo.Client
+        csExporter             ChangeStreamsExporterImpl
+        resumeToken            string
+        resumeAfterExistence   bool
+        bqPassCheck            string
+        pubsubPassCheck        string
+        kinesisStreamPassCheck string
+}
+
+func (m *mockChangeStremsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) <span class="cov8" title="1">{
+        m.bqPassCheck = "OK"
+        return nil, nil
+}</span>
+
+func (m *mockChangeStremsWatcherClientImpl) newPubsubClient(_ context.Context, _ string) (*pubsub.Client, error) <span class="cov8" title="1">{
+        m.pubsubPassCheck = "OK"
+        return nil, nil
+}</span>
+
+func (m *mockChangeStremsWatcherClientImpl) newKinesisClient(_ context.Context) (*kinesis.Client, error) <span class="cov8" title="1">{
+        m.kinesisStreamPassCheck = "OK"
+        return nil, nil
+}</span>
+
+func (m *mockChangeStremsWatcherClientImpl) watch(_ context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) <span class="cov8" title="1">{
+        if ops.ResumeAfter != nil </span><span class="cov8" title="1">{
+                if ops.ResumeAfter.(map[string]string)["_data"] == m.resumeToken </span><span class="cov8" title="1">{
+                        m.resumeAfterExistence = true
+                }</span>
+        } else<span class="cov8" title="1"> {
+                m.resumeAfterExistence = false
+        }</span>
+
+        <span class="cov8" title="1">return nil, nil</span>
+}
+
+func (c *mockChangeStremsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporterImpl) {<span class="cov8" title="1">
+}</span>
+
+func (c *mockChangeStremsWatcherClientImpl) exportChangeStreams(_ context.Context) error <span class="cov8" title="1">{
+        return nil
+}</span>
+
+type mockChangeStreamsExporterClientImpl struct {
+        cs                     primitive.M
+        bq                     interfaceForBigquery.BigqueryImpl
+        pubsub                 interfaceForPubsub.PubsubImpl
+        kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
+        resumeToken            interfaceForResumeToken.ResumeTokenImpl
+        bqPassCheck            string
+        pubsubPassCheck        string
+        kinesisStreamPassCheck string
+        csCursorFlag           bool
+}
+
+func (m *mockChangeStreamsExporterClientImpl) next(_ context.Context) bool <span class="cov8" title="1">{
+        return m.csCursorFlag
+}</span>
+
+func (m *mockChangeStreamsExporterClientImpl) decode() (primitive.M, error) <span class="cov8" title="1">{
+        return m.cs, nil
+}</span>
+
+func (_ *mockChangeStreamsExporterClientImpl) close(_ context.Context) error <span class="cov8" title="1">{
+        return nil
+}</span>
+
+func (m *mockChangeStreamsExporterClientImpl) exportToBigquery(_ context.Context, _ primitive.M) error <span class="cov8" title="1">{
+        m.bqPassCheck = "OK"
+        return nil
+}</span>
+
+func (m *mockChangeStreamsExporterClientImpl) exportToPubsub(_ context.Context, _ primitive.M) error <span class="cov8" title="1">{
+        m.pubsubPassCheck = "OK"
+        return nil
+}</span>
+
+func (m *mockChangeStreamsExporterClientImpl) exportToKinesisStream(_ context.Context, _ primitive.M) error <span class="cov8" title="1">{
+        m.kinesisStreamPassCheck = "OK"
+        return nil
+}</span>
+
+func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ string) error <span class="cov8" title="1">{
+        m.csCursorFlag = false
+        return nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package bigquery
+
+import (
+        "cloud.google.com/go/bigquery"
+        "context"
+        "encoding/json"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        bigqueryConfig "mxtransporter/config/bigquery"
+        "mxtransporter/pkg/errors"
+        "time"
+)
+
+type ChangeStreamTableSchema struct {
+        ID                string
+        OperationType     string
+        ClusterTime       time.Time
+        FullDocument      string
+        Ns                string
+        DocumentKey       string
+        UpdateDescription string
+}
+
+type (
+        bigqueryClient interface {
+                putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error
+        }
+
+        BigqueryImpl struct {
+                Bq bigqueryClient
+        }
+
+        BigqueryClientImpl struct {
+                BqClient *bigquery.Client
+        }
+)
+
+func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error <span class="cov0" title="0">{
+        if err := b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error <span class="cov8" title="1">{
+        bqCfg := bigqueryConfig.BigqueryConfig()
+
+        id, err := json.Marshal(cs["_id"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">opType := cs["operationType"].(string)
+        clusterTime := cs["clusterTime"].(primitive.Timestamp).T
+        fullDoc, err := json.Marshal(cs["fullDocument"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">ns, err := json.Marshal(cs["ns"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">docKey, err := json.Marshal(cs["documentKey"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">updDesc, err := json.Marshal(cs["updateDescription"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+
+        <span class="cov8" title="1">csItems := []ChangeStreamTableSchema{
+                {
+                        ID:                string(id),
+                        OperationType:     opType,
+                        ClusterTime:       time.Unix(int64(clusterTime), 0),
+                        FullDocument:      string(fullDoc),
+                        Ns:                string(ns),
+                        DocumentKey:       string(docKey),
+                        UpdateDescription: string(updDesc),
+                },
+        }
+
+        if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">//go:build test
+// +build test
+
+package bigquery
+
+import (
+        "cloud.google.com/go/bigquery"
+        "context"
+        "fmt"
+        "reflect"
+)
+
+type mockBigqueryClientImpl struct {
+        bqClient *bigquery.Client
+        csItems  []ChangeStreamTableSchema
+}
+
+func (m *mockBigqueryClientImpl) putRecord(_ context.Context, _ string, _ string, csItems []ChangeStreamTableSchema) error <span class="cov8" title="1">{
+        if csItems == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Expect csItems to not be nil.")
+        }</span>
+
+        <span class="cov8" title="1">fmt.Printf("%v\n", csItems)
+        if e, a := m.csItems, csItems; !reflect.DeepEqual(e, a) </span><span class="cov0" title="0">{
+                return fmt.Errorf("expect %v, got %v", e, a)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package kinesis_stream
+
+import (
+        "context"
+        "encoding/json"
+        "github.com/aws/aws-sdk-go-v2/aws"
+        "github.com/aws/aws-sdk-go-v2/service/kinesis"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        kinesisConfig "mxtransporter/config/kinesis-stream"
+        "mxtransporter/pkg/errors"
+        "strings"
+        "time"
+)
+
+type (
+        kinesisStreamClient interface {
+                putRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error
+        }
+
+        KinesisStreamImpl struct {
+                KinesisStream kinesisStreamClient
+        }
+
+        KinesisStreamClientImpl struct {
+                KinesisStreamClient *kinesis.Client
+        }
+)
+
+func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName string, rt interface{}, csArray []string) error <span class="cov0" title="0">{
+        _, err := k.KinesisStreamClient.PutRecord(ctx, &amp;kinesis.PutRecordInput{
+                Data:         []byte(strings.Join(csArray, "|") + "\n"),
+                PartitionKey: aws.String(rt.(string)),
+                StreamName:   aws.String(streamName),
+        })
+
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error <span class="cov8" title="1">{
+        ksCfg := kinesisConfig.KinesisStreamConfig()
+
+        id, err := json.Marshal(cs["_id"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">opType := cs["operationType"].(string)
+        clusterTime := cs["clusterTime"].(primitive.Timestamp).T
+        fullDoc, err := json.Marshal(cs["fullDocument"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">ns, err := json.Marshal(cs["ns"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">docKey, err := json.Marshal(cs["documentKey"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">updDesc, err := json.Marshal(cs["updateDescription"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+
+        <span class="cov8" title="1">r := []string{
+                string(id),
+                opType,
+                time.Unix(int64(clusterTime), 0).Format("2006-01-02 15:04:05"),
+                string(fullDoc),
+                string(ns),
+                string(docKey),
+                string(updDesc),
+        }
+
+        rt := cs["_id"].(primitive.M)["_data"]
+
+        if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">//go:build test
+// +build test
+
+package kinesis_stream
+
+import (
+        "context"
+        "fmt"
+        "github.com/aws/aws-sdk-go-v2/service/kinesis"
+        "reflect"
+)
+
+type mockKinesisStreamClientImpl struct {
+        kinesisStreamClient *kinesis.Client
+        rt                  string
+        cs                  []string
+}
+
+func (m *mockKinesisStreamClientImpl) putRecord(_ context.Context, _ string, rt interface{}, csArray []string) error <span class="cov8" title="1">{
+        if csArray == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Expect csItems to not be nil.")
+        }</span>
+        <span class="cov8" title="1">if e, a := m.rt, rt; !reflect.DeepEqual(e, a) </span><span class="cov0" title="0">{
+                return fmt.Errorf("expect %v, got %v", e, a)
+        }</span>
+        <span class="cov8" title="1">if e, a := m.cs, csArray; !reflect.DeepEqual(e, a) </span><span class="cov0" title="0">{
+                return fmt.Errorf("expect %v, got %v", e, a)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package pubsub
+
+import (
+        "cloud.google.com/go/pubsub"
+        "context"
+        "encoding/json"
+        "fmt"
+        "go.mongodb.org/mongo-driver/bson/primitive"
+        "go.uber.org/zap"
+        pubsubConfig "mxtransporter/config/pubsub"
+        "mxtransporter/pkg/errors"
+        "strings"
+        "time"
+)
+
+var results []*pubsub.PublishResult
+
+type (
+        IPubsub interface {
+                topicExists(ctx context.Context, topicID string) (bool, error)
+                createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error)
+                subscriptionExists(ctx context.Context, subscriptionID string) (bool, error)
+                createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error)
+                publishMessage(ctx context.Context, topicID string, csArray []string) error
+        }
+
+        PubsubImpl struct {
+                Pubsub IPubsub
+                Log *zap.SugaredLogger
+        }
+
+        PubsubClientImpl struct {
+                PubsubClient *pubsub.Client
+                Log          *zap.SugaredLogger
+        }
+)
+
+func (p *PubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) <span class="cov0" title="0">{
+        return p.PubsubClient.Topic(topicID).Exists(ctx)
+}</span>
+
+func (p *PubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) <span class="cov0" title="0">{
+        return p.PubsubClient.CreateTopic(ctx, topicID)
+}</span>
+
+func (p *PubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) <span class="cov0" title="0">{
+        return p.PubsubClient.Subscription(subscriptionID).Exists(ctx)
+}</span>
+
+func (p *PubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) <span class="cov0" title="0">{
+        return p.PubsubClient.CreateSubscription(ctx, subscriptionID, pubsub.SubscriptionConfig{
+                Topic:             p.PubsubClient.Topic(topicID),
+                AckDeadline:       60 * time.Second,
+                RetentionDuration: 24 * time.Hour,
+        })
+}</span>
+
+func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, csArray []string) error <span class="cov0" title="0">{
+        topic := p.PubsubClient.Topic(topicID)
+        defer topic.Stop()
+
+        r := topic.Publish(ctx, &amp;pubsub.Message{
+                Data: []byte(strings.Join(csArray, "|")),
+        })
+
+        for _, r := range append(results, r) </span><span class="cov0" title="0">{
+                id, err := r.Get(ctx)
+                if err != nil </span><span class="cov0" title="0">{
+                        return errors.InternalServerErrorPubSubPublish.Wrap("Failed to publish message.", err)
+                }</span>
+                <span class="cov0" title="0">p.Log.Info("Published a message with a message ID: ", id)</span>
+        }
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error <span class="cov8" title="1">{
+        psCfg := pubsubConfig.PubSubConfig()
+
+        topicID := psCfg.MongoDbDatabase
+        topicExistence, err := p.Pubsub.topicExists(ctx, topicID)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
+        }</span>
+        <span class="cov8" title="1">if topicExistence == false </span><span class="cov8" title="1">{
+                p.Log.Info("Topic is not exists. Creating a topic.")
+
+                var err error
+                _, err = p.Pubsub.createTopic(ctx, topicID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
+                }</span>
+                <span class="cov8" title="1">p.Log.Info("Successed to create topic. ")</span>
+        }
+
+        <span class="cov8" title="1">subscriptionID := psCfg.MongoDbCollection
+        subscriptionExistence, err := p.Pubsub.subscriptionExists(ctx, subscriptionID)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerErrorPubSubFind.Wrap("Failed to check subscription existence.", err)
+        }</span>
+
+        <span class="cov8" title="1">if subscriptionExistence == false </span><span class="cov8" title="1">{
+                p.Log.Info("Subscription is not exists. Creating a subscription.")
+
+                var err error
+                _, err = p.Pubsub.createSubscription(ctx, topicID, subscriptionID)
+                if err != nil </span><span class="cov0" title="0">{
+                        return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create subscription.", err)
+                }</span>
+                <span class="cov8" title="1">p.Log.Info("Successed to create subscription. ")</span>
+        }
+
+        <span class="cov8" title="1">id, err := json.Marshal(cs["_id"])
+        if err != nil </span><span class="cov8" title="1">{
+                fmt.Printf("%v\n", "xxxxxxxxxxxxxxxxxxx")
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">opType := cs["operationType"].(string)
+        clusterTime := cs["clusterTime"].(primitive.Timestamp).T
+        fullDoc, err := json.Marshal(cs["fullDocument"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">ns, err := json.Marshal(cs["ns"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">docKey, err := json.Marshal(cs["documentKey"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+        <span class="cov8" title="1">updDesc, err := json.Marshal(cs["updateDescription"])
+        if err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+        }</span>
+
+        <span class="cov8" title="1">r := []string{
+                string(id),
+                opType,
+                time.Unix(int64(clusterTime), 0).Format("2006-01-02 15:04:05"),
+                string(fullDoc),
+                string(ns),
+                string(docKey),
+                string(updDesc),
+        }
+
+        if err := p.Pubsub.publishMessage(ctx, topicID, r); err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">//go:build test
+// +build test
+
+package pubsub
+
+import (
+        "cloud.google.com/go/pubsub"
+        "context"
+        "fmt"
+        "reflect"
+)
+
+type mockPubsubClientImpl struct {
+        pubsubClient *pubsub.Client
+        cs           []string
+}
+
+//func (_ *mockPubsubClientImpl) pubsubTopic(_ context.Context, _ string) error {
+//        return nil
+//}
+
+func (_ *mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) <span class="cov8" title="1">{
+        return false, nil
+}</span>
+
+func (_ *mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) <span class="cov8" title="1">{
+        return nil, nil
+}</span>
+
+func (_ *mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error)<span class="cov8" title="1">{
+        return false, nil
+}</span>
+
+func (_ *mockPubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) <span class="cov8" title="1">{
+        return nil, nil
+}</span>
+
+func (m *mockPubsubClientImpl) publishMessage(_ context.Context, _ string, csArray []string) error <span class="cov8" title="1">{
+        if csArray == nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("Expect csItems to not be nil.")
+        }</span>
+        <span class="cov8" title="1">if e, a := m.cs, csArray; !reflect.DeepEqual(e, a) </span><span class="cov0" title="0">{
+                return fmt.Errorf("expect %v, got %v", e, a)
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package logger
+
+import (
+        "go.uber.org/zap"
+        "go.uber.org/zap/zapcore"
+        "os"
+)
+
+type Log struct {
+        Level           string
+        Format          string
+        OutputDirectory string
+        OutputFile      string
+}
+
+func New(logCfg Log) *zap.SugaredLogger <span class="cov8" title="1">{
+        var logFormat, logOutputPath, logOutputDir, logOutputF string
+
+        level := zap.NewAtomicLevel()
+
+        switch logCfg.Level </span>{
+        case "0":<span class="cov8" title="1">
+                level.SetLevel(zapcore.InfoLevel)</span>
+        case "1":<span class="cov8" title="1">
+                level.SetLevel(zapcore.ErrorLevel)</span>
+        }
+
+        <span class="cov8" title="1">if logCfg.Format == "console" </span><span class="cov0" title="0">{
+                logFormat = logCfg.Format
+        }</span> else<span class="cov8" title="1"> {
+                logFormat = "json"
+        }</span>
+
+        <span class="cov8" title="1">if logCfg.OutputDirectory != "" &amp;&amp; logCfg.OutputFile != "" </span><span class="cov8" title="1">{
+                logOutputDir = logCfg.OutputDirectory
+                logOutputF = logCfg.OutputFile
+                if _, err := os.Stat(logOutputDir); os.IsNotExist(err) </span><span class="cov8" title="1">{
+                        os.MkdirAll(logOutputDir, 0777)
+                }</span>
+                <span class="cov8" title="1">logOutputPath = logOutputDir + logOutputF
+                os.OpenFile(logOutputPath, os.O_WRONLY|os.O_CREATE, 0664)</span>
+        } else<span class="cov0" title="0"> {
+                logOutputPath = "stdout"
+        }</span>
+
+        <span class="cov8" title="1">cfg := zap.Config{
+                Level:    level,
+                Encoding: logFormat,
+                EncoderConfig: zapcore.EncoderConfig{
+                        TimeKey:     "Time",
+                        LevelKey:    "Level",
+                        MessageKey:  "Msg",
+                        EncodeLevel: zapcore.CapitalLevelEncoder,
+                        EncodeTime:  zapcore.ISO8601TimeEncoder,
+                },
+                OutputPaths: []string{logOutputPath},
+                // zap internal error output destination
+                ErrorOutputPaths: []string{"stderr"},
+        }
+        l, _ := cfg.Build()
+
+        return l.Sugar()</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package resume_token
+
+import (
+        "go.uber.org/zap"
+        "mxtransporter/config"
+        "mxtransporter/pkg/common"
+        "mxtransporter/pkg/errors"
+        "os"
+)
+
+type ResumeTokenImpl struct {
+        Log *zap.SugaredLogger
+}
+
+func (r *ResumeTokenImpl) SaveResumeToken(rt string) error <span class="cov8" title="1">{
+        pv, err := config.FetchPersistentVolumeDir()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">nowTime, err := common.FetchNowTime()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">filePath := pv + nowTime.Format("2006/01/02/")
+        file := filePath + nowTime.Format("2006-01-02.dat")
+
+        if dirStat, err := os.Stat(filePath); os.IsNotExist(err) || dirStat.IsDir() </span><span class="cov8" title="1">{
+                os.MkdirAll(filePath, 0777)
+        }</span>
+
+        <span class="cov8" title="1">fp, err := os.OpenFile(file, os.O_WRONLY|os.O_CREATE, 0664)
+
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerError.Wrap("Failed to open file saved resume token.", err)
+        }</span>
+        <span class="cov8" title="1">defer fp.Close()
+
+        _, err = fp.WriteString(rt)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.InternalServerError.Wrap("Failed to write resume token in file.", err)
+        }</span>
+
+        <span class="cov8" title="1">r.Log.Info("Success to save a resume token in PVC")
+
+        return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

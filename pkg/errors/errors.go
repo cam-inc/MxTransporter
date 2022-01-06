@@ -20,6 +20,7 @@ const (
 	// pubsub
 	InternalServerErrorPubSubFind   = errType("500: pubsub find error")
 	InternalServerErrorPubSubCreate = errType("500: pubsub create error")
+	InternalServerErrorPubSubPublish = errType("500: pubsub publish error")
 	// kinesis stream
 	InternalServerErrorKinesisStreamPut = errType("500: kinesis stream put error")
 )

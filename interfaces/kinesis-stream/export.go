@@ -43,8 +43,6 @@ func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName stri
 func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	ksCfg := kinesisConfig.KinesisStreamConfig()
 
-	rt := cs["_id"].(primitive.M)["_data"]
-
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
 		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
@@ -77,6 +75,8 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 		string(docKey),
 		string(updDesc),
 	}
+
+	rt := cs["_id"].(primitive.M)["_data"]
 
 	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {
 		return err

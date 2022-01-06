@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	pubsubConfig "mxtransporter/config/pubsub"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"time"
 )
+
+var results []*pubsub.PublishResult
 
 type (
 	IPubsub interface {
@@ -33,10 +36,7 @@ type (
 )
 
 func (p *PubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
-	topic := p.PubsubClient.Topic(topicID)
-	defer topic.Stop()
-
-	return topic.Exists(ctx)
+	return p.PubsubClient.Topic(topicID).Exists(ctx)
 }
 
 func (p *PubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
@@ -44,8 +44,7 @@ func (p *PubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pu
 }
 
 func (p *PubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
-	subscription := p.PubsubClient.Subscription(subscriptionID)
-	return subscription.Exists(ctx)
+	return p.PubsubClient.Subscription(subscriptionID).Exists(ctx)
 }
 
 func (p *PubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
@@ -60,9 +59,17 @@ func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, c
 	topic := p.PubsubClient.Topic(topicID)
 	defer topic.Stop()
 
-	topic.Publish(ctx, &pubsub.Message{
+	r := topic.Publish(ctx, &pubsub.Message{
 		Data: []byte(strings.Join(csArray, "|")),
 	})
+
+	for _, r := range append(results, r) {
+		id, err := r.Get(ctx)
+		if err != nil {
+			return errors.InternalServerErrorPubSubPublish.Wrap("Failed to publish message.", err)
+		}
+		p.Log.Info("Published a message with a message ID: ", id)
+	}
 
 	return nil
 }
@@ -105,6 +112,7 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
+		fmt.Printf("%v\n", "xxxxxxxxxxxxxxxxxxx")
 		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	opType := cs["operationType"].(string)

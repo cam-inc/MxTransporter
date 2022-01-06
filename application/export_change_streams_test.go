@@ -68,7 +68,7 @@ func deleteFileSavedResumeToken() error {
 }
 
 func Test_watchChangeStreams(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	var l *zap.SugaredLogger
 
@@ -203,7 +203,7 @@ func Test_watchChangeStreams(t *testing.T) {
 }
 
 func Test_exportChangeStreams(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	var l *zap.SugaredLogger
 
