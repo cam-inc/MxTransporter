@@ -12,6 +12,7 @@ func init() {
 	godotenv.Load()
 }
 
+// Required parameter uses lookupEnv ()
 func FetchPersistentVolumeDir() (string, error) {
 	pvDir, pvDirExistence := os.LookupEnv("PERSISTENT_VOLUME_DIR")
 	if pvDirExistence == false {
@@ -28,6 +29,7 @@ func FetchExportDestination() (string, error) {
 	return expDst, nil
 }
 
+// LookupEnv() is used because error judgment is required for error handling of the caller.
 func FetchGcpProject() (string, error) {
 	projectID, projectIDExistence := os.LookupEnv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
 	if projectIDExistence == false {
