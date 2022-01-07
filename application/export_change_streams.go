@@ -137,7 +137,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
-	if err != nil {
+	if err != nil && (strings.Index(expDst, "bigquery") != -1 || strings.Index(expDst, "pubsub") != -1) {
 		return err
 	}
 

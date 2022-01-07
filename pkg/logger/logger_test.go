@@ -71,9 +71,36 @@ func Test_New(t *testing.T) {
 			},
 		},
 		{
-			name: "Check that the log output correctly.",
+			name: "Check that the json log output correctly.",
 			runner: func(t *testing.T) {
 				logCfg.Level = "1"
+				l := New(logCfg)
+				l.Info("test log")
+
+				if _, err := os.Stat(logCfg.OutputDirectory); err != nil {
+					t.Fatal("Failed to make directory.")
+				}
+
+				lf := logCfg.OutputDirectory + logCfg.OutputFile
+				if _, err := os.Stat(lf); err != nil {
+					t.Fatal("Failed to make file.")
+				}
+
+				if lb, _ := os.ReadFile(lf); len(lb) != 0 {
+					t.Fatal("Failed to output log. Info level logs should not be output in this test case.")
+				}
+
+				l.Error("test log")
+				if lb, _ := os.ReadFile(lf); len(lb) == 0 {
+					t.Fatal("Failed to save error log to log file.")
+				}
+			},
+		},
+		{
+			name: "Check that the console log output correctly.",
+			runner: func(t *testing.T) {
+				logCfg.Level = "1"
+				logCfg.Format = "console"
 				l := New(logCfg)
 				l.Info("test log")
 
