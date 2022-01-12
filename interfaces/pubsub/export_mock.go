@@ -15,10 +15,6 @@ type mockPubsubClientImpl struct {
 	cs           []string
 }
 
-//func (_ *mockPubsubClientImpl) pubsubTopic(_ context.Context, _ string) error {
-//	return nil
-//}
-
 func (_ *mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
 	return false, nil
 }

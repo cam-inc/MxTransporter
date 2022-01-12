@@ -51,6 +51,16 @@ func Test_ExportToBigquery(t *testing.T) {
 			},
 		},
 		{
+			name: "Failed to put a record to bigquery.",
+			runner: func(t *testing.T) {
+				bqClientImpl := &mockBigqueryClientImplError{nil, nil}
+				mockBqImpl := BigqueryImpl{bqClientImpl}
+				if err := mockBqImpl.ExportToBigquery(ctx, csMap); err == nil {
+					t.Fatalf("Not behaving as intended.")
+				}
+			},
+		},
+		{
 			name: "Failed to marshal _id parameter of csMap.",
 			runner: func(t *testing.T) {
 				// Insert something that json.marchal fails

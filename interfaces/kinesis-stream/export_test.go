@@ -52,6 +52,16 @@ func Test_ExportToKinesisStream(t *testing.T) {
 			},
 		},
 		{
+			name: "Failed to put a record to kinesis data streams.",
+			runner: func(t *testing.T) {
+				ksClientImpl := &mockKinesisStreamClientImplError{nil, "", nil}
+				mockKsImpl := KinesisStreamImpl{ksClientImpl}
+				if err := mockKsImpl.ExportToKinesisStream(ctx, csMap); err == nil {
+					t.Fatalf("Not behaving as intended.")
+				}
+			},
+		},
+		{
 			name: "Failed to marshal _id parameter of csMap.",
 			runner: func(t *testing.T) {
 				// Insert something that json.marchal fails

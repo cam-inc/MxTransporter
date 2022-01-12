@@ -33,11 +33,7 @@ func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName stri
 		StreamName:   aws.String(streamName),
 	})
 
-	if err != nil {
-		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
-	}
-
-	return nil
+	return err
 }
 
 func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error {
@@ -79,7 +75,7 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 	rt := cs["_id"].(primitive.M)["_data"]
 
 	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {
-		return err
+		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
 	}
 
 	return nil

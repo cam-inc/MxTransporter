@@ -91,10 +91,7 @@ func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExpo
 }
 
 func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
-	if err := c.CsExporter.exportChangeStreams(ctx); err != nil {
-		return err
-	}
-	return nil
+	return c.CsExporter.exportChangeStreams(ctx)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
@@ -233,31 +230,19 @@ func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error {
 }
 
 func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error {
-	if err := c.bq.ExportToBigquery(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.bq.ExportToBigquery(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error {
-	if err := c.pubsub.ExportToPubsub(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.pubsub.ExportToPubsub(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
-	if err := c.kinesisStream.ExportToKinesisStream(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
-	if err := c.resumeToken.SaveResumeToken(rt); err != nil {
-		return err
-	}
-	return nil
+	return c.resumeToken.SaveResumeToken(rt)
 }
 
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {

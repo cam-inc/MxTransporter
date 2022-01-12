@@ -35,10 +35,7 @@ type (
 )
 
 func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
-	if err := b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
-		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
-	}
-	return nil
+	return b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems)
 }
 
 func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error {
@@ -80,7 +77,7 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	}
 
 	if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil {
-		return err
+		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 
 	return nil

@@ -55,7 +55,7 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">mxtransporter/application/export_change_streams.go (59.7%)</option>
+				<option value="file0">mxtransporter/application/export_change_streams.go (64.9%)</option>
 				
 				<option value="file1">mxtransporter/application/export_change_streams_mock.go (100.0%)</option>
 				
@@ -69,13 +69,13 @@
 				
 				<option value="file6">mxtransporter/config/pubsub/pubsub_config.go (100.0%)</option>
 				
-				<option value="file7">mxtransporter/interfaces/bigquery/export.go (84.0%)</option>
+				<option value="file7">mxtransporter/interfaces/bigquery/export.go (95.7%)</option>
 				
-				<option value="file8">mxtransporter/interfaces/bigquery/export_mock.go (60.0%)</option>
+				<option value="file8">mxtransporter/interfaces/bigquery/export_mock.go (66.7%)</option>
 				
-				<option value="file9">mxtransporter/interfaces/kinesis-stream/export.go (81.5%)</option>
+				<option value="file9">mxtransporter/interfaces/kinesis-stream/export.go (92.0%)</option>
 				
-				<option value="file10">mxtransporter/interfaces/kinesis-stream/export_mock.go (57.1%)</option>
+				<option value="file10">mxtransporter/interfaces/kinesis-stream/export_mock.go (62.5%)</option>
 				
 				<option value="file11">mxtransporter/interfaces/pubsub/export.go (69.0%)</option>
 				
@@ -190,11 +190,8 @@ func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExpo
 }</span>
 
 func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error <span class="cov0" title="0">{
-        if err := c.CsExporter.exportChangeStreams(ctx); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return c.CsExporter.exportChangeStreams(ctx)
+}</span>
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error <span class="cov8" title="1">{
         nowTime, err := common.FetchNowTime()
@@ -332,32 +329,20 @@ func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error <span
 }</span>
 
 func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
-        if err := c.bq.ExportToBigquery(ctx, cs); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return c.bq.ExportToBigquery(ctx, cs)
+}</span>
 
 func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
-        if err := c.pubsub.ExportToPubsub(ctx, cs); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return c.pubsub.ExportToPubsub(ctx, cs)
+}</span>
 
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error <span class="cov0" title="0">{
-        if err := c.kinesisStream.ExportToKinesisStream(ctx, cs); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return c.kinesisStream.ExportToKinesisStream(ctx, cs)
+}</span>
 
 func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error <span class="cov0" title="0">{
-        if err := c.resumeToken.SaveResumeToken(rt); err != nil </span><span class="cov0" title="0">{
-                return err
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return c.resumeToken.SaveResumeToken(rt)
+}</span>
 
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error <span class="cov8" title="1">{
         defer c.exporter.close(ctx)
@@ -700,11 +685,8 @@ type (
 )
 
 func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error <span class="cov0" title="0">{
-        if err := b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil </span><span class="cov0" title="0">{
-                return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
-        }</span>
-        <span class="cov0" title="0">return nil</span>
-}
+        return b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems)
+}</span>
 
 func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error <span class="cov8" title="1">{
         bqCfg := bigqueryConfig.BigqueryConfig()
@@ -744,8 +726,8 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
                 },
         }
 
-        if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil </span><span class="cov0" title="0">{
-                return err
+        if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
         }</span>
 
         <span class="cov8" title="1">return nil</span>
@@ -769,6 +751,11 @@ type mockBigqueryClientImpl struct {
         csItems  []ChangeStreamTableSchema
 }
 
+type mockBigqueryClientImplError struct {
+        bqClient *bigquery.Client
+        csItems  []ChangeStreamTableSchema
+}
+
 func (m *mockBigqueryClientImpl) putRecord(_ context.Context, _ string, _ string, csItems []ChangeStreamTableSchema) error <span class="cov8" title="1">{
         if csItems == nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("Expect csItems to not be nil.")
@@ -779,7 +766,10 @@ func (m *mockBigqueryClientImpl) putRecord(_ context.Context, _ string, _ string
         }</span>
         <span class="cov8" title="1">return nil</span>
 }
-</pre>
+
+func (m *mockBigqueryClientImplError) putRecord(_ context.Context, _ string, _ string, _ []ChangeStreamTableSchema) error <span class="cov8" title="1">{
+        return fmt.Errorf("Expected errors for error handling.")
+}</pre>
 		
 		<pre class="file" id="file9" style="display: none">package kinesis_stream
 
@@ -816,12 +806,8 @@ func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName stri
                 StreamName:   aws.String(streamName),
         })
 
-        if err != nil </span><span class="cov0" title="0">{
-                return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
-        }</span>
-
-        <span class="cov0" title="0">return nil</span>
-}
+        return err
+}</span>
 
 func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error <span class="cov8" title="1">{
         ksCfg := kinesisConfig.KinesisStreamConfig()
@@ -861,8 +847,8 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 
         rt := cs["_id"].(primitive.M)["_data"]
 
-        if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil </span><span class="cov0" title="0">{
-                return err
+        if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil </span><span class="cov8" title="1">{
+                return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
         }</span>
 
         <span class="cov8" title="1">return nil</span>
@@ -887,6 +873,12 @@ type mockKinesisStreamClientImpl struct {
         cs                  []string
 }
 
+type mockKinesisStreamClientImplError struct {
+        kinesisStreamClient *kinesis.Client
+        rt                  string
+        cs                  []string
+}
+
 func (m *mockKinesisStreamClientImpl) putRecord(_ context.Context, _ string, rt interface{}, csArray []string) error <span class="cov8" title="1">{
         if csArray == nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("Expect csItems to not be nil.")
@@ -899,7 +891,10 @@ func (m *mockKinesisStreamClientImpl) putRecord(_ context.Context, _ string, rt 
         }</span>
         <span class="cov8" title="1">return nil</span>
 }
-</pre>
+
+func (m *mockKinesisStreamClientImplError) putRecord(_ context.Context, _ string, _ interface{}, _ []string) error <span class="cov8" title="1">{
+        return fmt.Errorf("Expected errors for error handling.")
+}</pre>
 		
 		<pre class="file" id="file11" style="display: none">package pubsub
 
@@ -1071,10 +1066,6 @@ type mockPubsubClientImpl struct {
         pubsubClient *pubsub.Client
         cs           []string
 }
-
-//func (_ *mockPubsubClientImpl) pubsubTopic(_ context.Context, _ string) error {
-//        return nil
-//}
 
 func (_ *mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) <span class="cov8" title="1">{
         return false, nil
