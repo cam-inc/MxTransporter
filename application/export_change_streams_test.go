@@ -193,7 +193,7 @@ func Test_watchChangeStreams(t *testing.T) {
 			},
 		},
 		{
-			name: "Pass not to read resume token.",
+			name: "Failed to read resume token.",
 			runner: func(t *testing.T) {
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
 				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
