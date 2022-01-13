@@ -2,7 +2,6 @@ package common
 
 import (
 	"os"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -49,23 +48,15 @@ func Test_FetchNowTime(t *testing.T) {
 		runner func(t *testing.T)
 	}{
 		{
-			name: "Check that it is able to fetch now time",
+			name: "Check that the function returns a value without error.",
 			runner: func(t *testing.T) {
 				if err := os.Setenv("TIME_ZONE", tz); err != nil {
 					t.Fatalf("Failed to set file TIME_ZONE environment variables.")
 				}
 
-				tl, err := time.LoadLocation(tz)
-				if err != nil {
-					t.Fatal("Failed to fetch time zone.")
-				}
-
-				n, err := FetchNowTime()
-				if e, a := n, time.Now().In(tl); !reflect.DeepEqual(e, a) {
-					t.Fatalf("expect %v, got %v", e, a)
-				}
-
-				if err != nil {
+				nt, err := FetchNowTime()
+				et := time.Time{}
+				if nt == et || err != nil {
 					t.Fatalf("Failed to fetch now time.")
 				}
 			},
@@ -84,7 +75,7 @@ func Test_FetchNowTime(t *testing.T) {
 			},
 		},
 		{
-			name: "Check that it is able to fetch now time",
+			name: "Check that it is unable to fetch now time if setting time zone with mistakes.",
 			runner: func(t *testing.T) {
 				if err := os.Setenv("TIME_ZONE", "xxx"); err != nil {
 					t.Fatalf("Failed to set file TIME_ZONE environment variables.")
