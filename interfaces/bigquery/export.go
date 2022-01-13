@@ -43,25 +43,25 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json.", err)
 	}
 
 	csItems := []ChangeStreamTableSchema{
