@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"mxtransporter/config"
-	"mxtransporter/pkg/errors"
 	"mxtransporter/pkg/logger"
 	"os"
 	"reflect"
@@ -23,7 +22,7 @@ func Test_SaveResumeToken(t *testing.T) {
 	rt := "00000"
 
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -82,7 +81,6 @@ func Test_SaveResumeToken(t *testing.T) {
 				nowTime := time.Now().In(tl)
 				file := nowTime.Format("2006/01/02/2006-01-02.dat")
 
-
 				resumeTokenImpl := ResumeTokenImpl{l}
 				if err := resumeTokenImpl.SaveResumeToken(rt); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
@@ -112,7 +110,7 @@ func TestMain(m *testing.M) {
 
 	err := os.RemoveAll(nowTime.Format("2006"))
 	if err != nil {
-		fmt.Println(errors.InternalServerError.Wrap("The unnecessary file could not be deleted.", err))
+		fmt.Println(fmt.Errorf("The unnecessary file could not be deleted. errMessage: %s", err))
 	}
 
 	os.Exit(status)

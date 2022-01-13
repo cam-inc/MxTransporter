@@ -4,7 +4,6 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	pubsubConfig "mxtransporter/config/pubsub"
@@ -26,7 +25,7 @@ type (
 
 	PubsubImpl struct {
 		Pubsub IPubsub
-		Log *zap.SugaredLogger
+		Log    *zap.SugaredLogger
 	}
 
 	PubsubClientImpl struct {
@@ -112,7 +111,6 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		fmt.Printf("%v\n", "xxxxxxxxxxxxxxxxxxx")
 		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
 	}
 	opType := cs["operationType"].(string)

@@ -11,7 +11,7 @@ import (
 
 func Test_FetchPersistentVolumeDir(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -49,7 +49,7 @@ func Test_FetchPersistentVolumeDir(t *testing.T) {
 
 func Test_FetchExportDestination(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -87,7 +87,7 @@ func Test_FetchExportDestination(t *testing.T) {
 
 func Test_FetchGcpProject(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -125,7 +125,7 @@ func Test_FetchGcpProject(t *testing.T) {
 
 func Test_FetchTimeZone(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{

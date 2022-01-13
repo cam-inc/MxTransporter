@@ -23,7 +23,7 @@ func (_ *mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) 
 	return nil, nil
 }
 
-func (_ *mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error){
+func (_ *mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
 	return false, nil
 }
 

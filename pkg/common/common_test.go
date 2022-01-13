@@ -8,7 +8,7 @@ import (
 
 func Test_Contains(t *testing.T) {
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -44,7 +44,7 @@ func Test_FetchNowTime(t *testing.T) {
 	tz := "Asia/Tokyo"
 
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
@@ -87,7 +87,6 @@ func Test_FetchNowTime(t *testing.T) {
 			},
 		},
 	}
-
 
 	for _, v := range tests {
 		t.Run(v.name, v.runner)

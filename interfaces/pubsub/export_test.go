@@ -42,7 +42,7 @@ func Test_ExportToPubSub(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name string
+		name   string
 		runner func(t *testing.T)
 	}{
 		{
