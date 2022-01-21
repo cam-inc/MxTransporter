@@ -15,19 +15,19 @@ type mockPubsubClientImpl struct {
 	cs           []string
 }
 
-func (_ *mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
+func (*mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
 	return false, nil
 }
 
-func (_ *mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
+func (*mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
 	return nil, nil
 }
 
-func (_ *mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
+func (*mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
 	return false, nil
 }
 
-func (_ *mockPubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+func (*mockPubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
 	return nil, nil
 }
 

@@ -54,7 +54,7 @@ type (
 	}
 )
 
-func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
 	bqClient, err := client.NewBigqueryClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, p
 	return bqClient, nil
 }
 
-func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	psClient, err := client.NewPubsubClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, pro
 	return psClient, nil
 }
 
-func (_ *ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	ksClient, err := client.NewKinesisClient(ctx)
 	if err != nil {
 		return nil, err
@@ -134,7 +134,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
-	if err != nil && (strings.Index(expDst, "bigquery") != -1 || strings.Index(expDst, "pubsub") != -1) {
+	if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
 		return err
 	}
 
@@ -169,7 +169,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
 			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
 		default:
-			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
+			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly"))
 		}
 	}
 

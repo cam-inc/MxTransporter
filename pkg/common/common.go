@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Check if the array has the specified string
+// Contains check if the array has the specified string
 func Contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {

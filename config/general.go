@@ -12,10 +12,10 @@ func init() {
 	godotenv.Load()
 }
 
-// Required parameter uses lookupEnv ()
 func FetchPersistentVolumeDir() (string, error) {
+	// Required parameter uses lookupEnv ()
 	pvDir, pvDirExistence := os.LookupEnv("PERSISTENT_VOLUME_DIR")
-	if pvDirExistence == false {
+	if !pvDirExistence {
 		return "", errors.InternalServerErrorEnvGet.New("PERSISTENT_VOLUME_DIR is not existed in environment variables")
 	}
 	return pvDir, nil
@@ -23,16 +23,16 @@ func FetchPersistentVolumeDir() (string, error) {
 
 func FetchExportDestination() (string, error) {
 	expDst, expDstExistence := os.LookupEnv("EXPORT_DESTINATION")
-	if expDstExistence == false {
+	if !expDstExistence {
 		return "", errors.InternalServerErrorEnvGet.New("EXPORT_DESTINATION is not existed in environment variables")
 	}
 	return expDst, nil
 }
 
-// LookupEnv() is used because error judgment is required for error handling of the caller.
 func FetchGcpProject() (string, error) {
+	// LookupEnv() is used because error judgment is required for error handling of the caller.
 	projectID, projectIDExistence := os.LookupEnv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS")
-	if projectIDExistence == false {
+	if !projectIDExistence {
 		return "", errors.InternalServerErrorEnvGet.New("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS is not existed in environment variables")
 	}
 	return projectID, nil
@@ -40,7 +40,7 @@ func FetchGcpProject() (string, error) {
 
 func FetchTimeZone() (string, error) {
 	tz, tzExistence := os.LookupEnv("TIME_ZONE")
-	if tzExistence == false {
+	if !tzExistence {
 		return "", errors.InternalServerErrorEnvGet.New("TIME_ZONE is not existed in environment variables")
 	}
 	return tz, nil
