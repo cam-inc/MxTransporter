@@ -2,6 +2,8 @@
 
 MxTransporter is a middleware that accurately carries change streams of MongoDB in real time. For infrastructure, you can easily use this middleware by creating a container image with Dockerfile on any platform and deploying it.
 
+:jp: Japanese version of the README is [here](/README_JP.md).
+
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cam-inc_MxTransporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=cam-inc_MxTransporter)
 <br>
@@ -78,7 +80,7 @@ Run ```go run ./cmd/main.go``` in the root directory.
 2. When the Collection is updated, MxTransporter gets the change streams.
 3. Format change streams according to the export destination.
 4. Put change streams to the export destination.
-5. If the put is successful, the resume Token included in the change streams is taken out and saved in the persistent volume.
+5. If the put is successful, the resume token included in the change streams is taken out and saved in the persistent volume.
 
 <br>
 
@@ -89,7 +91,7 @@ Run ```go run ./cmd/main.go``` in the root directory.
 ### Connection to MongoDB
 Allow the public IP of the MxTransporter container on the mongoDB side. This allows you to watch the changed streams that occur.
 
-### Change streams
+### Change Streams
 Change streams output the change events that occurred in the database and are the same as the logs stored in oplog. And it has a unique token called resume token, which can be used to get events after a specific event.
 
 In this system, resume token is saved in Persistent Volume associated with the container, and when a new container is started, the resume token is referenced and change streams acquisition starts from that point.
@@ -117,7 +119,7 @@ $ cat {year}-{month}-{day}.dat
 T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
 ```
 
-When getting change-streams by referring to resumu token, it is designed to specify resume token in ```startAfrter``` of ```Collection.Watch()```.
+When getting change-streams by referring to resume token, it is designed to specify resume token in ```startAfrter``` of ```Collection.Watch()```.
 
 <br>
 

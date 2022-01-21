@@ -27,6 +27,10 @@ EXPORT_DESTINATION=bigquery
 or
 
 EXPORT_DESTINATION=pubsub
+
+or
+
+EXPORT_DESTINATION=bigquery,pubsub
 ```
 
 ### BigQuery schema  (optional)
@@ -76,7 +80,7 @@ Table schema
 ## Procedure
 **Optional: Setup BigQuery**
 
-You need to create a dataset and a collection.
+You need to create a dataset and a table.
 
 Create a dataset.
 It's interactive, so specify the dataset name.
@@ -112,7 +116,7 @@ $ make build
 
 **2. Create kubernetes secrets.**
 
-Collect the environment variables written in secrets.env and create them in a cluster as kubernetes secrets.
+Collect the environment variables written in ```secrets.env``` and create them in a cluster as kubernetes secrets.
 
 ```
 $ make secrets

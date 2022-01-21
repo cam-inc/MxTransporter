@@ -49,11 +49,11 @@ $ make build
 
 ・Create cluster
 
-Create ```cluster.yaml``` by referring to the environment variables written in .env. Then create a cluster with the ```eksctl create cluster``` command.
+Create ```cluster.yaml``` by referring to the environment variables written in ```.env```. Then create a cluster with the ```eksctl create cluster``` command.
 
 ・Create node group
 
-Create ```nodegroup.yaml``` by referring to the environment variables written in .env. Then create a node group with the ```eksctl create nodegroup``` command.
+Create ```nodegroup.yaml``` by referring to the environment variables written in ```.env```. Then create a node group with the ```eksctl create nodegroup``` command.
 
 <br>
 
@@ -66,7 +66,7 @@ Node group role is created by ```eksctl create cluster``` command, just attach ,
 
 **5. Create kubernetes secrets.**
 
-Collect the environment variables written in secrets.env and create them in a cluster as kubernetes secrets.
+Collect the environment variables written in ```secrets.env``` and create them in a cluster as kubernetes secrets.
 
 ```
 $ make secrets
@@ -76,7 +76,7 @@ $ make secrets
 
 **6. Deploy kubernetes resources.**
 
-If you have set an Optional environment variable in .secrets.env, edit the container env in ./templates/stateless.yaml.
+If you have set an Optional environment variable in ```.secrets.env```, edit the container env in ```./templates/stateless.yaml```.
 Set only the environment variables required for the container running on kubernetes.
 
 Create kubernetes resources with helm.
@@ -89,7 +89,7 @@ $ make deploy
 
 The following processing is performed here.<br>
 ・build docker image.<br>
-・login ecr repository.<br>
+・login ECR repository.<br>
 ・push docker image to ecr repository.<br>
 ・build helm variables.<br>
 ・deploy with helm templates.<br>
