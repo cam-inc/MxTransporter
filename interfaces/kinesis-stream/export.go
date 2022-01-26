@@ -72,9 +72,14 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 		string(updDesc),
 	}
 
-	rt, ok := cs["_id"].(primitive.M)["_data"]
+	pm, ok := cs["_id"].(primitive.M)
 	if !ok {
 		return errors.InternalServerError.New("Failed to assert _id parameters of change streams.")
+	}
+
+	rt, exists := pm["_data"]
+	if !exists {
+		return errors.InternalServerError.New("Failed to get _data parameters of change streams.")
 	}
 
 	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {
