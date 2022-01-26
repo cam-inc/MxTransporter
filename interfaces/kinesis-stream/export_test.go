@@ -166,6 +166,27 @@ func Test_ExportToKinesisStream(t *testing.T) {
 			},
 		},
 		{
+			name: "Check that _id of change streams parameter is primitive.M.",
+			runner: func(t *testing.T) {
+				// Insert something that json.marchal fails
+				csMap := primitive.M{
+					"_id":               "",
+					"operationType":     "insert",
+					"clusterTime":       primitive.Timestamp{00000, 0},
+					"fullDocument":      primitive.M{"wwwww": "test full document"},
+					"ns":                primitive.M{"xxxxx": "test ns"},
+					"documentKey":       primitive.M{"yyyyy": "test document key"},
+					"updateDescription": primitive.M{"zzzzz": "test update description"},
+				}
+
+				ksClientImpl := &mockKinesisStreamClientImpl{nil, "", nil}
+				mockKsImpl := KinesisStreamImpl{ksClientImpl}
+				if err := mockKsImpl.ExportToKinesisStream(ctx, csMap); err == nil {
+					t.Fatalf("Not behaving as intended.")
+				}
+			},
+		},
+		{
 			name: "Failed to get _data parameter value in _id parameter.",
 			runner: func(t *testing.T) {
 				// Insert something that json.marchal fails
