@@ -19,7 +19,7 @@ resources:
         subnetwork: $GKE_CLUSTER_SUBNETWORK
         initialClusterVersion: $GKE_CLUSTER_VERSION
         nodePools:
-          - name: change-streams-pool
+          - name: mxtransporter-pool
             initialNodeCount: 1
             locations:
               - $GKE_NODE_LOCATION_1

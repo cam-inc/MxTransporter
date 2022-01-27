@@ -5,7 +5,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ "cs-for" }}-{{ $collection | lower | kebabcase }}
+  name: {{ "mxt-for" }}-{{ $collection | lower | kebabcase }}
   labels:
     {{- include "helm.labels" $ | nindent 4 }}
 spec:
@@ -20,7 +20,7 @@ spec:
         {{- include "helm.selectorLabels" $ | nindent 8 }}
     spec:
       containers:
-        - name: {{ "cs-for" }}-{{ $collection | lower | kebabcase }}
+        - name: {{ "mxt-for" }}-{{ $collection | lower | kebabcase }}
           image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
           env:
             - name: MONGODB_HOST

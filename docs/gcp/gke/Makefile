@@ -1,12 +1,12 @@
 include .env
 
 .PHONY: all help \
-			build create-service-account create-custome-role attach-role-to-service-account build-gke-variables build-gke create-namespace\
-			deploy build-image build-helm-variables deploy-gke-resources \
-			secret create-secret \
-			stop pods-stop start pods-start \
-			upgrade upgrade-gke-resources update-gke \
-			create-bigquery-dataset create-bigquery-table set-bigquery-table-expiration-date
+		build create-service-account create-custome-role attach-role-to-service-account build-gke-variables build-gke create-namespace\
+		deploy build-image build-helm-variables deploy-gke-resources \
+		secret create-secret \
+		stop pods-stop start pods-start \
+		upgrade upgrade-gke-resources update-gke \
+		create-bigquery-dataset create-bigquery-table set-bigquery-table-expiration-date
 
 all: help
 

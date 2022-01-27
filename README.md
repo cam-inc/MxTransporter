@@ -44,7 +44,7 @@ With the Dockerfile provided, you can easily run MxTransporter by simply buildin
 
 ### Requirement
 
-- Build a Dockerfile, create an image, and create a container based on that image.
+- Execute the command ```make build-image``` in ```./Makefile```, Build a Dockerfile, create an image, and create a container based on that image.
 
 - Mount the persistent volume on the container to store the resume token. See the change streams section of this README for more information.
 
@@ -58,15 +58,15 @@ With the Dockerfile provided, you can easily run MxTransporter by simply buildin
 
 ## Run locally
 ### Procedure
-**1. Create ```.env``` by referring to ```.env.template```.**
+1. Create ```.env``` by referring to ```.env.template```.
 
-**2. Allow access from the IP of the local machine on the mongoDB.**
+2. Allow access from the IP of the local machine on the mongoDB.
 
-**3. Set permissions to access BigQuery, PubSub or Kinesis Data Streams from local.**
+3. Set permissions to access BigQuery, PubSub or Kinesis Data Streams from local.
 
 For details on how to set it, refer to Registering AWS and GCP Credentials Locally.
 
-**4. Run**
+4. Run
 
 Run ```go run ./cmd/main.go``` in the root directory.
 

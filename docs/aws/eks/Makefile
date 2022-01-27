@@ -1,10 +1,10 @@
 include .env
 
 .PHONY: all help \
-			create-kms-key \
-			build create-cluster create-nodegroup \
-			secret create-secret \
-			deploy build-image login-ecr push-to-ecr build-helm-variables deploy-eks-resources
+		create-kms-key \
+		build create-cluster create-nodegroup \
+		secret create-secret \
+		deploy build-image login-ecr push-to-ecr build-helm-variables deploy-eks-resources
 
 help:
 	@echo ""
