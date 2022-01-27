@@ -15,12 +15,20 @@ type mockPubsubClientImpl struct {
 	cs           []string
 }
 
-func (_ *mockPubsubClientImpl) pubsubTopic(_ context.Context, _ string) error {
-	return nil
+func (*mockPubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
+	return false, nil
 }
 
-func (_ *mockPubsubClientImpl) pubsubSubscription(_ context.Context, _ string, _ string) error {
-	return nil
+func (*mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error) {
+	return nil, nil
+}
+
+func (*mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
+	return false, nil
+}
+
+func (*mockPubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
+	return nil, nil
 }
 
 func (m *mockPubsubClientImpl) publishMessage(_ context.Context, _ string, csArray []string) error {

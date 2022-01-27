@@ -35,10 +35,7 @@ type (
 )
 
 func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, table string, csItems []ChangeStreamTableSchema) error {
-	if err := b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems); err != nil {
-		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
-	}
-	return nil
+	return b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems)
 }
 
 func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error {
@@ -46,25 +43,25 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
 	}
 
 	csItems := []ChangeStreamTableSchema{
@@ -80,7 +77,7 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	}
 
 	if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil {
-		return err
+		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 
 	return nil

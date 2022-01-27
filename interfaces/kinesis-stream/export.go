@@ -33,39 +33,33 @@ func (k *KinesisStreamClientImpl) putRecord(ctx context.Context, streamName stri
 		StreamName:   aws.String(streamName),
 	})
 
-	if err != nil {
-		return errors.InternalServerErrorKinesisStreamPut.Wrap("Failed to put message into kinesis stream.", err)
-	}
-
-	return nil
+	return err
 }
 
 func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	ksCfg := kinesisConfig.KinesisStreamConfig()
 
-	rt := cs["_id"].(primitive.M)["_data"]
-
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal json.", err)
+		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
 	}
 
 	r := []string{
@@ -76,6 +70,16 @@ func (k *KinesisStreamImpl) ExportToKinesisStream(ctx context.Context, cs primit
 		string(ns),
 		string(docKey),
 		string(updDesc),
+	}
+
+	pm, ok := cs["_id"].(primitive.M)
+	if !ok {
+		return errors.InternalServerError.New("Failed to assert _id parameters of change streams.")
+	}
+
+	rt, exists := pm["_data"]
+	if !exists {
+		return errors.InternalServerError.New("Failed to get _data parameters of change streams.")
 	}
 
 	if err := k.KinesisStream.putRecord(ctx, ksCfg.StreamName, rt, r); err != nil {

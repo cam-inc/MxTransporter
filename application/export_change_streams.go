@@ -54,7 +54,7 @@ type (
 	}
 )
 
-func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
 	bqClient, err := client.NewBigqueryClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (_ *ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, p
 	return bqClient, nil
 }
 
-func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	psClient, err := client.NewPubsubClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (_ *ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, pro
 	return psClient, nil
 }
 
-func (_ *ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
+func (*ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	ksClient, err := client.NewKinesisClient(ctx)
 	if err != nil {
 		return nil, err
@@ -91,10 +91,7 @@ func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExpo
 }
 
 func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
-	if err := c.CsExporter.exportChangeStreams(ctx); err != nil {
-		return err
-	}
-	return nil
+	return c.CsExporter.exportChangeStreams(ctx)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
@@ -137,7 +134,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
-	if err != nil {
+	if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
 		return err
 	}
 
@@ -163,7 +160,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 				return err
 			}
 			psClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
-			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl}
+			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
 			if err != nil {
@@ -172,7 +169,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
 			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
 		default:
-			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("You need to set the export destination in the environment variable correctly."))
+			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly"))
 		}
 	}
 
@@ -233,31 +230,19 @@ func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error {
 }
 
 func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error {
-	if err := c.bq.ExportToBigquery(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.bq.ExportToBigquery(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error {
-	if err := c.pubsub.ExportToPubsub(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.pubsub.ExportToPubsub(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
-	if err := c.kinesisStream.ExportToKinesisStream(ctx, cs); err != nil {
-		return err
-	}
-	return nil
+	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
-	if err := c.resumeToken.SaveResumeToken(rt); err != nil {
-		return err
-	}
-	return nil
+	return c.resumeToken.SaveResumeToken(rt)
 }
 
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
