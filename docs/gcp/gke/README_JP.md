@@ -122,7 +122,7 @@ $ make secrets
 
 **3. Kubernetes リソースをデプロイする**
 
-もしオプションの環境変数を```.secrets.env```セットしたのであれば、```./templates/stateless.yaml```内の env パラメータを編集します。Kubernetes で実行されているコンテナに必要な環境変数のみを設定します。
+もしオプションの環境変数を```.secrets.env```にセットしたのであれば、```./templates/stateless.yaml```内の env パラメータを編集します。Kubernetes で実行されているコンテナに必要な環境変数のみを設定します。
 
 Kubernetes リソースは helm によって作成されます。
 
@@ -133,9 +133,7 @@ $ make deploy
 ```
 
 このコマンドでは、以下のような処理が行われます。<br>
-・Docker イメージビルド<br>
-・ECR リポジトリへのログイン<br>
-・ECR リポジトリへ Docker イメージを送信<br>
+・GCR リポジトリへ Docker イメージを送信<br>
 ・helm の variables を作成します<br>
 ・helm テンプレートをデプロイする<br>
 
