@@ -87,7 +87,7 @@ attach-role-to-service-account:
 			--member="serviceAccount:mxtransporter@$(PROJECT_NAME).iam.gserviceaccount.com" \
 			--role="roles/logging.admin"
 	gcloud projects add-iam-policy-binding $(PROJECT_NAME) \
-			--member="serviceAccount:change-streams-exporter@$(PROJECT_NAME).iam.gserviceaccount.com" \
+			--member="serviceAccount:mxtransporter@$(PROJECT_NAME).iam.gserviceaccount.com" \
 			--role="roles/storage.admin"
 
 	@echo "attach role to service accountin $(PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS) ..."

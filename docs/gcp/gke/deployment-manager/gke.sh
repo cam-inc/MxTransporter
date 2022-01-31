@@ -33,7 +33,7 @@ resources:
               autoUpgrade: False
               autoRepair: True
             config:
-              machineType: n1-standard-1
+              machineType: $GKE_NODE_MACHINE_TYPE
               localSsdCount: 0
               diskSizeGb: 100
               preemptible: False
