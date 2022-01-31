@@ -2,6 +2,8 @@
 
 MxTransporter is a middleware that accurately carries change streams of MongoDB in real time. For infrastructure, you can easily use this middleware by creating a container image with Dockerfile on any platform and deploying it.
 
+With MxTransporter, real-time data can be reproduced and retained on the data utilization side, and data utilization will become even more active.
+
 :jp: Japanese version of the README is [here](/README_JP.md).
 
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)

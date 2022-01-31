@@ -2,6 +2,8 @@
 
 MxTransporter は MongoDB の Change Streams を正確に、リアルタイムで送信先に運ぶミドルウェアです。MxTransporter は、用意された Dockerfile からコンテナイメージを作成し、お好きな環境へデプロイすることで簡単に利用することができます。
 
+MxTransporterにより、データ活用側でリアルタイムなデータを再現、保持でき、データ活用がより一層活発になるでしょう。
+
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cam-inc_MxTransporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=cam-inc_MxTransporter)
 <br>
