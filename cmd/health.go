@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/cam-inc/mxtransporter/config"
+	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
+	"github.com/cam-inc/mxtransporter/pkg/client"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
-	"mxtransporter/config"
-	mongoConnection "mxtransporter/interfaces/mongo"
-	"mxtransporter/pkg/client"
-	"mxtransporter/pkg/logger"
 	"os"
 )
 

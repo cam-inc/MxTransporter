@@ -1,10 +1,10 @@
 package resume_token
 
 import (
+	"github.com/cam-inc/mxtransporter/config"
+	"github.com/cam-inc/mxtransporter/pkg/common"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.uber.org/zap"
-	"mxtransporter/config"
-	"mxtransporter/pkg/common"
-	"mxtransporter/pkg/errors"
 	"os"
 )
 

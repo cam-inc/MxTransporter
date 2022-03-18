@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/cam-inc/mxtransporter/pkg/errors"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"github.com/joho/godotenv"
-	"mxtransporter/pkg/errors"
-	"mxtransporter/pkg/logger"
 	"os"
 )
 

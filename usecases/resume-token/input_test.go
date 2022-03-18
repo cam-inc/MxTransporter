@@ -5,9 +5,9 @@ package resume_token
 
 import (
 	"fmt"
+	"github.com/cam-inc/mxtransporter/config"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"go.uber.org/zap"
-	"mxtransporter/config"
-	"mxtransporter/pkg/logger"
 	"os"
 	"reflect"
 	"testing"

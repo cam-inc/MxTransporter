@@ -6,11 +6,11 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
+	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	kinesisConfig "mxtransporter/config/kinesis-stream"
-	mongoConfig "mxtransporter/config/mongodb"
-	"mxtransporter/pkg/errors"
 )
 
 func NewBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {

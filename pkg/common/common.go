@@ -1,8 +1,8 @@
 package common
 
 import (
-	"mxtransporter/config"
-	"mxtransporter/pkg/errors"
+	"github.com/cam-inc/mxtransporter/config"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"time"
 )
 

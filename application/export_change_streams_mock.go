@@ -8,13 +8,13 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
+	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
+	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
+	interfaceForResumeToken "github.com/cam-inc/mxtransporter/usecases/resume-token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	interfaceForBigquery "mxtransporter/interfaces/bigquery"
-	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
-	interfaceForPubsub "mxtransporter/interfaces/pubsub"
-	interfaceForResumeToken "mxtransporter/usecases/resume-token"
 )
 
 type mockChangeStremsWatcherClientImpl struct {

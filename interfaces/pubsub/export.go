@@ -4,10 +4,10 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
+	pubsubConfig "github.com/cam-inc/mxtransporter/config/pubsub"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
-	pubsubConfig "mxtransporter/config/pubsub"
-	"mxtransporter/pkg/errors"
 	"strings"
 	"time"
 )

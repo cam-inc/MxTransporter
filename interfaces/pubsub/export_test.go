@@ -5,11 +5,11 @@ package pubsub
 
 import (
 	"context"
+	"github.com/cam-inc/mxtransporter/config"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"math"
-	"mxtransporter/config"
-	"mxtransporter/pkg/logger"
 	"testing"
 	"time"
 )
