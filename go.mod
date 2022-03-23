@@ -7,10 +7,11 @@ require (
 	cloud.google.com/go/datacatalog v1.0.0 // indirect
 	cloud.google.com/go/kms v1.1.0 // indirect
 	cloud.google.com/go/pubsub v1.12.2
-	cloud.google.com/go/storage v1.17.0 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.9.1
-	github.com/aws/aws-sdk-go-v2/config v1.8.2
+	cloud.google.com/go/storage v1.18.2
+	github.com/aws/aws-sdk-go-v2 v1.15.0
+	github.com/aws/aws-sdk-go-v2/config v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.6.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/spf13/cobra v1.2.1

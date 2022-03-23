@@ -8,6 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
 	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
+	rtConfig "github.com/cam-inc/mxtransporter/config/resume-token"
+	"github.com/cam-inc/mxtransporter/pkg/client/storage"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -33,7 +35,7 @@ func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	ksCfg := kinesisConfig.KinesisStreamConfig()
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(ksCfg.KinesisStreamRegion))
 	if err != nil {
-		return nil, errors.InternalServerErrorClientGet.Wrap("aws client connection refused", err)
+		return nil, errors.InternalServerErrorClientGet.Wrap("failed aws load default config.", err)
 	}
 
 	c := kinesis.NewFromConfig(cfg)
@@ -49,3 +51,10 @@ func NewMongoClient(ctx context.Context) (*mongo.Client, error) {
 	}
 	return c, nil
 }
+func NewResumeTokenClient(ctx context.Context) (storage.StorageClient, error) {
+	c := rtConfig.ResumeTokenConfig()
+	return storage.NewStorageClient(ctx, c.VolumeType, c.Path, c.BucketName, c.Region)
+
+}
+
+//func NewStorageClient(ctx context.Context)

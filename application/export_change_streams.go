@@ -12,15 +12,13 @@ import (
 	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/client"
-	"github.com/cam-inc/mxtransporter/pkg/common"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
-	interfaceForResumeToken "github.com/cam-inc/mxtransporter/usecases/resume-token"
+	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"os"
 	"strings"
 	"time"
 )
@@ -95,29 +93,20 @@ func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
-	nowTime, err := common.FetchNowTime()
+
+	rtImpl, err := irt.New(ctx, c.Log)
 	if err != nil {
 		return err
 	}
-
-	pv, err := config.FetchPersistentVolumeDir()
-	if err != nil {
-		return err
-	}
-
-	file := pv + nowTime.Format("2006/01/02/2006-01-02.dat")
-
-	rtByte, err := os.ReadFile(file)
-
+	rt := rtImpl.ReadResumeToken(ctx)
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
-	if len(rtByte) == 0 && err == nil {
+	if len(rt) == 0 && err == nil {
 		c.Log.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
-	} else if len(rtByte) == 0 && err != nil {
+	} else if len(rt) == 0 && err != nil {
 		c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
 	} else {
-		rtStr := string(rtByte)
-		var rt interface{} = map[string]string{"_data": strings.TrimRight(rtStr, "\n")}
+		var rt interface{} = map[string]string{"_data": strings.TrimRight(rt, "\n")}
 
 		ops.SetResumeAfter(rt)
 	}
@@ -173,7 +162,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		}
 	}
 
-	rtImpl := interfaceForResumeToken.ResumeTokenImpl{c.Log}
+	//rtImpl := irt.ResumeTokenImpl{c.log}
 
 	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, rtImpl}
 	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
@@ -195,7 +184,7 @@ type (
 		exportToBigquery(ctx context.Context, cs primitive.M) error
 		exportToPubsub(ctx context.Context, cs primitive.M) error
 		exportToKinesisStream(ctx context.Context, cs primitive.M) error
-		saveResumeToken(rt string) error
+		saveResumeToken(ctx context.Context, rt string) error
 	}
 
 	ChangeStreamsExporterImpl struct {
@@ -208,7 +197,7 @@ type (
 		bq            interfaceForBigquery.BigqueryImpl
 		pubsub        interfaceForPubsub.PubsubImpl
 		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
-		resumeToken   interfaceForResumeToken.ResumeTokenImpl
+		resumeToken   irt.ResumeToken
 	}
 )
 
@@ -241,8 +230,8 @@ func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Cont
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
 
-func (c *changeStreamsExporterClientImpl) saveResumeToken(rt string) error {
-	return c.resumeToken.SaveResumeToken(rt)
+func (c *changeStreamsExporterClientImpl) saveResumeToken(ctx context.Context, rt string) error {
+	return c.resumeToken.SaveResumeToken(ctx, rt)
 }
 
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
@@ -297,7 +286,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 
 		csRt := csMap["_id"].(primitive.M)["_data"].(string)
 
-		if err := c.exporter.saveResumeToken(csRt); err != nil {
+		if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
 			return err
 		}
 	}
