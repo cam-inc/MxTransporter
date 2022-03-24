@@ -14,31 +14,6 @@ func init() {
 	godotenv.Load()
 }
 
-func FetchPersistentVolumeDir() (string, error) {
-	// Required parameter uses lookupEnv ()
-	pvDir, pvDirExistence := os.LookupEnv(constant.RESUME_TOKEN_VOLUME_DIR)
-	if !pvDirExistence {
-		return "", errors.InternalServerErrorEnvGet.New("RESUME_TOKEN_VOLUME_DIR is not existed in environment variables")
-	}
-	return pvDir, nil
-}
-
-func FetchPersistentVolumeType() (string, error) {
-	pvType, exists := os.LookupEnv(constant.RESUME_TOKEN_VOLUME_TYPE)
-	if !exists {
-		return "", errors.InternalServerErrorEnvGet.New("RESUME_TOKEN_VOLUME_TYPE is not existed in environment variables")
-	}
-	return pvType, nil
-}
-
-func FetchPersistentVolumeBucketName() (string, error) {
-	bucket, exists := os.LookupEnv(constant.RESUME_TOKEN_VOLUME_BUCKET_NAME)
-	if !exists {
-		return "", errors.InternalServerErrorEnvGet.New("RESUME_TOKEN_VOLUME_BUCKET_NAME is not existed in environment variables")
-	}
-	return bucket, nil
-}
-
 func FetchResumeTokenFileName() (string, error) {
 	rtFileName, exists := os.LookupEnv(constant.RESUME_TOKEN_FILE_NAME)
 	if !exists {

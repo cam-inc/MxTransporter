@@ -55,5 +55,3 @@ func NewResumeTokenClient(ctx context.Context, cfg rtConfig.ResumeToken) (storag
 	return storage.NewStorageClient(ctx, cfg.VolumeType, cfg.Path, cfg.BucketName, cfg.Region)
 
 }
-
-//func NewStorageClient(ctx context.Context)

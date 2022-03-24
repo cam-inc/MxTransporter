@@ -162,8 +162,6 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		}
 	}
 
-	//rtImpl := irt.ResumeTokenImpl{c.log}
-
 	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, rtImpl}
 	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
 

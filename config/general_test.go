@@ -9,44 +9,6 @@ import (
 	"testing"
 )
 
-func Test_FetchPersistentVolumeDir(t *testing.T) {
-	tests := []struct {
-		name   string
-		runner func(t *testing.T)
-	}{
-		{
-			name: "Does not succeed when the environment variable PERSISTENT_VOLUME_DIR is not set.",
-			runner: func(t *testing.T) {
-				_, err := FetchPersistentVolumeDir()
-				if err == nil {
-					t.Fatalf("Because the environment variable PERSISTENT_VOLUME_DIR is not set, error must be returned from the target function.")
-				}
-			},
-		},
-		{
-			name: "Check to call the set environment variable PERSISTENT_VOLUME_DIR.",
-			runner: func(t *testing.T) {
-				pvDir := "/test"
-				if err := os.Setenv("PERSISTENT_VOLUME_DIR", pvDir); err != nil {
-					t.Fatalf("Failed to set file PERSISTENT_VOLUME_DIR environment variables.")
-				}
-
-				r, err := FetchPersistentVolumeDir()
-				if e, a := r, pvDir; !reflect.DeepEqual(e, a) {
-					t.Fatal("Environment variable PERSISTENT_VOLUME_DIR is not acquired correctly.")
-				}
-				if err != nil {
-					t.Fatal("Failed to fetch Environment variable PERSISTENT_VOLUME_DIR.")
-				}
-			},
-		},
-	}
-
-	for _, v := range tests {
-		t.Run(v.name, v.runner)
-	}
-}
-
 func Test_FetchExportDestination(t *testing.T) {
 	tests := []struct {
 		name   string

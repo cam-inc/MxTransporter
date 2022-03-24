@@ -17,7 +17,7 @@ type (
 const (
 	s3Type    serviceName = "s3"
 	gcsType   serviceName = "gcs"
-	localType serviceName = "local"
+	fileType  serviceName = "file"
 	anonymous serviceName = "anonymous"
 )
 
@@ -27,8 +27,8 @@ func ConvServiceName(name string) serviceName {
 		return s3Type
 	case gcsType:
 		return gcsType
-	case localType:
-		return localType
+	case fileType:
+		return fileType
 	}
 	return anonymous
 }
@@ -39,7 +39,7 @@ func NewStorageClient(ctx context.Context, serviceName, path, bucketName, region
 		return newS3(ctx, bucketName, region)
 	case gcsType:
 		return NewGcs(ctx, bucketName, region)
-	case localType:
+	case fileType:
 		return newFile(ctx, path)
 	}
 	return newFile(ctx, path)
