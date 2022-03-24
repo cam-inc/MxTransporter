@@ -3,7 +3,6 @@ package storage
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -11,8 +10,13 @@ import (
 )
 
 type (
+	s3client interface {
+		PutObject(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error)
+		GetObject(ctx context.Context, params *s3.GetObjectInput, optFns ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+		DeleteObject(ctx context.Context, params *s3.DeleteObjectInput, optFns ...func(*s3.Options)) (*s3.DeleteObjectOutput, error)
+	}
 	s3Cli struct {
-		client *s3.Client
+		client s3client
 		bucket string
 		region string
 	}
@@ -41,15 +45,12 @@ func (s *s3Cli) DeleteObject(ctx context.Context, key string) error {
 }
 
 func (s *s3Cli) PutObject(ctx context.Context, key, value string) error {
-
 	rtBuf := bytes.NewBuffer([]byte(value))
-
 	input := &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 		Body:   rtBuf,
 	}
-
 	_, err := s.client.PutObject(ctx, input)
 	return err
 }
@@ -63,6 +64,5 @@ func newS3(ctx context.Context, bucket, region string) (StorageClient, error) {
 	cli.client = s3.NewFromConfig(cfg)
 	cli.bucket = bucket
 	cli.region = region
-	fmt.Printf("DEBUG %v\n", cli)
 	return cli, nil
 }

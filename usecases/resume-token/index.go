@@ -23,6 +23,7 @@ type ResumeToken interface {
 type resumeTokenImpl struct {
 	Log             *zap.SugaredLogger
 	client          storage.StorageClient
+	volumeType      string
 	volumePath      string
 	tokenFileName   string
 	saveIntervalSec int
@@ -51,10 +52,14 @@ func (r *resumeTokenImpl) SaveResumeToken(ctx context.Context, rt string) error 
 		r.Log.Errorf("Failed SaveResumeToken key:%s, err:%v", filePath, err)
 		return errors.InternalServerError.Wrap("Failed to SaveResumeToken", err)
 	}
+	r.setSavedTimestamp()
 	return nil
 }
 
 func (r *resumeTokenImpl) setSavedTimestamp() {
+	if r.saveIntervalSec == 0 {
+		return
+	}
 	r.lock.Lock()
 	defer r.lock.Unlock()
 	r.savedTimestamp = time.Now()
@@ -68,8 +73,7 @@ func (r *resumeTokenImpl) enableSave() bool {
 }
 
 func (r resumeTokenImpl) Env() string {
-	//TODO implement me
-	return fmt.Sprintf(`{"volume_path":"%s", "file_name":"%s", "intaval":"%d"}`, r.volumePath, r.tokenFileName, r.saveIntervalSec)
+	return fmt.Sprintf(`{"volumeType":"%s","volume_path":"%s", "file_name":"%s", "intaval":"%d"}`, r.volumeType, r.volumePath, r.tokenFileName, r.saveIntervalSec)
 }
 
 func New(ctx context.Context, log *zap.SugaredLogger) (ResumeToken, error) {
@@ -81,7 +85,7 @@ func New(ctx context.Context, log *zap.SugaredLogger) (ResumeToken, error) {
 		return nil, err
 	}
 
-	cli, err := client.NewResumeTokenClient(ctx)
+	cli, err := client.NewResumeTokenClient(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +93,7 @@ func New(ctx context.Context, log *zap.SugaredLogger) (ResumeToken, error) {
 	mu := &sync.RWMutex{}
 	return &resumeTokenImpl{
 		Log:             log,
+		volumeType:      cfg.VolumeType,
 		volumePath:      cfg.Path,
 		tokenFileName:   fileName,
 		saveIntervalSec: cfg.SaveIntervalSec,

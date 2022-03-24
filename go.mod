@@ -13,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.6.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.0
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.3.0
 	github.com/spf13/cobra v1.2.1
 	go.mongodb.org/mongo-driver v1.5.3

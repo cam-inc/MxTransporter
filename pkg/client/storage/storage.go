@@ -12,31 +12,14 @@ type (
 	}
 
 	serviceName string
-
-	storageCli struct {
-		service serviceName
-	}
 )
 
 const (
 	s3Type    serviceName = "s3"
 	gcsType   serviceName = "gcs"
+	localType serviceName = "local"
 	anonymous serviceName = "anonymous"
 )
-
-func (s *storageCli) GetObject(key string) ([]byte, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (s *storageCli) PutObject(key string) error {
-	//TODO implement me
-	panic("implement me")
-}
-func (s *storageCli) DeleteObject(key string) error {
-	//TODO implement me
-	panic("implement me")
-}
 
 func ConvServiceName(name string) serviceName {
 	switch serviceName(name) {
@@ -44,18 +27,20 @@ func ConvServiceName(name string) serviceName {
 		return s3Type
 	case gcsType:
 		return gcsType
+	case localType:
+		return localType
 	}
 	return anonymous
 }
 
 func NewStorageClient(ctx context.Context, serviceName, path, bucketName, region string) (StorageClient, error) {
-
 	switch ConvServiceName(serviceName) {
 	case s3Type:
 		return newS3(ctx, bucketName, region)
 	case gcsType:
 		return NewGcs(ctx, bucketName, region)
+	case localType:
+		return newFile(ctx, path)
 	}
-
-	return newLocalStorage(ctx, path)
+	return newFile(ctx, path)
 }

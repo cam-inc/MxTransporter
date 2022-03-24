@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"os"
 )
 
@@ -12,7 +11,7 @@ type (
 	}
 )
 
-func (f *fileStorageCli) GetObject(ctx context.Context, key string) ([]byte, error) {
+func (f *fileStorageCli) GetObject(_ context.Context, key string) ([]byte, error) {
 
 	rtByte, err := os.ReadFile(key)
 	if err != nil {
@@ -22,11 +21,11 @@ func (f *fileStorageCli) GetObject(ctx context.Context, key string) ([]byte, err
 	return rtByte, nil
 }
 
-func (f *fileStorageCli) DeleteObject(ctx context.Context, key string) error {
+func (f *fileStorageCli) DeleteObject(_ context.Context, key string) error {
 	return os.RemoveAll(key)
 }
 
-func (f *fileStorageCli) PutObject(ctx context.Context, key, value string) error {
+func (f *fileStorageCli) PutObject(_ context.Context, key, value string) error {
 
 	if _, err := os.Stat(f.volumePath); os.IsNotExist(err) {
 		os.MkdirAll(f.volumePath, 0777)
@@ -46,10 +45,9 @@ func (f *fileStorageCli) PutObject(ctx context.Context, key, value string) error
 	return nil
 }
 
-func newLocalStorage(ctx context.Context, path string) (StorageClient, error) {
+func newFile(_ context.Context, path string) (StorageClient, error) {
 	cli := &fileStorageCli{
 		volumePath: path,
 	}
-	fmt.Printf("DEBUG %v\n", cli)
 	return cli, nil
 }
