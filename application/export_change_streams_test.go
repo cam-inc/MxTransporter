@@ -5,13 +5,14 @@ package application
 
 import (
 	"context"
+	mocks "github.com/cam-inc/mxtransporter/application/mock"
 	"github.com/cam-inc/mxtransporter/config"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"github.com/cam-inc/mxtransporter/pkg/logger"
-	interfaceForResumeToken "github.com/cam-inc/mxtransporter/usecases/resume-token"
+	"github.com/golang/mock/gomock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"os"
@@ -104,7 +105,10 @@ func Test_watchChangeStreams(t *testing.T) {
 				}
 
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -124,7 +128,10 @@ func Test_watchChangeStreams(t *testing.T) {
 				}
 
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -144,7 +151,10 @@ func Test_watchChangeStreams(t *testing.T) {
 				}
 
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -164,7 +174,10 @@ func Test_watchChangeStreams(t *testing.T) {
 				}
 
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -178,12 +191,23 @@ func Test_watchChangeStreams(t *testing.T) {
 		{
 			name: "Pass to read resume token.",
 			runner: func(t *testing.T) {
-				if err := saveResumeToken("", "00000"); err != nil {
-					t.Fatalf("Testing Error, ErrorMessage: %v", err)
+				token := "00000"
+
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+				}
+				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "00000", false, "", "", ""}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
 				}
 
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "00000", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+				resumeTokenImpl := mocks.NewMockResumeToken(ctrl)
+				resumeTokenImpl.EXPECT().ReadResumeToken(ctx).Return(token).AnyTimes()
+				watcher.setResumeTokenManager(resumeTokenImpl)
+
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -196,7 +220,10 @@ func Test_watchChangeStreams(t *testing.T) {
 			name: "Failed to read resume token.",
 			runner: func(t *testing.T) {
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -209,7 +236,10 @@ func Test_watchChangeStreams(t *testing.T) {
 			name: "Pass to get bigquery client.",
 			runner: func(t *testing.T) {
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -225,7 +255,10 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -246,7 +279,10 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -267,7 +303,10 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -285,7 +324,10 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
 				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{mockWatcherClient, l}
+				watcher := ChangeStremsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
 				if err := watcher.WatchChangeStreams(ctx); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -324,7 +366,21 @@ func Test_exportChangeStreams(t *testing.T) {
 		},
 	}
 
-	mockExporterClient := &mockChangeStreamsExporterClientImpl{csMap, interfaceForBigquery.BigqueryImpl{}, interfaceForPubsub.PubsubImpl{}, interfaceForKinesisStream.KinesisStreamImpl{}, interfaceForResumeToken.ResumeTokenImpl{}, "", "", "", true}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	resumeTokenImpl := mocks.NewMockResumeToken(ctrl)
+
+	mockExporterClient := &mockChangeStreamsExporterClientImpl{
+		cs:                     csMap,
+		bq:                     interfaceForBigquery.BigqueryImpl{},
+		pubsub:                 interfaceForPubsub.PubsubImpl{},
+		kinesisStream:          interfaceForKinesisStream.KinesisStreamImpl{},
+		resumeToken:            resumeTokenImpl,
+		bqPassCheck:            "",
+		pubsubPassCheck:        "",
+		kinesisStreamPassCheck: "",
+		csCursorFlag:           true,
+	}
 
 	tests := []struct {
 		name   string
@@ -345,6 +401,9 @@ func Test_exportChangeStreams(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "bigquery"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+				}
 				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
 				if err := exporter.exportChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
@@ -359,6 +418,9 @@ func Test_exportChangeStreams(t *testing.T) {
 			runner: func(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "pubsub"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
+				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
 				}
 				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
 				if err := exporter.exportChangeStreams(ctx); err != nil {
@@ -375,6 +437,9 @@ func Test_exportChangeStreams(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "kinesisStream"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+				}
 				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
 				if err := exporter.exportChangeStreams(ctx); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
@@ -389,6 +454,9 @@ func Test_exportChangeStreams(t *testing.T) {
 			runner: func(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "bigquery,pubsub,kinesisStream"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
+				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
 				}
 				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
 				if err := exporter.exportChangeStreams(ctx); err != nil {
@@ -406,6 +474,9 @@ func Test_exportChangeStreams(t *testing.T) {
 			runner: func(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "xxx"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
+				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
 				}
 				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
 				if err := exporter.exportChangeStreams(ctx); err == nil {

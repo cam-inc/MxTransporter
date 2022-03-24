@@ -66,7 +66,7 @@ type mockChangeStreamsExporterClientImpl struct {
 	bq                     interfaceForBigquery.BigqueryImpl
 	pubsub                 interfaceForPubsub.PubsubImpl
 	kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
-	resumeToken            interfaceForResumeToken.ResumeTokenImpl
+	resumeToken            interfaceForResumeToken.ResumeToken
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
@@ -100,7 +100,7 @@ func (m *mockChangeStreamsExporterClientImpl) exportToKinesisStream(_ context.Co
 	return nil
 }
 
-func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ string) error {
+func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ context.Context, _ string) error {
 	m.csCursorFlag = false
 	return nil
 }

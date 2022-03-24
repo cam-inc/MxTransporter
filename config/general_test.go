@@ -157,3 +157,35 @@ func Test_LogConfig(t *testing.T) {
 		}
 	})
 }
+
+func Test_FetchResumeTokenFileName(t *testing.T) {
+	t.Run("Check to call the set environment variable.", func(t *testing.T) {
+		if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+			t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+		}
+		col, err := FetchResumeTokenFileName()
+		if err != nil {
+			t.Fatalf("FetchResumeTokenFileName return error %v", err)
+		}
+		if e, a := col, "test.dat"; !reflect.DeepEqual(e, a) {
+			t.Fatalf("Environment variable MONGODB_COLLECTION is not acquired correctly. %s", col)
+		}
+
+		if err := os.Setenv("RESUME_TOKEN_FILE_NAME", "resume"); err != nil {
+			t.Fatalf("Failed to set file MONGO_COLLECTION environment variables.")
+		}
+		r, err := FetchResumeTokenFileName()
+		if err != nil {
+			t.Fatalf("FetchResumeTokenFileName return error %v", err)
+		}
+		if e, a := r, "resume"; !reflect.DeepEqual(e, a) {
+			t.Fatalf("Environment variable LOG_OUTPUT_FILE is not acquired correctly. %s", r)
+		}
+
+		os.Unsetenv("RESUME_TOKEN_FILE_NAME")
+		os.Unsetenv("MONGODB_COLLECTION")
+		if _, err := FetchResumeTokenFileName(); err == nil {
+			t.Fatal("FetchResumeTokenFileName no error.")
+		}
+	})
+}

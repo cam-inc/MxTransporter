@@ -42,8 +42,9 @@ type (
 	}
 
 	ChangeStremsWatcherImpl struct {
-		Watcher changeStremsWatcher
-		Log     *zap.SugaredLogger
+		Watcher            changeStremsWatcher
+		Log                *zap.SugaredLogger
+		resumeTokenManager irt.ResumeToken
 	}
 
 	ChangeStremsWatcherClientImpl struct {
@@ -88,22 +89,27 @@ func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExpo
 	c.CsExporter = exporter
 }
 
+func (c *ChangeStremsWatcherImpl) setResumeTokenManager(resumeToken irt.ResumeToken) {
+	c.resumeTokenManager = resumeToken
+}
 func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
 	return c.CsExporter.exportChangeStreams(ctx)
 }
 
 func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
 
-	rtImpl, err := irt.New(ctx, c.Log)
-	if err != nil {
-		return err
+	if c.resumeTokenManager == nil {
+		rtImpl, err := irt.New(ctx, c.Log)
+		if err != nil {
+			return err
+		}
+		c.resumeTokenManager = rtImpl
 	}
-	rt := rtImpl.ReadResumeToken(ctx)
+
+	rt := c.resumeTokenManager.ReadResumeToken(ctx)
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
-	if len(rt) == 0 && err == nil {
-		c.Log.Info("Failed to get resume token. File is already existed, but resume token is not saved in the file.")
-	} else if len(rt) == 0 && err != nil {
+	if len(rt) == 0 {
 		c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
 	} else {
 		var rt interface{} = map[string]string{"_data": strings.TrimRight(rt, "\n")}
@@ -162,7 +168,7 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 		}
 	}
 
-	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, rtImpl}
+	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, c.resumeTokenManager}
 	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
 
 	c.Watcher.setCsExporter(exporter)
