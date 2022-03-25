@@ -3,6 +3,7 @@ package storage
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"github.com/cam-inc/mxtransporter/pkg/client"
 	"io"
 )
 
@@ -24,10 +25,6 @@ func (g *gcsCli) GetObject(ctx context.Context, key string) ([]byte, error) {
 	return o, err
 }
 
-func (g *gcsCli) DeleteObject(ctx context.Context, key string) error {
-	return g.client.Bucket(g.bucket).Object(key).Delete(ctx)
-}
-
 func (g *gcsCli) PutObject(ctx context.Context, key, value string) error {
 	writer := g.client.Bucket(g.bucket).Object(key).NewWriter(ctx)
 	defer writer.Close()
@@ -35,9 +32,9 @@ func (g *gcsCli) PutObject(ctx context.Context, key, value string) error {
 	return err
 }
 
-func NewGcs(ctx context.Context, bucket, region string) (StorageClient, error) {
+func newGcs(ctx context.Context, bucket, region string) (StorageClient, error) {
 	cli := &gcsCli{}
-	gscCli, err := storage.NewClient(ctx)
+	gscCli, err := client.NewGcsClient(ctx)
 	if err != nil {
 		return nil, err
 	}

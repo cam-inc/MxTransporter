@@ -21,10 +21,6 @@ func (f *fileStorageCli) GetObject(_ context.Context, key string) ([]byte, error
 	return rtByte, nil
 }
 
-func (f *fileStorageCli) DeleteObject(_ context.Context, key string) error {
-	return os.RemoveAll(key)
-}
-
 func (f *fileStorageCli) PutObject(_ context.Context, key, value string) error {
 
 	if _, err := os.Stat(f.volumePath); os.IsNotExist(err) {

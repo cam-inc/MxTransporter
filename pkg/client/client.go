@@ -3,13 +3,13 @@ package client
 import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
 	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
-	rtConfig "github.com/cam-inc/mxtransporter/config/resume-token"
-	"github.com/cam-inc/mxtransporter/pkg/client/storage"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -51,7 +51,22 @@ func NewMongoClient(ctx context.Context) (*mongo.Client, error) {
 	}
 	return c, nil
 }
-func NewResumeTokenClient(ctx context.Context, cfg rtConfig.ResumeToken) (storage.StorageClient, error) {
+
+/*
+	func NewResumeTokenClient(ctx context.Context, cfg rtConfig.ResumeToken) (storage.StorageClient, error) {
 	return storage.NewStorageClient(ctx, cfg.VolumeType, cfg.Path, cfg.BucketName, cfg.Region)
 
+}
+
+*/
+
+func NewS3Client(ctx context.Context) (*s3.Client, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s3.NewFromConfig(cfg), nil
+}
+func NewGcsClient(ctx context.Context) (*storage.Client, error) {
+	return storage.NewClient(ctx)
 }

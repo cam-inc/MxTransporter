@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/cam-inc/mxtransporter/config"
 	rtConfig "github.com/cam-inc/mxtransporter/config/resume-token"
-	"github.com/cam-inc/mxtransporter/pkg/client"
-	"github.com/cam-inc/mxtransporter/pkg/client/storage"
+	"github.com/cam-inc/mxtransporter/interfaces/storage"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.uber.org/zap"
 	"path"
@@ -85,7 +84,7 @@ func New(ctx context.Context, log *zap.SugaredLogger) (ResumeToken, error) {
 		return nil, err
 	}
 
-	cli, err := client.NewResumeTokenClient(ctx, cfg)
+	cli, err := storage.NewStorageClient(ctx, cfg.VolumeType, cfg.Path, cfg.BucketName, cfg.Region)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+
+  mxt:
+    build:
+      context: '.'
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - mongodb-primary
+      - mongodb-secondary
+      - mongodb-arbiter
+    env_file:
+      - $PWD/.env
+    volumes:
+      - $PWD/gcp.json:/opt/gcp.json
+
+  mongodb-primary:
+    extends:
+      file: docker-compose.mongo-replica.yml
+      service: mongodb-primary
+  
+  mongodb-secondary:
+    extends:
+      file: docker-compose.mongo-replica.yml
+      service: mongodb-secondary
+  
+  mongodb-arbiter:
+    extends:
+      file: docker-compose.mongo-replica.yml
+      service: mongodb-arbiter

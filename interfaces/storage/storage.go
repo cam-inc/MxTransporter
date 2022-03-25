@@ -7,7 +7,6 @@ import (
 type (
 	StorageClient interface {
 		GetObject(ctx context.Context, key string) ([]byte, error)
-		DeleteObject(ctx context.Context, key string) error
 		PutObject(ctx context.Context, key, value string) error
 	}
 
@@ -38,7 +37,7 @@ func NewStorageClient(ctx context.Context, serviceName, path, bucketName, region
 	case s3Type:
 		return newS3(ctx, bucketName, region)
 	case gcsType:
-		return NewGcs(ctx, bucketName, region)
+		return newGcs(ctx, bucketName, region)
 	case fileType:
 		return newFile(ctx, path)
 	}
