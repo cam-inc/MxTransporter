@@ -52,14 +52,6 @@ func NewMongoClient(ctx context.Context) (*mongo.Client, error) {
 	return c, nil
 }
 
-/*
-	func NewResumeTokenClient(ctx context.Context, cfg rtConfig.ResumeToken) (storage.StorageClient, error) {
-	return storage.NewStorageClient(ctx, cfg.VolumeType, cfg.Path, cfg.BucketName, cfg.Region)
-
-}
-
-*/
-
 func NewS3Client(ctx context.Context) (*s3.Client, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
