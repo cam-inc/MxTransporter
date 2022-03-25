@@ -25,8 +25,14 @@ func main() {
 	}
 	defer mClient.Disconnect(ctx)
 
-	watcherClient := &application.ChangeStremsWatcherClientImpl{mClient, application.ChangeStreamsExporterImpl{}}
-	watcher := application.ChangeStremsWatcherImpl{watcherClient, l}
+	watcherClient := &application.ChangeStremsWatcherClientImpl{
+		MongoClient: mClient,
+		CsExporter:  application.ChangeStreamsExporterImpl{},
+	}
+	watcher := application.ChangeStremsWatcherImpl{
+		Watcher: watcherClient,
+		Log:     l,
+	}
 
 	if err := watcher.WatchChangeStreams(ctx); err != nil {
 		l.Error(err)
