@@ -38,11 +38,41 @@ spec:
                 secretKeyRef:
                   name: {{ $.Values.secrets.name }}
                   key: MONGODB_COLLECTION_{{ $collection }}
-            - name: PERSISTENT_VOLUME_DIR
+            - name: RESUME_TOKEN_VOLUME_DIR
               valueFrom:
                 secretKeyRef:
                   name: {{ $.Values.secrets.name }}
-                  key: PERSISTENT_VOLUME_DIR
+                  key: RESUME_TOKEN_VOLUME_DIR
+#            # Optional
+#            - name: RESUME_TOKEN_VOLUME_TYPE
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_VOLUME_TYPE
+#            # Optional
+#            - name: RESUME_TOKEN_VOLUME_BUCKET_NAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_VOLUME_BUCKET_NAME
+#            # Optional
+#            - name: RESUME_TOKEN_FILE_NAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_FILE_NAME
+#            # Optional
+#            - name: RESUME_TOKEN_BUCKET_REGION
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_BUCKET_REGION
+#            # Optional
+#            - name: RESUME_TOKEN_SAVE_INTERVAL_SEC
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_SAVE_INTERVAL_SEC
             - name: EXPORT_DESTINATION
               valueFrom:
                 secretKeyRef:
