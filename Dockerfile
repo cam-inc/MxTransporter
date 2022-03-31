@@ -1,5 +1,7 @@
 FROM golang:latest
 
+LABEL org.opencontainers.image.source="https://github.com/cam-inc/MxTransporter"
+
 WORKDIR /go/src
 
 COPY . ./
