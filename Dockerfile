@@ -1,4 +1,7 @@
-FROM golang:latest
+##
+## Build
+##
+FROM golang:latest as build
 
 WORKDIR /go/src
 
@@ -14,5 +17,16 @@ RUN go install ./cmd/main.go
 
 RUN go build -o /go/bin/health -ldflags '-s -w' ./cmd/health.go
 RUN go install ./cmd/health.go
+
+##
+## Deploy
+##
+FROM alpine:latest
+
+WORKDIR /go/src
+
+COPY --from=build /go/bin/main /go/bin/main
+COPY --from=build /go/bin/health /go/bin/health
+COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 
 ENTRYPOINT ["/go/bin/main"]
