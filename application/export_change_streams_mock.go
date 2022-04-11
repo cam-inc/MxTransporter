@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
+	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	interfaceForResumeToken "github.com/cam-inc/mxtransporter/usecases/resume-token"
@@ -25,6 +26,12 @@ type mockChangeStremsWatcherClientImpl struct {
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
+	filePassCheck          string
+}
+
+func (m *mockChangeStremsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
+	m.filePassCheck = "OK"
+	return nil, nil
 }
 
 func (m *mockChangeStremsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {
@@ -70,6 +77,7 @@ type mockChangeStreamsExporterClientImpl struct {
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
+	filePassCheck          string
 	csCursorFlag           bool
 }
 
@@ -97,6 +105,10 @@ func (m *mockChangeStreamsExporterClientImpl) exportToPubsub(_ context.Context, 
 
 func (m *mockChangeStreamsExporterClientImpl) exportToKinesisStream(_ context.Context, _ primitive.M) error {
 	m.kinesisStreamPassCheck = "OK"
+	return nil
+}
+func (m *mockChangeStreamsExporterClientImpl) exportToFile(_ context.Context, cs primitive.M) error {
+	m.filePassCheck = "OK"
 	return nil
 }
 

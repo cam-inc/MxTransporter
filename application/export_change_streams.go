@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/cam-inc/mxtransporter/config"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
+	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/client"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,6 +31,7 @@ const (
 	BigQuery      agent = "bigquery"
 	CloudPubSub   agent = "pubsub"
 	KinesisStream agent = "kinesisStream"
+	File          agent = "file"
 )
 
 type (
@@ -37,6 +40,7 @@ type (
 		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
 		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
 		watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error)
+		newFileClient(ctx context.Context) (iff.Exporter, error)
 		setCsExporter(exporter ChangeStreamsExporterImpl)
 		exportChangeStreams(ctx context.Context) error
 	}
@@ -75,6 +79,12 @@ func (*ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*ki
 		return nil, err
 	}
 	return ksClient, nil
+}
+
+func (*ChangeStremsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
+	return iff.New(logger.New(logger.Log{
+		Level: "0",
+	}).Desugar()), nil
 }
 
 func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
@@ -126,21 +136,26 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	if err != nil {
 		return err
 	}
+
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
-	if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
-		return err
-	}
+	/*
+		if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
+			return err
+		}
+	*/
 
 	var (
 		bqImpl interfaceForBigquery.BigqueryImpl
 		psImpl interfaceForPubsub.PubsubImpl
 		ksImpl interfaceForKinesisStream.KinesisStreamImpl
+		fe     iff.Exporter
 	)
 
 	for i := 0; i < len(expDstList); i++ {
 		eDst := expDstList[i]
+		fmt.Printf("========%s======\n", eDst)
 		switch agent(eDst) {
 		case BigQuery:
 			bqClient, err := c.Watcher.newBigqueryClient(ctx, projectID)
@@ -163,13 +178,29 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 			}
 			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
 			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
+		case File:
+			fCli, err := c.Watcher.newFileClient(ctx)
+			if err != nil {
+				return err
+			}
+			fe = fCli
 		default:
-			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly"))
+			return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly. you set %s", eDst))
 		}
 	}
 
-	exporterClient := &changeStreamsExporterClientImpl{cs, bqImpl, psImpl, ksImpl, c.resumeTokenManager}
-	exporter := ChangeStreamsExporterImpl{exporterClient, c.Log}
+	exporterClient := &changeStreamsExporterClientImpl{
+		cs:            cs,
+		bq:            bqImpl,
+		pubsub:        psImpl,
+		kinesisStream: ksImpl,
+		fileExporter:  fe,
+		resumeToken:   c.resumeTokenManager,
+	}
+	exporter := ChangeStreamsExporterImpl{
+		exporter: exporterClient,
+		log:      c.Log,
+	}
 
 	c.Watcher.setCsExporter(exporter)
 
@@ -188,6 +219,7 @@ type (
 		exportToBigquery(ctx context.Context, cs primitive.M) error
 		exportToPubsub(ctx context.Context, cs primitive.M) error
 		exportToKinesisStream(ctx context.Context, cs primitive.M) error
+		exportToFile(ctx context.Context, cs primitive.M) error
 		saveResumeToken(ctx context.Context, rt string) error
 	}
 
@@ -201,6 +233,7 @@ type (
 		bq            interfaceForBigquery.BigqueryImpl
 		pubsub        interfaceForPubsub.PubsubImpl
 		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
+		fileExporter  iff.Exporter
 		resumeToken   irt.ResumeToken
 	}
 )
@@ -233,7 +266,9 @@ func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
-
+func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
+	return c.fileExporter.Put(ctx, cs)
+}
 func (c *changeStreamsExporterClientImpl) saveResumeToken(ctx context.Context, rt string) error {
 	return c.resumeToken.SaveResumeToken(ctx, rt)
 }
@@ -263,6 +298,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		var eg errgroup.Group
 		for i := 0; i < len(expDstList); i++ {
 			eDst := expDstList[i]
+			fmt.Printf("========%s======\n", eDst)
 			eg.Go(func() error {
 				switch agent(eDst) {
 				case BigQuery:
@@ -277,8 +313,12 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 					if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
 						return err
 					}
+				case File:
+					if err := c.exporter.exportToFile(ctx, csMap); err != nil {
+						return err
+					}
 				default:
-					return errors.InternalServerErrorEnvGet.New("The export destination is wrong. You need to set the export destination in the environment variable correctly.")
+					return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly. you set %s", eDst))
 				}
 				return nil
 			})

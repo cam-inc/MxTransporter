@@ -23,6 +23,8 @@ const (
 	InternalServerErrorPubSubPublish = errType("500: pubsub publish error")
 	// kinesis stream
 	InternalServerErrorKinesisStreamPut = errType("500: kinesis stream put error")
+	// local storage file
+	InternalServerErrorFilePut = errType("500: file put error")
 )
 
 func (e errType) New(msg string) error {
