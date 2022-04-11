@@ -113,7 +113,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -145,7 +145,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -177,7 +177,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -209,7 +209,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -241,7 +241,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -273,7 +273,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -298,7 +298,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -326,7 +326,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -359,7 +359,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -397,7 +397,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -430,7 +430,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -461,7 +461,7 @@ func Test_watchChangeStreams(t *testing.T) {
 					kinesisStreamPassCheck: "",
 					filePassCheck:          "",
 				}
-				watcher := ChangeStremsWatcherImpl{
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}

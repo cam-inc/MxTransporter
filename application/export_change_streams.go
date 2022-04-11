@@ -14,7 +14,6 @@ import (
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/client"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
-	"github.com/cam-inc/mxtransporter/pkg/logger"
 	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -35,7 +34,7 @@ const (
 )
 
 type (
-	changeStremsWatcher interface {
+	changeStreamsWatcher interface {
 		newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
 		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
 		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
@@ -45,19 +44,19 @@ type (
 		exportChangeStreams(ctx context.Context) error
 	}
 
-	ChangeStremsWatcherImpl struct {
-		Watcher            changeStremsWatcher
+	ChangeStreamsWatcherImpl struct {
+		Watcher            changeStreamsWatcher
 		Log                *zap.SugaredLogger
 		resumeTokenManager irt.ResumeToken
 	}
 
-	ChangeStremsWatcherClientImpl struct {
+	ChangeStreamsWatcherClientImpl struct {
 		MongoClient *mongo.Client
 		CsExporter  ChangeStreamsExporterImpl
 	}
 )
 
-func (*ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
+func (*ChangeStreamsWatcherClientImpl) newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
 	bqClient, err := client.NewBigqueryClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -65,7 +64,7 @@ func (*ChangeStremsWatcherClientImpl) newBigqueryClient(ctx context.Context, pro
 	return bqClient, nil
 }
 
-func (*ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+func (*ChangeStreamsWatcherClientImpl) newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	psClient, err := client.NewPubsubClient(ctx, projectID)
 	if err != nil {
 		return nil, err
@@ -73,7 +72,7 @@ func (*ChangeStremsWatcherClientImpl) newPubsubClient(ctx context.Context, proje
 	return psClient, nil
 }
 
-func (*ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
+func (*ChangeStreamsWatcherClientImpl) newKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	ksClient, err := client.NewKinesisClient(ctx)
 	if err != nil {
 		return nil, err
@@ -81,13 +80,11 @@ func (*ChangeStremsWatcherClientImpl) newKinesisClient(ctx context.Context) (*ki
 	return ksClient, nil
 }
 
-func (*ChangeStremsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
-	return iff.New(logger.New(logger.Log{
-		Level: "0",
-	}).Desugar()), nil
+func (*ChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
+	return iff.New(config.FileExportConfig()), nil
 }
 
-func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
+func (c *ChangeStreamsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
 	cs, err := mongoConnection.Watch(ctx, c.MongoClient, ops)
 	if err != nil {
 		return nil, err
@@ -95,18 +92,18 @@ func (c *ChangeStremsWatcherClientImpl) watch(ctx context.Context, ops *options.
 	return cs, nil
 }
 
-func (c *ChangeStremsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExporterImpl) {
+func (c *ChangeStreamsWatcherClientImpl) setCsExporter(exporter ChangeStreamsExporterImpl) {
 	c.CsExporter = exporter
 }
 
-func (c *ChangeStremsWatcherImpl) setResumeTokenManager(resumeToken irt.ResumeToken) {
+func (c *ChangeStreamsWatcherImpl) setResumeTokenManager(resumeToken irt.ResumeToken) {
 	c.resumeTokenManager = resumeToken
 }
-func (c *ChangeStremsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
+func (c *ChangeStreamsWatcherClientImpl) exportChangeStreams(ctx context.Context) error {
 	return c.CsExporter.exportChangeStreams(ctx)
 }
 
-func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
+func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
 
 	if c.resumeTokenManager == nil {
 		rtImpl, err := irt.New(ctx, c.Log)
@@ -140,11 +137,6 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
-	/*
-		if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
-			return err
-		}
-	*/
 
 	var (
 		bqImpl interfaceForBigquery.BigqueryImpl
@@ -155,7 +147,6 @@ func (c *ChangeStremsWatcherImpl) WatchChangeStreams(ctx context.Context) error 
 
 	for i := 0; i < len(expDstList); i++ {
 		eDst := expDstList[i]
-		fmt.Printf("========%s======\n", eDst)
 		switch agent(eDst) {
 		case BigQuery:
 			bqClient, err := c.Watcher.newBigqueryClient(ctx, projectID)
@@ -267,7 +258,7 @@ func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Cont
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
 func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
-	return c.fileExporter.Put(ctx, cs)
+	return c.fileExporter.Export(ctx, cs)
 }
 func (c *changeStreamsExporterClientImpl) saveResumeToken(ctx context.Context, rt string) error {
 	return c.resumeToken.SaveResumeToken(ctx, rt)
@@ -298,7 +289,6 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		var eg errgroup.Group
 		for i := 0; i < len(expDstList); i++ {
 			eDst := expDstList[i]
-			fmt.Printf("========%s======\n", eDst)
 			eg.Go(func() error {
 				switch agent(eDst) {
 				case BigQuery:

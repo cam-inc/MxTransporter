@@ -25,11 +25,11 @@ func main() {
 	}
 	defer mClient.Disconnect(ctx)
 
-	watcherClient := &application.ChangeStremsWatcherClientImpl{
+	watcherClient := &application.ChangeStreamsWatcherClientImpl{
 		MongoClient: mClient,
 		CsExporter:  application.ChangeStreamsExporterImpl{},
 	}
-	watcher := application.ChangeStremsWatcherImpl{
+	watcher := application.ChangeStreamsWatcherImpl{
 		Watcher: watcherClient,
 		Log:     l,
 	}
