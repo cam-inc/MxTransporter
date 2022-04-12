@@ -65,7 +65,7 @@ func LogConfig() logger.Log {
 func FileExportConfig() *iff.ExporterConfig {
 	cfg := &iff.ExporterConfig{}
 
-	cfg.LogType = os.Getenv(constant.FILE_EXPORTER_LOG_TYPE_KEY)
+	cfg.LogType = os.Getenv(constant.FILE_EXPORTER_LOG_TYPE)
 	cfg.ChangeStreamKey = os.Getenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
 	cfg.NameKey = os.Getenv(constant.FILE_EXPORTER_NAME_KEY)
 	cfg.TimeKey = os.Getenv(constant.FILE_EXPORTER_TIME_KEY)

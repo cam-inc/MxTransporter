@@ -18,7 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type mockChangeStremsWatcherClientImpl struct {
+type mockChangeStreamsWatcherClientImpl struct {
 	mongoClient            *mongo.Client
 	csExporter             ChangeStreamsExporterImpl
 	resumeToken            string
@@ -29,27 +29,27 @@ type mockChangeStremsWatcherClientImpl struct {
 	filePassCheck          string
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
 	m.filePassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {
 	m.bqPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newPubsubClient(_ context.Context, _ string) (*pubsub.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newPubsubClient(_ context.Context, _ string) (*pubsub.Client, error) {
 	m.pubsubPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newKinesisClient(_ context.Context) (*kinesis.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newKinesisClient(_ context.Context) (*kinesis.Client, error) {
 	m.kinesisStreamPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) watch(_ context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
+func (m *mockChangeStreamsWatcherClientImpl) watch(_ context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
 	if ops.ResumeAfter != nil {
 		if ops.ResumeAfter.(map[string]string)["_data"] == m.resumeToken {
 			m.resumeAfterExistence = true
@@ -61,10 +61,10 @@ func (m *mockChangeStremsWatcherClientImpl) watch(_ context.Context, ops *option
 	return nil, nil
 }
 
-func (c *mockChangeStremsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporterImpl) {
+func (c *mockChangeStreamsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporterImpl) {
 }
 
-func (c *mockChangeStremsWatcherClientImpl) exportChangeStreams(_ context.Context) error {
+func (c *mockChangeStreamsWatcherClientImpl) exportChangeStreams(_ context.Context) error {
 	return nil
 }
 

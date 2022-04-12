@@ -196,8 +196,8 @@ func Test_FileExportConfig(t *testing.T) {
 		if err := os.Setenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY, "changeStream"); err != nil {
 			t.Fatalf("Failed to set file FILE_EXPORTER_CHANGE_STREAM_KEY environment variables.")
 		}
-		if err := os.Setenv(constant.FILE_EXPORTER_LOG_TYPE_KEY, "changeStream"); err != nil {
-			t.Fatalf("Failed to set file FILE_EXPORTER_LOG_TYPE_KEY environment variables.")
+		if err := os.Setenv(constant.FILE_EXPORTER_LOG_TYPE, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_LOG_TYPE environment variables.")
 		}
 		if err := os.Setenv(constant.FILE_EXPORTER_TIME_KEY, "changeStream"); err != nil {
 			t.Fatalf("Failed to set file FILE_EXPORTER_TIME_KEY environment variables.")
@@ -207,7 +207,7 @@ func Test_FileExportConfig(t *testing.T) {
 		}
 		FileExportConfig()
 		os.Unsetenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
-		os.Unsetenv(constant.FILE_EXPORTER_LOG_TYPE_KEY)
+		os.Unsetenv(constant.FILE_EXPORTER_LOG_TYPE)
 		os.Unsetenv(constant.FILE_EXPORTER_TIME_KEY)
 		os.Unsetenv(constant.FILE_EXPORTER_NAME_KEY)
 	})

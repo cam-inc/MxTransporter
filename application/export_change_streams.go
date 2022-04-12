@@ -137,6 +137,9 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 	expDstList := strings.Split(expDst, ",")
 
 	projectID, err := config.FetchGcpProject()
+	if err != nil && (strings.Contains(expDst, string(BigQuery)) || strings.Contains(expDst, string(CloudPubSub))) {
+		return err
+	}
 
 	var (
 		bqImpl interfaceForBigquery.BigqueryImpl
