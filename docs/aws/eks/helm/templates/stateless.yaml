@@ -44,6 +44,30 @@ spec:
                   name: {{ $.Values.secrets.name }}
                   key: RESUME_TOKEN_VOLUME_DIR
 #            # Optional
+#            - name: FILE_EXPORTER_LOG_TYPE_KEY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: FILE_EXPORTER_LOG_TYPE_KEY
+#            # Optional
+#            - name: FILE_EXPORTER_CHANGE_STREAM_KEY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: FILE_EXPORTER_CHANGE_STREAM_KEY
+#            # Optional
+#            - name: FILE_EXPORTER_TIME_KEY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: FILE_EXPORTER_TIME_KEY
+#            # Optional
+#            - name: FILE_EXPORTER_NAME_KEY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: FILE_EXPORTER_NAME_KEY
+#            # Optional
 #            - name: RESUME_TOKEN_VOLUME_TYPE
 #              valueFrom:
 #                secretKeyRef:
