@@ -8,6 +8,7 @@ import (
 	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"github.com/joho/godotenv"
 	"os"
+	"strconv"
 )
 
 func init() {
@@ -64,11 +65,13 @@ func LogConfig() logger.Log {
 
 func FileExportConfig() *iff.ExporterConfig {
 	cfg := &iff.ExporterConfig{}
-
+	cfg.WriterConfig.Writer = os.Getenv(constant.FILE_EXPORTER_WRITER)
+	cfg.WriterConfig.MaxMegaBytes, _ = strconv.Atoi(os.Getenv(constant.FILE_EXPORTER_WRITER_MAX_MEGABYTES))
+	cfg.WriterConfig.MaxDays, _ = strconv.Atoi(os.Getenv(constant.FILE_EXPORTER_WRITER_MAX_DAYS))
+	cfg.WriterConfig.MaxFileBackups, _ = strconv.Atoi(os.Getenv(constant.FILE_EXPORTER_WRITER_MAX_BACKUPS))
 	cfg.LogType = os.Getenv(constant.FILE_EXPORTER_LOG_TYPE)
 	cfg.ChangeStreamKey = os.Getenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
 	cfg.NameKey = os.Getenv(constant.FILE_EXPORTER_NAME_KEY)
 	cfg.TimeKey = os.Getenv(constant.FILE_EXPORTER_TIME_KEY)
-
 	return cfg
 }

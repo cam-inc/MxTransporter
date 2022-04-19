@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"time"
 )
@@ -15,7 +16,16 @@ type (
 		Export(ctx context.Context, cs primitive.M) error
 	}
 
+	WriterType   string
+	WriterConfig struct {
+		Writer         string
+		FilePath       string
+		MaxMegaBytes   int
+		MaxDays        int
+		MaxFileBackups int
+	}
 	ExporterConfig struct {
+		WriterConfig
 		LogType         string
 		ChangeStreamKey string
 		TimeKey         string
@@ -40,6 +50,19 @@ type (
 		UpdateDescription primitive.M `json:"updateDescription"`
 	}
 )
+
+const (
+	StdOut WriterType = "stdout"
+	File   WriterType = "file"
+)
+
+func convWriterType(v string) WriterType {
+	switch WriterType(v) {
+	case StdOut:
+		return StdOut
+	}
+	return File
+}
 
 // MarshalJSON timestamp to time.Time (byte array)
 func (t timestamp) MarshalJSON() ([]byte, error) {
@@ -89,8 +112,18 @@ func New(cfg *ExporterConfig) Exporter {
 		cfg.ChangeStreamKey = "cs"
 	}
 
+	writer := zapcore.WriteSyncer(os.Stdout)
+	if convWriterType(cfg.Writer) != StdOut {
+		writer = zapcore.AddSync(&lumberjack.Logger{
+			Filename:   cfg.Writer,
+			MaxSize:    cfg.MaxMegaBytes,   //megabytes
+			MaxAge:     cfg.MaxDays,        //days
+			MaxBackups: cfg.MaxFileBackups, //files
+		})
+	}
+
 	encoder := zapcore.NewJSONEncoder(zconfig)
-	core := zapcore.NewCore(encoder, zapcore.WriteSyncer(os.Stdout), zap.NewAtomicLevelAt(zapcore.InfoLevel))
+	core := zapcore.NewCore(encoder, writer, zap.NewAtomicLevelAt(zapcore.InfoLevel))
 	log := zap.New(core)
 
 	return &fileExporter{
