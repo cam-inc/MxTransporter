@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/cam-inc/mxtransporter/config/constant"
+	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"github.com/joho/godotenv"
@@ -59,4 +60,15 @@ func LogConfig() logger.Log {
 	l.OutputDirectory = os.Getenv(constant.LOG_OUTPUT_DIRECTORY)
 	l.OutputFile = os.Getenv(constant.LOG_OUTPUT_FILE)
 	return l
+}
+
+func FileExportConfig() *iff.ExporterConfig {
+	cfg := &iff.ExporterConfig{}
+
+	cfg.LogType = os.Getenv(constant.FILE_EXPORTER_LOG_TYPE)
+	cfg.ChangeStreamKey = os.Getenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
+	cfg.NameKey = os.Getenv(constant.FILE_EXPORTER_NAME_KEY)
+	cfg.TimeKey = os.Getenv(constant.FILE_EXPORTER_TIME_KEY)
+
+	return cfg
 }

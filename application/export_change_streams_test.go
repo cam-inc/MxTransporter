@@ -103,9 +103,17 @@ func Test_watchChangeStreams(t *testing.T) {
 				if err := os.Unsetenv("TIME_ZONE"); err != nil {
 					t.Fatalf("Failed to unset file TIME_ZONE environment variables.")
 				}
-
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   false,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -127,8 +135,17 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to unset file PERSISTENT_VOLUME_DIR environment variables.")
 				}
 
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   false,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -150,8 +167,17 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to unset file EXPORT_DESTINATION environment variables.")
 				}
 
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   false,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -173,8 +199,17 @@ func Test_watchChangeStreams(t *testing.T) {
 					t.Fatalf("Failed to unset file PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS environment variables.")
 				}
 
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   false,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -196,8 +231,17 @@ func Test_watchChangeStreams(t *testing.T) {
 				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
 					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
 				}
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "00000", false, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "00000",
+					resumeAfterExistence:   false,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -219,8 +263,17 @@ func Test_watchChangeStreams(t *testing.T) {
 		{
 			name: "Failed to read resume token.",
 			runner: func(t *testing.T) {
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -235,8 +288,17 @@ func Test_watchChangeStreams(t *testing.T) {
 		{
 			name: "Pass to get bigquery client.",
 			runner: func(t *testing.T) {
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -254,8 +316,17 @@ func Test_watchChangeStreams(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "pubsub"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -278,8 +349,17 @@ func Test_watchChangeStreams(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "kinesisStream"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -297,13 +377,60 @@ func Test_watchChangeStreams(t *testing.T) {
 			},
 		},
 		{
-			name: "Pass to get bigquery, pubsub, kinesis stream client.",
+			name: "Pass to get file output client.",
 			runner: func(t *testing.T) {
-				if err := os.Setenv("EXPORT_DESTINATION", "bigquery,pubsub,kinesisStream"); err != nil {
+				// Unset environment variables to reproduce the condition.
+				if err := os.Unsetenv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS"); err != nil {
+					t.Fatalf("Failed to unset file PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS environment variables.")
+				}
+
+				if err := os.Setenv("EXPORT_DESTINATION", "file"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
+					Watcher: mockWatcherClient,
+					Log:     l,
+				}
+				if err := watcher.WatchChangeStreams(ctx); err != nil {
+					t.Fatalf("Testing Error, ErrorMessage: %v", err)
+				}
+				if mockWatcherClient.filePassCheck != "OK" {
+					t.Fatalf("Testing Error, ErrorMessage: failed to get resumeToken.")
+				}
+
+				// Undo environment variables
+				if err := os.Setenv("PROJECT_NAME_TO_EXPORT_CHANGE_STREAMS", ""); err != nil {
+					t.Fatalf("Failed to set file GCP_PROJECT environment variables.")
+				}
+			},
+		},
+		{
+			name: "Pass to get bigquery, pubsub, kinesis stream, file client.",
+			runner: func(t *testing.T) {
+				if err := os.Setenv("EXPORT_DESTINATION", "bigquery,pubsub,kinesisStream,file"); err != nil {
+					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
+				}
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -312,8 +439,9 @@ func Test_watchChangeStreams(t *testing.T) {
 				}
 				if mockWatcherClient.bqPassCheck != "OK" &&
 					mockWatcherClient.pubsubPassCheck != "OK" &&
-					mockWatcherClient.kinesisStreamPassCheck != "OK" {
-					t.Fatalf("Testing Error, ErrorMessage: failed to get resumeToken.")
+					mockWatcherClient.kinesisStreamPassCheck != "OK" &&
+					mockWatcherClient.filePassCheck != "OK" {
+					t.Fatalf("Testing Error, ErrorMessage: failed to get multi client.")
 				}
 			},
 		},
@@ -323,8 +451,17 @@ func Test_watchChangeStreams(t *testing.T) {
 				if err := os.Setenv("EXPORT_DESTINATION", "xxx"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
-				mockWatcherClient := &mockChangeStremsWatcherClientImpl{nil, ChangeStreamsExporterImpl{}, "", true, "", "", ""}
-				watcher := ChangeStremsWatcherImpl{
+				mockWatcherClient := &mockChangeStreamsWatcherClientImpl{
+					mongoClient:            nil,
+					csExporter:             ChangeStreamsExporterImpl{},
+					resumeToken:            "",
+					resumeAfterExistence:   true,
+					bqPassCheck:            "",
+					pubsubPassCheck:        "",
+					kinesisStreamPassCheck: "",
+					filePassCheck:          "",
+				}
+				watcher := ChangeStreamsWatcherImpl{
 					Watcher: mockWatcherClient,
 					Log:     l,
 				}
@@ -379,6 +516,7 @@ func Test_exportChangeStreams(t *testing.T) {
 		bqPassCheck:            "",
 		pubsubPassCheck:        "",
 		kinesisStreamPassCheck: "",
+		filePassCheck:          "",
 		csCursorFlag:           true,
 	}
 
@@ -411,6 +549,7 @@ func Test_exportChangeStreams(t *testing.T) {
 				if mockExporterClient.bqPassCheck != "OK" {
 					t.Fatalf("Testing Error, ErrorMessage: not going through export to bigquery.")
 				}
+				mockExporterClient.bqPassCheck = ""
 			},
 		},
 		{
@@ -429,6 +568,7 @@ func Test_exportChangeStreams(t *testing.T) {
 				if mockExporterClient.pubsubPassCheck != "OK" {
 					t.Fatalf("Testing Error, ErrorMessage: not going through export to pubsub.")
 				}
+				mockExporterClient.pubsubPassCheck = ""
 			},
 		},
 		{
@@ -447,12 +587,32 @@ func Test_exportChangeStreams(t *testing.T) {
 				if mockExporterClient.kinesisStreamPassCheck != "OK" {
 					t.Fatalf("Testing Error, ErrorMessage: not going through export to kinesis stream.")
 				}
+				mockExporterClient.kinesisStreamPassCheck = ""
 			},
 		},
 		{
-			name: "Pass to export to bigquery, pubsub, kinesis stream.",
+			name: "Pass to export to file.",
 			runner: func(t *testing.T) {
-				if err := os.Setenv("EXPORT_DESTINATION", "bigquery,pubsub,kinesisStream"); err != nil {
+				if err := os.Setenv("EXPORT_DESTINATION", "file"); err != nil {
+					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
+				}
+				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+					t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+				}
+				exporter := ChangeStreamsExporterImpl{mockExporterClient, l}
+				if err := exporter.exportChangeStreams(ctx); err != nil {
+					t.Fatalf("Testing Error, ErrorMessage: %v", err)
+				}
+				if mockExporterClient.filePassCheck != "OK" {
+					t.Fatalf("Testing Error, ErrorMessage: not going through export to local storage file.")
+				}
+				mockExporterClient.filePassCheck = ""
+			},
+		},
+		{
+			name: "Pass to export to bigquery, pubsub, kinesis stream, file.",
+			runner: func(t *testing.T) {
+				if err := os.Setenv("EXPORT_DESTINATION", "bigquery,pubsub,kinesisStream,file"); err != nil {
 					t.Fatalf("Failed to set file EXPORT_DESTINATION environment variables.")
 				}
 				if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
@@ -464,7 +624,8 @@ func Test_exportChangeStreams(t *testing.T) {
 				}
 				if mockExporterClient.bqPassCheck != "OK" &&
 					mockExporterClient.pubsubPassCheck != "OK" &&
-					mockExporterClient.kinesisStreamPassCheck != "OK" {
+					mockExporterClient.kinesisStreamPassCheck != "OK" &&
+					mockExporterClient.filePassCheck != "OK" {
 					t.Fatalf("Testing Error, ErrorMessage: not going through export to bigquery or pubsub or kinesis stream.")
 				}
 			},

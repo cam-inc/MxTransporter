@@ -5,7 +5,7 @@ services:
   mxt:
     build:
       context: '.'
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     restart: always
     depends_on:
       - mongodb-primary
@@ -14,7 +14,8 @@ services:
     env_file:
       - $PWD/.env
     volumes:
-      - $PWD/gcp.json:/opt/gcp.json
+      - $PWD:/go/src
+    command: go run cmd/main.go
 
   mongodb-primary:
     extends:

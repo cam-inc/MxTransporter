@@ -4,6 +4,7 @@
 package config
 
 import (
+	"github.com/cam-inc/mxtransporter/config/constant"
 	"os"
 	"reflect"
 	"testing"
@@ -187,5 +188,27 @@ func Test_FetchResumeTokenFileName(t *testing.T) {
 		if _, err := FetchResumeTokenFileName(); err == nil {
 			t.Fatal("FetchResumeTokenFileName no error.")
 		}
+	})
+}
+
+func Test_FileExportConfig(t *testing.T) {
+	t.Run("Check to call the set environment variable.", func(t *testing.T) {
+		if err := os.Setenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_CHANGE_STREAM_KEY environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_LOG_TYPE, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_LOG_TYPE environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_TIME_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_TIME_KEY environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_NAME_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_NAME_KEY environment variables.")
+		}
+		FileExportConfig()
+		os.Unsetenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
+		os.Unsetenv(constant.FILE_EXPORTER_LOG_TYPE)
+		os.Unsetenv(constant.FILE_EXPORTER_TIME_KEY)
+		os.Unsetenv(constant.FILE_EXPORTER_NAME_KEY)
 	})
 }

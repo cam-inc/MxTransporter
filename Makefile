@@ -2,4 +2,4 @@
 
 build-image:
 	@echo "build image..."
-	docker build -t mxtransporter .
+	docker build -t mxtransporter -f Dockerfile.local .
