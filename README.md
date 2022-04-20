@@ -225,6 +225,14 @@ No special preparation is required. If you want to separate the data warehouse t
 
 Change streams are sent to that in a pipe (|) separated CSV.
 
+### Standard output
+It is tandard output or file output.
+This feature assumes the case of relaying data via a sidecar-powered agent (fluentd, fluentbit, etc.).
+Due to the specifications of Docker log, if it is output as standard, it will be chunked at 16K Bytes, so if you want to avoid it, please use a file.
+```
+{"logType": "{FILE_EXPORTER_LOG_TYPE_KEY}","{FILE_EXPORTER_CHANGE_STREAM_KEY}":{// Change Stream Data //}}
+```
+
 <br>
 
 ## Format
@@ -247,6 +255,12 @@ It is formatted into a pipe (|) separated CSV and put.
 ```
 {"_data":"T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
 "}|insert|2021-10-01 23:59:59|{"_id":"6893253plm30db298659298h”,”name”:”xxx”}|{“coll”:”xxx”,”db”:”xxx”}|{“_id":"6893253plm30db298659298h"}|null
+```
+
+### Standard output
+It is basic JSON. It is possible to change the key of ChangeStream, add a Time field by specifying the environment variable option.
+```
+{"logType": "{FILE_EXPORTER_LOG_TYPE_KEY}","{FILE_EXPORTER_CHANGE_STREAM_KEY}":{// Change Stream Data //},"{FILE_EXPORTER_TIME_KEY}":"2022-04-20T01:47:39.228Z"}
 ```
 
 <br>
