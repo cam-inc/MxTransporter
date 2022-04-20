@@ -12,11 +12,11 @@ MxTransporterにより、データ活用側でリアルタイムなデータを�
 # 特徴
 - 柔軟に選べるエクスポート先
 
-取得し、整形された後の Change Streams のエクスポート先としてデータウェアハウスとストリーミングサービスをサポートしています。
+取得し、整形された後の Change Streams のエクスポート先としてデータウェアハウスとストリーミングサービスなどをサポートしています。
 
 - 複数宛先への同時エクスポート
 
-整形された Change Streams の情報は、複数のデータウェアハウス、ストリーミングサービスを、宛先として同時に選択することができます。
+整形された Change Streams の情報は、複数のデータウェアハウス、ストリーミングサービスなどを、宛先として同時に選択することができます。
 
 - コンテナ基盤
 
@@ -96,25 +96,44 @@ Change Streams はデータベースで起きた変更イベントを出力し�
 
 コンテナが停止する直前の Change Streams の resume token は永続ボリュームに保存されるため、コンテナが停止し、新しいコンテナがスタートしたときに resume token を参照して、逃した Change Streams を再取得できます。
 
-resume token は、永続ボリュームがマウントされているディレクトリに保存されます。
+resume token は以下を保存先として設定できます。
 
-```PERSISTENT_VOLUME_DIR``` はという環境変数をコンテナに与えます。
+#### ローカルファイル
+resume token は、永続ボリュームがマウントされているディレクトリに保存されます。<br>
+```RESUME_TOKEN_VOLUME_TYPE=file```とすることで、ローカルファイルへの保存を選択できます。
+
+```RESUME_TOKEN_VOLUME_DIR``` という環境変数をコンテナに与えます。
 
 ```
-{$PERSISTENT_VOLUME_DIR}/{year}/{month}/{day}
+{$RESUME_TOKEN_VOLUME_DIR}/{$RESUME_TOKEN_FILE_NAME}.dat
 ```
 
-resume token は```{year}-{month}-{day}.dat```というファイルに保存されます。
+resume token は```{RESUME_TOKEN_FILE_NAME}.dat```というファイルに保存されます。<br>
+```RESUME_TOKEN_FILE_NAME```はオプショナルな環境変数なので、設定しない場合は```{MONGODB_COLLECTION}.dat```という名前のファイルに保存されます
 
 ```
 $ pwd
-{$PERSISTENT_VOLUME_DIR}/{year}/{month}/{day}
+{$PERSISTENT_VOLUME_DIR}
 
 $ ls
-{year}-{month}-{day}.dat
+{RESUME_TOKEN_FILE_NAME}.dat
 
-$ cat {year}-{month}-{day}.dat
+$ cat {RESUME_TOKEN_FILE_NAME}.dat
 T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
+```
+
+#### 外部ストレージ
+クラウドストレージに保存することも可能です。
+
+```RESUME_TOKEN_VOLUME_TYPE=s3 or RESUME_TOKEN_VOLUME_TYPE=gcs```とすることで、S3かGCSへの保存を選択できます。<br>
+オブジェクトキーとしては```RESUME_TOKEN_VOLUME_DIR```を設定してください。
+
+以下の環境変数を任意で設定してください。
+```
+RESUME_TOKEN_VOLUME_BUCKET_NAME
+RESUME_TOKEN_FILE_NAME
+RESUME_TOKEN_BUCKET_REGION
+RESUME_TOKEN_SAVE_INTERVAL_SEC
 ```
 
 resume token を参照して Change Streams を取得する場合、```Collection.Watch()```の```startAfrter```で resume tokenを指定するように設計されています。
@@ -127,6 +146,24 @@ MxTransporter は以下の宛先に Change Streams をエクスポートしま�
 - Google Cloud BigQuery
 - Google Cloud Pub/Sub
 - Amazon Kinesis Data Streams
+- Standard output
+
+以下のように環境変数を設定します。
+```
+EXPORT_DESTINATION=bigquery
+
+or
+
+EXPORT_DESTINATION=kinesisStream
+
+or
+
+EXPORT_DESTINATION=pubsub
+
+or
+
+EXPORT_DESTINATION=file
+```
 
 ### BigQuery
 次のようなスキーマで BigQuery テーブルを作成します。
@@ -209,8 +246,8 @@ Change Streams をエクスポート先に送る前にフォーマットを整�
 <br>
 
 # Contributors
-| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   |
-| :---: |
+| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br />   |
+| :---: | :---: |
 <br>
 
 

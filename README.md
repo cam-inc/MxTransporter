@@ -12,12 +12,12 @@ With MxTransporter, real-time data can be reproduced and retained on the data ut
 
 # Features
 - Flexible export destination
-  
-It supports data warehouse and streaming service as export destinations after collecting change streams.
+
+It supports data warehouses, streaming services, etc. as destinations for Change Streams after they have been retrieved and formatted.
 
 - Simultaneous multi-export destination
 
-Multiple supported data warehouses and streaming services can be selected at the same time to export formatted change streams information.
+The formatted Change Streams information allows you to select multiple data warehouses, streaming services, etc. as destinations at the same time.
 
 - Container base
 
@@ -100,25 +100,45 @@ In this system, resume token is saved in Persistent Volume associated with the c
 
 The resume token of the change streams just before the container stopped is stored in the persistent volume, so you can refer to it and get again the change streams that you missed while the container stopped and the new container started again.
 
-The resume token is stored in the directory where the persistent volume is mounted.
+The resume token can be set to the following as the save destination.
 
-```PERSISTENT_VOLUME_DIR``` is an environment variable given to the container.
+#### local file
+The resume token is stored in the directory where the persistent volume is mounted.<br>
+You can choose to save to a local file by setting ```RESUME_TOKEN_VOLUME_TYPE = file```.
+
+```RESUME_TOKEN_VOLUME_DIR``` is an environment variable given to the container.
 
 ```
-{$PERSISTENT_VOLUME_DIR}/{year}/{month}/{day}
+{$RESUME_TOKEN_VOLUME_DIR}/{$RESUME_TOKEN_FILE_NAME}.dat
 ```
 
-The resume token is saved in ```{year}-{month}-{day}.dat```.
+The resume token is saved in a file called ``` {RESUME_TOKEN_FILE_NAME} .dat```. <br>
+```RESUME_TOKEN_FILE_NAME``` is an optional environment variable, so if you don't set it, it will be saved in a file named ```{MONGODB_COLLECTION} .dat```.
 
 ```
 $ pwd
-{$PERSISTENT_VOLUME_DIR}/{year}/{month}/{day}
+{$PERSISTENT_VOLUME_DIR}
 
 $ ls
-{year}-{month}-{day}.dat
+{RESUME_TOKEN_FILE_NAME}.dat
 
-$ cat {year}-{month}-{day}.dat
+$ cat {RESUME_TOKEN_FILE_NAME}.dat
 T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
+```
+
+#### External storage
+It is also possible to save to cloud storage.
+
+You can choose to save to S3 or GCS by setting ```RESUME_TOKEN_VOLUME_TYPE = s3 or RESUME_TOKEN_VOLUME_TYPE = gcs```. <br>
+Set ``` RESUME_TOKEN_VOLUME_DIR``` as the object key.
+
+Set the following environment variables as you like.
+
+```
+RESUME_TOKEN_VOLUME_BUCKET_NAME
+RESUME_TOKEN_FILE_NAME
+RESUME_TOKEN_BUCKET_REGION
+RESUME_TOKEN_SAVE_INTERVAL_SEC
 ```
 
 When getting change-streams by referring to resume token, it is designed to specify resume token in ```startAfrter``` of ```Collection.Watch()```.
@@ -131,6 +151,25 @@ MxTransporter export change streams to the following description.
 - Google Cloud BigQuery
 - Google Cloud Pub/Sub
 - Amazon Kinesis Data Streams
+- Standard output
+
+Set the environment variables as follows.
+```
+EXPORT_DESTINATION=bigquery
+
+or
+
+EXPORT_DESTINATION=kinesisStream
+
+or
+
+EXPORT_DESTINATION=pubsub
+
+or
+
+EXPORT_DESTINATION=file
+```
+
 
 ### BigQuery
 Create a BigQuery Table with a schema like the one below.
@@ -213,8 +252,8 @@ It is formatted into a pipe (|) separated CSV and put.
 <br>
 
 # Contributors
-| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   |
-| :---: |
+| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br />   |
+| :---: | :---: |
 <br>
 
 

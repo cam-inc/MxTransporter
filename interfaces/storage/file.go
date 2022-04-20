@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"os"
 )
 
@@ -15,7 +16,7 @@ func (f *fileStorageCli) GetObject(_ context.Context, key string) ([]byte, error
 
 	rtByte, err := os.ReadFile(key)
 	if err != nil {
-		return nil, err
+		return nil, errors.InternalServerError.Wrap("Failed to read file.", err)
 	}
 
 	return rtByte, nil
@@ -30,13 +31,13 @@ func (f *fileStorageCli) PutObject(_ context.Context, key, value string) error {
 	fp, err := os.OpenFile(key, os.O_WRONLY|os.O_CREATE, 0664)
 
 	if err != nil {
-		return err
+		return errors.InternalServerError.Wrap("Failed to open file.", err)
 	}
 	defer fp.Close()
 
 	_, err = fp.WriteString(value)
 	if err != nil {
-		return err
+		return errors.InternalServerError.Wrap("Failed to write to file.", err)
 	}
 	return nil
 }
