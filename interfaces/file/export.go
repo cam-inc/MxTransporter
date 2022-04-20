@@ -99,6 +99,7 @@ func (f *fileExporter) Export(_ context.Context, cs primitive.M) error {
 func New(cfg *ExporterConfig) Exporter {
 	zconfig := zapcore.EncoderConfig{
 		TimeKey:       cfg.TimeKey,
+		EncodeTime:    zapcore.ISO8601TimeEncoder,
 		NameKey:       cfg.NameKey,
 		MessageKey:    zapcore.OmitKey,
 		LevelKey:      zapcore.OmitKey,

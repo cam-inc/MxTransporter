@@ -219,6 +219,14 @@ Table schema
 
 パイプ(|)区切りのCSV形式で Change Streams はサブスクリプションに送られます。
 
+### Standard output
+標準出力またはファイル出力します。
+この機能はサイドカーで動くエージェント(fluentd, fluentbit 等)経由でデータをリレーするケースを想定しています。
+Dockerログの仕様上、標準出力した場合は16K Bytesでチャンクされるので、それを避ける場合はファイルを使用してください。
+```
+{"logType": "{FILE_EXPORTER_LOG_TYPE_KEY}","{FILE_EXPORTER_CHANGE_STREAM_KEY}":{// Change Stream Data //}}
+```
+
 <br>
 
 ## フォーマット
@@ -241,6 +249,12 @@ Change Streams をエクスポート先に送る前にフォーマットを整�
 ```
 {"_data":"T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
 "}|insert|2021-10-01 23:59:59|{"_id":"6893253plm30db298659298h”,”name”:”xxx”}|{“coll”:”xxx”,”db”:”xxx”}|{“_id":"6893253plm30db298659298h"}|null
+```
+
+### Standard output
+基本的なJSONです。環境変数オプション指定によりChangeStreamのキーを変更したり、Timeフィールドを追加することが可能です。
+```
+{"logType": "{FILE_EXPORTER_LOG_TYPE_KEY}","{FILE_EXPORTER_CHANGE_STREAM_KEY}":{// Change Stream Data //},"{FILE_EXPORTER_TIME_KEY}":"2022-04-20T01:47:39.228Z"}
 ```
 
 <br>
