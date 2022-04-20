@@ -147,6 +147,7 @@ MxTransporter は以下の宛先に Change Streams をエクスポートしま�
 - Google Cloud Pub/Sub
 - Amazon Kinesis Data Streams
 - Standard output
+- Local file
 
 以下のように環境変数を設定します。
 ```
@@ -159,6 +160,10 @@ EXPORT_DESTINATION=kinesisStream
 or
 
 EXPORT_DESTINATION=pubsub
+
+or
+
+EXPORT_DESTINATION=stdout
 
 or
 
@@ -219,6 +224,9 @@ Table schema
 
 パイプ(|)区切りのCSV形式で Change Streams はサブスクリプションに送られます。
 
+### Standard Output or File
+特段、準備は必要有りません。
+
 <br>
 
 ## フォーマット
@@ -242,6 +250,9 @@ Change Streams をエクスポート先に送る前にフォーマットを整�
 {"_data":"T7466SLQD7J49BT7FQ4DYERM6BYGEMVD9ZFTGUFLTPFTVWS35FU4BHUUH57J3BR33UQSJJ8TMTK365V5JMG2WYXF93TYSA6BBW9ZERYX6HRHQWYS
 "}|insert|2021-10-01 23:59:59|{"_id":"6893253plm30db298659298h”,”name”:”xxx”}|{“coll”:”xxx”,”db”:”xxx”}|{“_id":"6893253plm30db298659298h"}|null
 ```
+
+### Standard Output or File
+Zapの
 
 <br>
 
