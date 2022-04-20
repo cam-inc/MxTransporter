@@ -39,7 +39,10 @@ func (s *s3Cli) PutObject(ctx context.Context, key, value string) error {
 		Body:   rtBuf,
 	}
 	_, err := s.client.PutObject(ctx, input)
-	return errors.InternalServerErrorS3PutObject.Wrap("Failed to put object.", err)
+	if err != nil {
+		return errors.InternalServerErrorS3PutObject.Wrap("Failed to put object.", err)
+	}
+	return nil
 }
 
 func newS3(ctx context.Context, bucket, region string) (StorageClient, error) {

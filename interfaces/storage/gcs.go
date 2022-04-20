@@ -30,7 +30,10 @@ func (g *gcsCli) PutObject(ctx context.Context, key, value string) error {
 	writer := g.client.Bucket(g.bucket).Object(key).NewWriter(ctx)
 	defer writer.Close()
 	_, err := writer.Write([]byte(value))
-	return errors.InternalServerErrorGcsWriteObject.Wrap("Failed to write object.", err)
+	if err != nil {
+		return errors.InternalServerErrorGcsWriteObject.Wrap("Failed to write object.", err)
+	}
+	return nil
 }
 
 func newGcs(ctx context.Context, bucket, region string) (StorageClient, error) {
