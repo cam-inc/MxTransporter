@@ -215,7 +215,10 @@ Table schema
 ```
 
 ### Pub/Sub
-特段、準備は必要ありません。対象の Change Streams が発生した元の MongoDB のデータベース名を元にトピック、コレクション名を元にサブスクリプションを作成します。
+以下の環境変数を設定し、Change Streamsをエクスポートするトピック名を指定します。
+```
+PUBSUB_TOPIC_NAME
+```
 
 パイプ(|)区切りのCSV形式で Change Streams はサブスクリプションに送られます。
 

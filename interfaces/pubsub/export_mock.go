@@ -23,14 +23,6 @@ func (*mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*
 	return nil, nil
 }
 
-func (*mockPubsubClientImpl) subscriptionExists(ctx context.Context, subscriptionID string) (bool, error) {
-	return false, nil
-}
-
-func (*mockPubsubClientImpl) createSubscription(ctx context.Context, topicID string, subscriptionID string) (*pubsub.Subscription, error) {
-	return nil, nil
-}
-
 func (m *mockPubsubClientImpl) publishMessage(_ context.Context, _ string, csArray []string) error {
 	if csArray == nil {
 		return fmt.Errorf("Expect csItems to not be nil.")

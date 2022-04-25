@@ -6,13 +6,11 @@ import (
 )
 
 type PubSub struct {
-	MongoDbDatabase   string
-	MongoDbCollection string
+	TopicName string
 }
 
 func PubSubConfig() PubSub {
 	var psCfg PubSub
-	psCfg.MongoDbDatabase = os.Getenv(constant.MONGODB_DATABASE)
-	psCfg.MongoDbCollection = os.Getenv(constant.MONGODB_COLLECTION)
+	psCfg.TopicName = os.Getenv(constant.PUBSUB_TOPIC_NAME)
 	return psCfg
 }
