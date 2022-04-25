@@ -11,21 +11,14 @@ import (
 
 func Test_PubSubConfig(t *testing.T) {
 	t.Run("Check to call the set environment variable.", func(t *testing.T) {
-		mDatabase := "xxx"
-		mCollection := "yyy"
-		if err := os.Setenv("MONGODB_DATABASE", mDatabase); err != nil {
-			t.Fatalf("Failed to set file MONGODB_DATABASE environment variables.")
-		}
-		if err := os.Setenv("MONGODB_COLLECTION", mCollection); err != nil {
-			t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+		mTopicID := "xxx"
+		if err := os.Setenv("PUBSUB_TOPIC_NAME", mTopicID); err != nil {
+			t.Fatalf("Failed to set file PUBSUB_TOPIC_NAME environment variables.")
 		}
 
 		psCfg := PubSubConfig()
-		if e, a := psCfg.MongoDbDatabase, mDatabase; !reflect.DeepEqual(e, a) {
+		if e, a := psCfg.MongoDbDatabase, mTopicID; !reflect.DeepEqual(e, a) {
 			t.Fatal("Environment variable MONGODB_DATABASE is not acquired correctly.")
-		}
-		if e, a := psCfg.MongoDbCollection, mCollection; !reflect.DeepEqual(e, a) {
-			t.Fatal("Environment variable MONGODB_COLLECTION is not acquired correctly.")
 		}
 	})
 }
