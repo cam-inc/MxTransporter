@@ -17,7 +17,7 @@ func Test_PubSubConfig(t *testing.T) {
 		}
 
 		psCfg := PubSubConfig()
-		if e, a := psCfg.MongoDbDatabase, mTopicID; !reflect.DeepEqual(e, a) {
+		if e, a := psCfg.TopicName, mTopicID; !reflect.DeepEqual(e, a) {
 			t.Fatal("Environment variable MONGODB_DATABASE is not acquired correctly.")
 		}
 	})
