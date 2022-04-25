@@ -6,7 +6,7 @@ import (
 )
 
 type PubSub struct {
-	TopicName   string
+	TopicName string
 }
 
 func PubSubConfig() PubSub {
