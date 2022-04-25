@@ -216,7 +216,10 @@ Table schema
 ```
 
 ### Pub/Sub
-No special preparation is required. Automaticaly, create a Topic with the MongoDB Database name, and a Subscription with the MongoDB Collection name from which the change streams originated.
+Set the following environment variables to specify the topic name to which Change Streams will be exported.
+```
+PUBSUB_TOPIC_NAME
+```
 
 Change streams are sent to that subscription in a pipe (|) separated CSV.
 
