@@ -35,7 +35,7 @@ func (r *resumeTokenImpl) ReadResumeToken(ctx context.Context) string {
 	filePath := path.Clean(tmp)
 	o, err := r.client.GetObject(ctx, filePath)
 	if err != nil {
-		r.Log.Errorf("Failed ReadResumeToken key:%s, err:%v", filePath, err)
+		r.Log.Infof("Failed ReadResumeToken key:%s, err:%v", filePath, err)
 		return ""
 	}
 	return string(o)
