@@ -1,7 +1,9 @@
-# ------------------------
-# First stage: build
-# ------------------------
-FROM golang:latest as builder
+##
+## Build
+##
+FROM golang:latest as build
+
+LABEL org.opencontainers.image.source="https://github.com/cam-inc/MxTransporter"
 
 WORKDIR /go/src
 
@@ -19,11 +21,15 @@ RUN go install ./cmd/main.go
 RUN go build -o /go/bin/health -ldflags '-s -w' ./cmd/health.go
 RUN go install ./cmd/health.go
 
-# ------------------------
-# Complete stage
-# ------------------------
-FROM golang:latest
-COPY --from=builder /go /go
+##
+## Deploy
+##
+FROM alpine:latest
+
+WORKDIR /go/src
+
+COPY --from=build /go/bin/main /go/bin/main
+COPY --from=build /go/bin/health /go/bin/health
+COPY --from=build /usr/share/zoneinfo /usr/share/zoneinfo
 
 ENTRYPOINT ["/go/bin/main"]
-
