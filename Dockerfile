@@ -8,6 +8,7 @@ LABEL org.opencontainers.image.source="https://github.com/cam-inc/MxTransporter"
 WORKDIR /go/src
 
 COPY . ./
+
 RUN go mod download
 
 ARG CGO_ENABLED=0

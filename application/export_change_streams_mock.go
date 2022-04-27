@@ -8,16 +8,17 @@ import (
 	"cloud.google.com/go/pubsub"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
+	iff "github.com/cam-inc/mxtransporter/interfaces/file"
+	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
+	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
+	interfaceForResumeToken "github.com/cam-inc/mxtransporter/usecases/resume-token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	interfaceForBigquery "mxtransporter/interfaces/bigquery"
-	interfaceForKinesisStream "mxtransporter/interfaces/kinesis-stream"
-	interfaceForPubsub "mxtransporter/interfaces/pubsub"
-	interfaceForResumeToken "mxtransporter/usecases/resume-token"
 )
 
-type mockChangeStremsWatcherClientImpl struct {
+type mockChangeStreamsWatcherClientImpl struct {
 	mongoClient            *mongo.Client
 	csExporter             ChangeStreamsExporterImpl
 	resumeToken            string
@@ -25,24 +26,30 @@ type mockChangeStremsWatcherClientImpl struct {
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
+	filePassCheck          string
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
+	m.filePassCheck = "OK"
+	return nil, nil
+}
+
+func (m *mockChangeStreamsWatcherClientImpl) newBigqueryClient(_ context.Context, _ string) (*bigquery.Client, error) {
 	m.bqPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newPubsubClient(_ context.Context, _ string) (*pubsub.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newPubsubClient(_ context.Context, _ string) (*pubsub.Client, error) {
 	m.pubsubPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) newKinesisClient(_ context.Context) (*kinesis.Client, error) {
+func (m *mockChangeStreamsWatcherClientImpl) newKinesisClient(_ context.Context) (*kinesis.Client, error) {
 	m.kinesisStreamPassCheck = "OK"
 	return nil, nil
 }
 
-func (m *mockChangeStremsWatcherClientImpl) watch(_ context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
+func (m *mockChangeStreamsWatcherClientImpl) watch(_ context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
 	if ops.ResumeAfter != nil {
 		if ops.ResumeAfter.(map[string]string)["_data"] == m.resumeToken {
 			m.resumeAfterExistence = true
@@ -54,10 +61,10 @@ func (m *mockChangeStremsWatcherClientImpl) watch(_ context.Context, ops *option
 	return nil, nil
 }
 
-func (c *mockChangeStremsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporterImpl) {
+func (c *mockChangeStreamsWatcherClientImpl) setCsExporter(_ ChangeStreamsExporterImpl) {
 }
 
-func (c *mockChangeStremsWatcherClientImpl) exportChangeStreams(_ context.Context) error {
+func (c *mockChangeStreamsWatcherClientImpl) exportChangeStreams(_ context.Context) error {
 	return nil
 }
 
@@ -66,10 +73,11 @@ type mockChangeStreamsExporterClientImpl struct {
 	bq                     interfaceForBigquery.BigqueryImpl
 	pubsub                 interfaceForPubsub.PubsubImpl
 	kinesisStream          interfaceForKinesisStream.KinesisStreamImpl
-	resumeToken            interfaceForResumeToken.ResumeTokenImpl
+	resumeToken            interfaceForResumeToken.ResumeToken
 	bqPassCheck            string
 	pubsubPassCheck        string
 	kinesisStreamPassCheck string
+	filePassCheck          string
 	csCursorFlag           bool
 }
 
@@ -99,8 +107,12 @@ func (m *mockChangeStreamsExporterClientImpl) exportToKinesisStream(_ context.Co
 	m.kinesisStreamPassCheck = "OK"
 	return nil
 }
+func (m *mockChangeStreamsExporterClientImpl) exportToFile(_ context.Context, cs primitive.M) error {
+	m.filePassCheck = "OK"
+	return nil
+}
 
-func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ string) error {
+func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ context.Context, _ string) error {
 	m.csCursorFlag = false
 	return nil
 }

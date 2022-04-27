@@ -4,48 +4,11 @@
 package config
 
 import (
+	"github.com/cam-inc/mxtransporter/config/constant"
 	"os"
 	"reflect"
 	"testing"
 )
-
-func Test_FetchPersistentVolumeDir(t *testing.T) {
-	tests := []struct {
-		name   string
-		runner func(t *testing.T)
-	}{
-		{
-			name: "Does not succeed when the environment variable PERSISTENT_VOLUME_DIR is not set.",
-			runner: func(t *testing.T) {
-				_, err := FetchPersistentVolumeDir()
-				if err == nil {
-					t.Fatalf("Because the environment variable PERSISTENT_VOLUME_DIR is not set, error must be returned from the target function.")
-				}
-			},
-		},
-		{
-			name: "Check to call the set environment variable PERSISTENT_VOLUME_DIR.",
-			runner: func(t *testing.T) {
-				pvDir := "/test"
-				if err := os.Setenv("PERSISTENT_VOLUME_DIR", pvDir); err != nil {
-					t.Fatalf("Failed to set file PERSISTENT_VOLUME_DIR environment variables.")
-				}
-
-				r, err := FetchPersistentVolumeDir()
-				if e, a := r, pvDir; !reflect.DeepEqual(e, a) {
-					t.Fatal("Environment variable PERSISTENT_VOLUME_DIR is not acquired correctly.")
-				}
-				if err != nil {
-					t.Fatal("Failed to fetch Environment variable PERSISTENT_VOLUME_DIR.")
-				}
-			},
-		},
-	}
-
-	for _, v := range tests {
-		t.Run(v.name, v.runner)
-	}
-}
 
 func Test_FetchExportDestination(t *testing.T) {
 	tests := []struct {
@@ -193,5 +156,59 @@ func Test_LogConfig(t *testing.T) {
 		if e, a := l.OutputFile, outputFile; !reflect.DeepEqual(e, a) {
 			t.Fatal("Environment variable LOG_OUTPUT_FILE is not acquired correctly.")
 		}
+	})
+}
+
+func Test_FetchResumeTokenFileName(t *testing.T) {
+	t.Run("Check to call the set environment variable.", func(t *testing.T) {
+		if err := os.Setenv("MONGODB_COLLECTION", "test"); err != nil {
+			t.Fatalf("Failed to set file MONGODB_COLLECTION environment variables.")
+		}
+		col, err := FetchResumeTokenFileName()
+		if err != nil {
+			t.Fatalf("FetchResumeTokenFileName return error %v", err)
+		}
+		if e, a := col, "test.dat"; !reflect.DeepEqual(e, a) {
+			t.Fatalf("Environment variable MONGODB_COLLECTION is not acquired correctly. %s", col)
+		}
+
+		if err := os.Setenv("RESUME_TOKEN_FILE_NAME", "resume"); err != nil {
+			t.Fatalf("Failed to set file MONGO_COLLECTION environment variables.")
+		}
+		r, err := FetchResumeTokenFileName()
+		if err != nil {
+			t.Fatalf("FetchResumeTokenFileName return error %v", err)
+		}
+		if e, a := r, "resume"; !reflect.DeepEqual(e, a) {
+			t.Fatalf("Environment variable LOG_OUTPUT_FILE is not acquired correctly. %s", r)
+		}
+
+		os.Unsetenv("RESUME_TOKEN_FILE_NAME")
+		os.Unsetenv("MONGODB_COLLECTION")
+		if _, err := FetchResumeTokenFileName(); err == nil {
+			t.Fatal("FetchResumeTokenFileName no error.")
+		}
+	})
+}
+
+func Test_FileExportConfig(t *testing.T) {
+	t.Run("Check to call the set environment variable.", func(t *testing.T) {
+		if err := os.Setenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_CHANGE_STREAM_KEY environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_LOG_TYPE, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_LOG_TYPE environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_TIME_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_TIME_KEY environment variables.")
+		}
+		if err := os.Setenv(constant.FILE_EXPORTER_NAME_KEY, "changeStream"); err != nil {
+			t.Fatalf("Failed to set file FILE_EXPORTER_NAME_KEY environment variables.")
+		}
+		FileExportConfig()
+		os.Unsetenv(constant.FILE_EXPORTER_CHANGE_STREAM_KEY)
+		os.Unsetenv(constant.FILE_EXPORTER_LOG_TYPE)
+		os.Unsetenv(constant.FILE_EXPORTER_TIME_KEY)
+		os.Unsetenv(constant.FILE_EXPORTER_NAME_KEY)
 	})
 }

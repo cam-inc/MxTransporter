@@ -1,6 +1,7 @@
 package kinesis_stream
 
 import (
+	"github.com/cam-inc/mxtransporter/config/constant"
 	"os"
 )
 
@@ -11,7 +12,7 @@ type KinesisStream struct {
 
 func KinesisStreamConfig() KinesisStream {
 	var ksCfg KinesisStream
-	ksCfg.StreamName = os.Getenv("KINESIS_STREAM_NAME")
-	ksCfg.KinesisStreamRegion = os.Getenv("KINESIS_STREAM_REGION")
+	ksCfg.StreamName = os.Getenv(constant.KINESIS_STREAM_NAME)
+	ksCfg.KinesisStreamRegion = os.Getenv(constant.KINESIS_STREAM_REGION)
 	return ksCfg
 }

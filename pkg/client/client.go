@@ -3,14 +3,16 @@ package client
 import (
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/pubsub"
+	"cloud.google.com/go/storage"
 	"context"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
+	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	kinesisConfig "mxtransporter/config/kinesis-stream"
-	mongoConfig "mxtransporter/config/mongodb"
-	"mxtransporter/pkg/errors"
 )
 
 func NewBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error) {
@@ -33,7 +35,7 @@ func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	ksCfg := kinesisConfig.KinesisStreamConfig()
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(ksCfg.KinesisStreamRegion))
 	if err != nil {
-		return nil, errors.InternalServerErrorClientGet.Wrap("aws client connection refused", err)
+		return nil, errors.InternalServerErrorClientGet.Wrap("failed aws load default config.", err)
 	}
 
 	c := kinesis.NewFromConfig(cfg)
@@ -48,4 +50,15 @@ func NewMongoClient(ctx context.Context) (*mongo.Client, error) {
 		return nil, errors.InternalServerErrorMongoDbConnect.Wrap("mongodb connection refused.", err)
 	}
 	return c, nil
+}
+
+func NewS3Client(ctx context.Context) (*s3.Client, error) {
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return s3.NewFromConfig(cfg), nil
+}
+func NewGcsClient(ctx context.Context) (*storage.Client, error) {
+	return storage.NewClient(ctx)
 }

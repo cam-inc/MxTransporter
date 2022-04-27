@@ -41,7 +41,7 @@ build: create-service-account \
 secrets: create-secrets
 
 deploy: build-image \
-		puch-to-gcr \
+		push-to-gcr \
 		build-helm-variables \
 		deploy-gke-resources
 
@@ -137,7 +137,7 @@ build-image:
 	@echo "build image..."
 	docker build -t mxtransporter ../../../
 
-puch-to-gcr:
+push-to-gcr:
 	docker tag mxtransporter $(GCR_REPO):$(GCR_REPO_TAG)
 	@echo "push image to gcr..."
 	docker push $(GCR_REPO):$(GCR_REPO_TAG)

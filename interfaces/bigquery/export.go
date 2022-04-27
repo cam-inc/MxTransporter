@@ -4,9 +4,9 @@ import (
 	"cloud.google.com/go/bigquery"
 	"context"
 	"encoding/json"
+	bigqueryConfig "github.com/cam-inc/mxtransporter/config/bigquery"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	bigqueryConfig "mxtransporter/config/bigquery"
-	"mxtransporter/pkg/errors"
 	"time"
 )
 

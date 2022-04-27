@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
+	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	kinesisConfig "mxtransporter/config/kinesis-stream"
-	"mxtransporter/pkg/errors"
 	"strings"
 	"time"
 )

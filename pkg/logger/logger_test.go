@@ -5,7 +5,7 @@ package logger
 
 import (
 	"bytes"
-	"mxtransporter/pkg/errors"
+	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"os"
 	"testing"
 )

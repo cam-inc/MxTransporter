@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/cam-inc/mxtransporter/application"
+	"github.com/cam-inc/mxtransporter/config"
+	"github.com/cam-inc/mxtransporter/pkg/client"
+	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"go.uber.org/zap"
-	"mxtransporter/application"
-	"mxtransporter/config"
-	"mxtransporter/pkg/client"
-	"mxtransporter/pkg/logger"
 )
 
 func main() {
@@ -25,8 +25,14 @@ func main() {
 	}
 	defer mClient.Disconnect(ctx)
 
-	watcherClient := &application.ChangeStremsWatcherClientImpl{mClient, application.ChangeStreamsExporterImpl{}}
-	watcher := application.ChangeStremsWatcherImpl{watcherClient, l}
+	watcherClient := &application.ChangeStreamsWatcherClientImpl{
+		MongoClient: mClient,
+		CsExporter:  application.ChangeStreamsExporterImpl{},
+	}
+	watcher := application.ChangeStreamsWatcherImpl{
+		Watcher: watcherClient,
+		Log:     l,
+	}
 
 	if err := watcher.WatchChangeStreams(ctx); err != nil {
 		l.Error(err)
