@@ -215,6 +215,7 @@ type (
 		exportToKinesisStream(ctx context.Context, cs primitive.M) error
 		exportToFile(ctx context.Context, cs primitive.M) error
 		saveResumeToken(ctx context.Context, rt string) error
+		err() error
 	}
 
 	ChangeStreamsExporterImpl struct {
@@ -260,11 +261,17 @@ func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
+
 func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
 	return c.fileExporter.Export(ctx, cs)
 }
+
 func (c *changeStreamsExporterClientImpl) saveResumeToken(ctx context.Context, rt string) error {
 	return c.resumeToken.SaveResumeToken(ctx, rt)
+}
+
+func (c *changeStreamsExporterClientImpl) err() error {
+	return c.cs.Err()
 }
 
 func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) error {
@@ -277,6 +284,7 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 	expDstList := strings.Split(expDst, ",")
 
 	for c.exporter.next(ctx) {
+
 		csMap, err := c.exporter.decode()
 		if err != nil {
 			return err
@@ -327,5 +335,12 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 			return err
 		}
 	}
+
+	if err := c.exporter.err(); err != nil {
+		return errors.InternalServerError.Wrap("Could not get the next event for change stream.", err)
+	}
+
+	c.log.Info("Acquisition of change streams was interrupted.")
+
 	return nil
 }
