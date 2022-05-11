@@ -116,3 +116,7 @@ func (m *mockChangeStreamsExporterClientImpl) saveResumeToken(_ context.Context,
 	m.csCursorFlag = false
 	return nil
 }
+
+func (m *mockChangeStreamsExporterClientImpl) err() error {
+	return nil
+}
