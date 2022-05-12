@@ -279,7 +279,7 @@ Note that you can only exclude fields within the ``` fullDocument``` field.
 MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD
 
 e.g.
-MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD=fulldocument.<Unnecessary fields>,clusterTime
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD=fulldocument.<Unnecessary fields>,fulldocument.<Unnecessary fields>
 ```
 
 Please refer to the following MongoDB documentation.
