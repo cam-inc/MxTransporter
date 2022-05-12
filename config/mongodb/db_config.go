@@ -6,9 +6,9 @@ import (
 )
 
 type Mongo struct {
-	MongoDbConnectionUrl             string
-	MongoDbDatabase                  string
-	MongoDbCollection                string
+	MongoDbConnectionUrl                         string
+	MongoDbDatabase                              string
+	MongoDbCollection                            string
 	MongoWatchPipelineExcludeCsFulldocumentField string
 }
 
