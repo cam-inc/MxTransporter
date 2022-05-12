@@ -170,6 +170,8 @@ or
 EXPORT_DESTINATION=file
 ```
 
+
+
 ### BigQuery
 次のようなスキーマで BigQuery テーブルを作成します。
 
@@ -260,10 +262,29 @@ Change Streams をエクスポート先に送る前にフォーマットを整�
 ```
 
 ### Standard output or File
-基本的なJSONです。環境変数オプション指定によりChangeStreamのキーを変更したり、Timeフィールドを追加することが可能です。
+基本的なJSONです。環境変数オプション指定により ChangeStreams のキーを変更したり、Timeフィールドを追加することが可能です。
 ```
 {"logType": "{FILE_EXPORTER_LOG_TYPE_KEY}","{FILE_EXPORTER_CHANGE_STREAM_KEY}":{// Change Stream Data //},"{FILE_EXPORTER_TIME_KEY}":"2022-04-20T01:47:39.228Z"}
 ```
+
+<br>
+
+## 除外フィールド
+Change Streams を export する際に、```fullDocument```内の不要なフィールドを除外することができます。
+
+以下のような環境変数を設定してください。複数指定する場合は ```,```で区切ります。
+
+```fullDocument```フィールド内のフィールド以外は除外できない点に注意してください。
+
+```
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD
+
+e.g.
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD=fulldocument.<Unnecessary fields>,fulldocument.<Unnecessary fields>
+```
+
+以下の MongoDB ドキュメントを参考にしてください。
+https://www.mongodb.com/docs/manual/reference/operator/aggregation/unset/#mongodb-pipeline-pipe.-unset
 
 <br>
 

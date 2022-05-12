@@ -48,7 +48,7 @@ func fetchCollection(ctx context.Context, db *mongo.Database) (*mongo.Collection
 	return cl, nil
 }
 
-func Watch(ctx context.Context, client *mongo.Client, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
+func Watch(ctx context.Context, client *mongo.Client, pipeline mongo.Pipeline, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
 	db, err := fetchDatabase(ctx, client)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func Watch(ctx context.Context, client *mongo.Client, ops *options.ChangeStreamO
 		return nil, err
 	}
 
-	cs, err := coll.Watch(ctx, mongo.Pipeline{}, ops)
+	cs, err := coll.Watch(ctx, pipeline, ops)
 	if err != nil {
 		return nil, errors.InternalServerErrorMongoDbOperate.Wrap("Failed to watch mongodb.", err)
 	}

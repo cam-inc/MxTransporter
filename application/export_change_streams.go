@@ -7,14 +7,17 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/cam-inc/mxtransporter/config"
+	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
 	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/client"
+	"github.com/cam-inc/mxtransporter/pkg/common"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -85,7 +88,32 @@ func (*ChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exp
 }
 
 func (c *ChangeStreamsWatcherClientImpl) watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error) {
-	cs, err := mongoConnection.Watch(ctx, c.MongoClient, ops)
+	mongoCfg := mongoConfig.MongoConfig()
+
+	var pipeline mongo.Pipeline
+	if mongoCfg.MongoWatchPipelineExcludeCsFulldocumentField != "" {
+		excludeFields := strings.Split(mongoCfg.MongoWatchPipelineExcludeCsFulldocumentField, ",")
+
+		if common.Contains(excludeFields, "_id") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "operationType") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "clusterTime") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "fullDocument") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "ns") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "documentKey") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		} else if common.Contains(excludeFields, "updateDescription") {
+			return nil, errors.InternalServerError.New("The specified exclude field cannot be excluded from change streams.")
+		}
+
+		pipeline = mongo.Pipeline{bson.D{{"$unset", excludeFields}}}
+	}
+
+	cs, err := mongoConnection.Watch(ctx, c.MongoClient, pipeline, ops)
 	if err != nil {
 		return nil, err
 	}

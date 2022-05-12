@@ -268,6 +268,25 @@ It is basic JSON. It is possible to change the key of ChangeStream, add a Time f
 
 <br>
 
+## Exclude Field
+When exporting Change Streams, you can exclude unnecessary fields in the ```fullDocument```.
+
+Set the following environment variables. If you specify more than one, separate them with ```,```.
+
+Note that you can only exclude fields within the ``` fullDocument``` field.
+
+```
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD
+
+e.g.
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD=fulldocument.<Unnecessary fields>,clusterTime
+```
+
+Please refer to the following MongoDB documentation.
+https://www.mongodb.com/docs/manual/reference/operator/aggregation/unset/#mongodb-pipeline-pipe.-unset
+
+<br>
+
 # Contributors
 | [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br />   |
 | :---: | :---: |
