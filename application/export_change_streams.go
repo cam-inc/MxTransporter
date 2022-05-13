@@ -353,15 +353,22 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 			})
 		}
 
-		if err := eg.Wait(); err != nil {
-			return err
-		}
+		go func() {
 
-		csRt := csMap["_id"].(primitive.M)["_data"].(string)
+			// TODO: エラーハンドリングはあとでちゃんとやります
 
-		if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
-			return err
-		}
+			if err := eg.Wait(); err != nil {
+				c.log.Errorf("eg.Wait() Error %s", err)
+				return
+			}
+
+			csRt := csMap["_id"].(primitive.M)["_data"].(string)
+
+			if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
+				c.log.Errorf("saveResumeToken Error %s", err)
+				return
+			}
+		}()
 	}
 
 	if err := c.exporter.err(); err != nil {
