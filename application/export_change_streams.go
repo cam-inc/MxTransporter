@@ -134,9 +134,12 @@ func (c *ChangeStreamsWatcherClientImpl) exportChangeStreams(ctx context.Context
 func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
-	rtUnusedModeFlag := config.FetchResumeTokenUnusedMode()
+	rtUnusedModeFlag, err := config.FetchResumeTokenUnusedMode()
+	if err != nil {
+		return err
+	}
 
-	if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
+	if !rtUnusedModeFlag {
 		if c.resumeTokenManager == nil {
 			rtImpl, err := irt.New(ctx, c.Log)
 			if err != nil {
@@ -153,10 +156,8 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 			var rt interface{} = map[string]string{"_data": strings.TrimRight(rt, "\n")}
 			ops.SetResumeAfter(rt)
 		}
-	} else if strings.EqualFold(rtUnusedModeFlag, "true") {
-		c.Log.Info("ResumeTokenUnusedMode: You have selected a mode to get change streams without using resume token.")
 	} else {
-		return errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
+		c.Log.Info("ResumeTokenUnusedMode: You have selected a mode to get change streams without using resume token.")
 	}
 
 	cs, err := c.Watcher.watch(ctx, ops)
@@ -364,17 +365,17 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 			return err
 		}
 
-		rtUnusedModeFlag := config.FetchResumeTokenUnusedMode()
-		if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
+		rtUnusedModeFlag, err := config.FetchResumeTokenUnusedMode()
+		if err != nil {
+			return err
+		}
+
+		if !rtUnusedModeFlag {
 			csRt := csMap["_id"].(primitive.M)["_data"].(string)
 
 			if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
 				return err
 			}
-		} else if strings.EqualFold(rtUnusedModeFlag, "true") {
-			continue
-		} else {
-			return errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
 		}
 	}
 

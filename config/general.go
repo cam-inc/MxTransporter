@@ -9,6 +9,12 @@ import (
 	"github.com/joho/godotenv"
 	"os"
 	"strconv"
+	"strings"
+)
+
+const (
+	ResumeTokenUnusedTrue  = "true"
+	ResumeTokenUnusedFalse = "false"
 )
 
 func init() {
@@ -46,9 +52,26 @@ func FetchGcpProject() (string, error) {
 	return projectID, nil
 }
 
-func FetchResumeTokenUnusedMode() string {
+func FetchResumeTokenUnusedMode() (bool, error) {
 	rtUnusedModeFlag := os.Getenv(constant.RESUME_TOKEN_UNUSED_MODE)
-	return rtUnusedModeFlag
+
+	if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
+		rtUnusedModeFlag = ResumeTokenUnusedFalse
+		b, err := strconv.ParseBool(rtUnusedModeFlag)
+		if err != nil {
+			return false, errors.InternalServerError.Wrap("Failed to parsse RESUME_TOKEN_UNUSED_MODE to bool value.", err)
+		}
+		return b, nil
+	} else if strings.EqualFold(rtUnusedModeFlag, "true") {
+		rtUnusedModeFlag = ResumeTokenUnusedTrue
+		b, err := strconv.ParseBool(rtUnusedModeFlag)
+		if err != nil {
+			return false, errors.InternalServerError.Wrap("Failed to parsse RESUME_TOKEN_UNUSED_MODE to bool value.", err)
+		}
+		return b, nil
+	} else {
+		return false, errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
+	}
 }
 
 func FetchTimeZone() (string, error) {
