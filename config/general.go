@@ -47,7 +47,6 @@ func FetchGcpProject() (string, error) {
 }
 
 func FetchResumeTokenUnusedMode() string {
-	// LookupEnv() is used because error judgment is required for error handling of the caller.
 	rtUnusedModeFlag := os.Getenv(constant.RESUME_TOKEN_UNUSED_MODE)
 	return rtUnusedModeFlag
 }
