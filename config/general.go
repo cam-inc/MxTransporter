@@ -12,11 +12,6 @@ import (
 	"strings"
 )
 
-const (
-	ResumeTokenUnusedTrue  = "true"
-	ResumeTokenUnusedFalse = "false"
-)
-
 func init() {
 	// for runing locally
 	godotenv.Load()
@@ -56,19 +51,9 @@ func FetchResumeTokenUnusedMode() (bool, error) {
 	rtUnusedModeFlag := os.Getenv(constant.RESUME_TOKEN_UNUSED_MODE)
 
 	if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
-		rtUnusedModeFlag = ResumeTokenUnusedFalse
-		b, err := strconv.ParseBool(rtUnusedModeFlag)
-		if err != nil {
-			return false, errors.InternalServerError.Wrap("Failed to parsse RESUME_TOKEN_UNUSED_MODE to bool value.", err)
-		}
-		return b, nil
+		return false, nil
 	} else if strings.EqualFold(rtUnusedModeFlag, "true") {
-		rtUnusedModeFlag = ResumeTokenUnusedTrue
-		b, err := strconv.ParseBool(rtUnusedModeFlag)
-		if err != nil {
-			return false, errors.InternalServerError.Wrap("Failed to parsse RESUME_TOKEN_UNUSED_MODE to bool value.", err)
-		}
-		return b, nil
+		return true, nil
 	} else {
 		return false, errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
 	}
