@@ -132,24 +132,31 @@ func (c *ChangeStreamsWatcherClientImpl) exportChangeStreams(ctx context.Context
 }
 
 func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error {
-
-	if c.resumeTokenManager == nil {
-		rtImpl, err := irt.New(ctx, c.Log)
-		if err != nil {
-			return err
-		}
-		c.resumeTokenManager = rtImpl
-	}
-
-	rt := c.resumeTokenManager.ReadResumeToken(ctx)
 	ops := options.ChangeStream().SetFullDocument(options.UpdateLookup)
 
-	if len(rt) == 0 {
-		c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
-	} else {
-		var rt interface{} = map[string]string{"_data": strings.TrimRight(rt, "\n")}
+	rtUnusedModeFlag := config.FetchResumeTokenUnusedMode()
 
-		ops.SetResumeAfter(rt)
+	if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
+		if c.resumeTokenManager == nil {
+			rtImpl, err := irt.New(ctx, c.Log)
+			if err != nil {
+				return err
+			}
+			c.resumeTokenManager = rtImpl
+		}
+
+		rt := c.resumeTokenManager.ReadResumeToken(ctx)
+
+		if len(rt) == 0 {
+			c.Log.Info("File saved resume token in is not exists. Get from the current change streams.")
+		} else {
+			var rt interface{} = map[string]string{"_data": strings.TrimRight(rt, "\n")}
+			ops.SetResumeAfter(rt)
+		}
+	} else if strings.EqualFold(rtUnusedModeFlag, "true") {
+		c.Log.Info("ResumeTokenUnusedMode: You have selected a mode to get change streams without using resume token.")
+	} else {
+		return errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
 	}
 
 	cs, err := c.Watcher.watch(ctx, ops)
@@ -357,10 +364,17 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 			return err
 		}
 
-		csRt := csMap["_id"].(primitive.M)["_data"].(string)
+		rtUnusedModeFlag := config.FetchResumeTokenUnusedMode()
+		if rtUnusedModeFlag == "" || strings.EqualFold(rtUnusedModeFlag, "false") {
+			csRt := csMap["_id"].(primitive.M)["_data"].(string)
 
-		if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
-			return err
+			if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
+				return err
+			}
+		} else if strings.EqualFold(rtUnusedModeFlag, "true") {
+			continue
+		} else {
+			return errors.InternalServerError.New("The environment variable RESUME_TOKEN_UNUSED_MODE is not set to the proper value.")
 		}
 	}
 

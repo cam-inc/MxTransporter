@@ -138,6 +138,18 @@ RESUME_TOKEN_SAVE_INTERVAL_SEC
 
 resume token を参照して Change Streams を取得する場合、```Collection.Watch()```の```startAfrter```で resume tokenを指定するように設計されています。
 
+#### Resume Token を利用しない
+Resume Token を利用した再取得を無効化することもできます。
+
+その際は以下の環境変数を設定してください。
+※デフォルトではResume Token を利用した再取得は有効化されています。
+```
+RESUME_TOKEN_UNUSED_MODE=true
+```
+
+無効化した場合、 Resume Token の保存先などの設定は不要ですし、永続ボリュームやストレージの準備も不要です。
+
+
 <br>
 
 ## Change Streams をエクスポートする

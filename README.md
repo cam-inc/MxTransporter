@@ -143,6 +143,17 @@ RESUME_TOKEN_SAVE_INTERVAL_SEC
 
 When getting change-streams by referring to resume token, it is designed to specify resume token in ```startAfrter``` of ```Collection.Watch()```.
 
+#### Unused Resume Token
+You can also disable reacquisition using Resume Token.
+
+In that case, set the following environment variables.
+```
+RESUME_TOKEN_UNUSED_MODE=true
+```
+
+If you disable it, you do not need to set the storage destination of Resume Token, and you do not need to prepare persistent volume or storage.
+
+
 <br>
 
 ## Export change streams

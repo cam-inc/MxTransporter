@@ -46,6 +46,12 @@ func FetchGcpProject() (string, error) {
 	return projectID, nil
 }
 
+func FetchResumeTokenUnusedMode() string {
+	// LookupEnv() is used because error judgment is required for error handling of the caller.
+	rtUnusedModeFlag := os.Getenv(constant.RESUME_TOKEN_UNUSED_MODE)
+	return rtUnusedModeFlag
+}
+
 func FetchTimeZone() (string, error) {
 	tz, tzExistence := os.LookupEnv(constant.TIME_ZONE)
 	if !tzExistence {
