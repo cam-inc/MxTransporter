@@ -39,6 +39,18 @@ spec:
                   name: {{ $.Values.secrets.name }}
                   key: MONGODB_COLLECTION_{{ $collection }}
 #            # Optional
+#            - name: RESUME_TOKEN_UNUSED_MODE
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: RESUME_TOKEN_UNUSED_MODE
+#            # Optional
+#            - name: MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD
+#            # Optional
 #            - name: BIGQUERY_DATASET
 #              valueFrom:
 #                secretKeyRef:
