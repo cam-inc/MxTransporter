@@ -276,10 +276,10 @@ Set the following environment variables. If you specify more than one, separate 
 Note that you can only exclude fields within the ``` fullDocument``` field.
 
 ```
-MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD
 
 e.g.
-MONGO_WATCH_PIPELINE_EXCLUDE_CS_FIELD=fulldocument.<Unnecessary fields>,fulldocument.<Unnecessary fields>
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD=fullDocument.<Unnecessary fields>,fullDocument.<Unnecessary fields>
 ```
 
 Please refer to the following MongoDB documentation.

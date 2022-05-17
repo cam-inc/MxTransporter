@@ -280,7 +280,7 @@ Change Streams を export する際に、```fullDocument```内の不要なフィ
 MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD
 
 e.g.
-MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD=fulldocument.<Unnecessary fields>,fulldocument.<Unnecessary fields>
+MONGO_WATCH_PIPELINE_EXCLUDE_CS_FULLDOCUMENT_FIELD=fullDocument.<Unnecessary fields>,fullDocument.<Unnecessary fields>
 ```
 
 以下の MongoDB ドキュメントを参考にしてください。
