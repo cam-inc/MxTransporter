@@ -5,13 +5,14 @@ package pubsub
 
 import (
 	"context"
+	"math"
+	"testing"
+	"time"
+
 	"github.com/cam-inc/mxtransporter/config"
 	"github.com/cam-inc/mxtransporter/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
-	"math"
-	"testing"
-	"time"
 )
 
 func Test_ExportToPubSub(t *testing.T) {
@@ -48,8 +49,18 @@ func Test_ExportToPubSub(t *testing.T) {
 		{
 			name: "Pass to publish a message to pubsub.",
 			runner: func(t *testing.T) {
-				psClientImpl := &mockPubsubClientImpl{nil, testCsArray}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: testCsArray}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
+				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err != nil {
+					t.Fatalf("Testing Error, ErrorMessage: %v", err)
+				}
+			},
+		},
+		{
+			name: "Pass to publish a message to pubsub with ordering key.",
+			runner: func(t *testing.T) {
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: testCsArray}
+				mockPsImpl := PubsubImpl{psClientImpl, l, "documentKey"}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err != nil {
 					t.Fatalf("Testing Error, ErrorMessage: %v", err)
 				}
@@ -69,8 +80,8 @@ func Test_ExportToPubSub(t *testing.T) {
 					"updateDescription": primitive.M{"zzzzz": "test update description"},
 				}
 
-				psClientImpl := &mockPubsubClientImpl{nil, nil}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: nil}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -90,8 +101,8 @@ func Test_ExportToPubSub(t *testing.T) {
 					"updateDescription": primitive.M{"zzzzz": "test update description"},
 				}
 
-				psClientImpl := &mockPubsubClientImpl{nil, nil}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: nil}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -111,8 +122,8 @@ func Test_ExportToPubSub(t *testing.T) {
 					"updateDescription": primitive.M{"zzzzz": "test update description"},
 				}
 
-				psClientImpl := &mockPubsubClientImpl{nil, nil}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: nil}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -132,8 +143,8 @@ func Test_ExportToPubSub(t *testing.T) {
 					"updateDescription": primitive.M{"zzzzz": "test update description"},
 				}
 
-				psClientImpl := &mockPubsubClientImpl{nil, nil}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: nil}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}
@@ -153,8 +164,18 @@ func Test_ExportToPubSub(t *testing.T) {
 					"updateDescription": math.NaN(),
 				}
 
-				psClientImpl := &mockPubsubClientImpl{nil, nil}
-				mockPsImpl := PubsubImpl{psClientImpl, l}
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: nil}
+				mockPsImpl := PubsubImpl{psClientImpl, l, ""}
+				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
+					t.Fatalf("Not behaving as intended.")
+				}
+			},
+		},
+		{
+			name: "Failed to get ordering key.",
+			runner: func(t *testing.T) {
+				psClientImpl := &mockPubsubClientImpl{pubsubClient: nil, cs: testCsArray}
+				mockPsImpl := PubsubImpl{psClientImpl, l, "invalid-key"}
 				if err := mockPsImpl.ExportToPubsub(ctx, csMap); err == nil {
 					t.Fatalf("Not behaving as intended.")
 				}

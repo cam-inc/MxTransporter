@@ -21,6 +21,7 @@ const (
 	InternalServerErrorPubSubFind    = errType("500: pubsub find error")
 	InternalServerErrorPubSubCreate  = errType("500: pubsub create error")
 	InternalServerErrorPubSubPublish = errType("500: pubsub publish error")
+	InvalidErrorPubSubOrderingKey    = errType("400: pubsub ordering key error")
 	// kinesis stream
 	InternalServerErrorKinesisStreamPut = errType("500: kinesis stream put error")
 	// local storage file
