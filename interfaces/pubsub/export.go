@@ -1,15 +1,17 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/pubsub"
 	pubsubConfig "github.com/cam-inc/mxtransporter/config/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
-	"strings"
-	"time"
 )
 
 var results []*pubsub.PublishResult
@@ -18,12 +20,13 @@ type (
 	IPubsub interface {
 		topicExists(ctx context.Context, topicID string) (bool, error)
 		createTopic(ctx context.Context, topicID string) (*pubsub.Topic, error)
-		publishMessage(ctx context.Context, topicID string, csArray []string) error
+		publishMessage(ctx context.Context, topicID string, csArray []string, pmo ...publishMessageOption) error
 	}
 
 	PubsubImpl struct {
-		Pubsub IPubsub
-		Log    *zap.SugaredLogger
+		Pubsub     IPubsub
+		Log        *zap.SugaredLogger
+		OrderingBy string
 	}
 
 	PubsubClientImpl struct {
@@ -31,6 +34,14 @@ type (
 		Log          *zap.SugaredLogger
 	}
 )
+
+func withOrderingKey(orderingKey string) publishMessageOption {
+	return func(o *pubsub.Message) {
+		o.OrderingKey = orderingKey
+	}
+}
+
+type publishMessageOption func(opts *pubsub.Message)
 
 func (p *PubsubClientImpl) topicExists(ctx context.Context, topicID string) (bool, error) {
 	return p.PubsubClient.Topic(topicID).Exists(ctx)
@@ -40,13 +51,16 @@ func (p *PubsubClientImpl) createTopic(ctx context.Context, topicID string) (*pu
 	return p.PubsubClient.CreateTopic(ctx, topicID)
 }
 
-func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, csArray []string) error {
+func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, csArray []string, pmo ...publishMessageOption) error {
 	topic := p.PubsubClient.Topic(topicID)
 	defer topic.Stop()
-
-	r := topic.Publish(ctx, &pubsub.Message{
+	message := &pubsub.Message{
 		Data: []byte(strings.Join(csArray, "|")),
-	})
+	}
+	for _, pmo := range pmo {
+		pmo(message)
+	}
+	r := topic.Publish(ctx, message)
 
 	for _, r := range append(results, r) {
 		id, err := r.Get(ctx)
@@ -111,9 +125,21 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 		string(updDesc),
 	}
 
-	if err := p.Pubsub.publishMessage(ctx, topicID, r); err != nil {
-		return err
+	if p.OrderingBy != "" {
+		key, err := p.orderingKey(cs)
+		if err != nil {
+			return err
+		}
+		return p.Pubsub.publishMessage(ctx, topicID, r, withOrderingKey(key))
 	}
 
-	return nil
+	return p.Pubsub.publishMessage(ctx, topicID, r)
+}
+
+func (p *PubsubImpl) orderingKey(cs primitive.M) (string, error) {
+	key, ok := cs[p.OrderingBy]
+	if !ok {
+		return "", errors.InvalidErrorPubSubOrderingKey.New(fmt.Sprintf("Failed to get orderingKey cs: %v, orderingBy: %s", cs, p.OrderingBy))
+	}
+	return fmt.Sprintf("%v", key), nil
 }

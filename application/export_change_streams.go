@@ -1,12 +1,16 @@
 package application
 
 import (
-	"cloud.google.com/go/bigquery"
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
+	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/pubsub"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/cam-inc/mxtransporter/config"
+	pconfig "github.com/cam-inc/mxtransporter/config/pubsub"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
 	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
@@ -20,8 +24,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"strings"
-	"time"
 )
 
 type agent string
@@ -164,7 +166,7 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 				return err
 			}
 			psClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
-			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log}
+			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log, pconfig.PubSubConfig().OrderingBy}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
 			if err != nil {

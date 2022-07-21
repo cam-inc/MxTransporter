@@ -4,10 +4,11 @@
 package pubsub
 
 import (
-	"cloud.google.com/go/pubsub"
 	"context"
 	"fmt"
 	"reflect"
+
+	"cloud.google.com/go/pubsub"
 )
 
 type mockPubsubClientImpl struct {
@@ -23,7 +24,7 @@ func (*mockPubsubClientImpl) createTopic(ctx context.Context, topicID string) (*
 	return nil, nil
 }
 
-func (m *mockPubsubClientImpl) publishMessage(_ context.Context, _ string, csArray []string) error {
+func (m *mockPubsubClientImpl) publishMessage(_ context.Context, _ string, csArray []string, pmo ...publishMessageOption) error {
 	if csArray == nil {
 		return fmt.Errorf("Expect csItems to not be nil.")
 	}

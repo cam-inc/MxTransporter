@@ -33,6 +33,14 @@ or
 EXPORT_DESTINATION=bigquery,pubsub
 ```
 
+### Pubsub Ordering (オプション)
+メッセージの順序指定を利用したい場合、環境変数```PUBSUB_ORDERING_BY```を設定する必要があります。
+https://cloud.google.com/pubsub/docs/ordering
+
+**注意**
+メッセージの順序指定はパフォーマンスに悪影響をもたらす可能性があります。
+参照: https://medium.com/google-cloud/google-cloud-pub-sub-ordered-delivery-1e4181f60bc8
+
 ### BigQuery スキーマ (オプション)
 Change Streams を BigQuery にエクスポートしたい場合、以下のようなテーブルスキーマを指定する必要があります。
 
