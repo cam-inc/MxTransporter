@@ -34,12 +34,12 @@ EXPORT_DESTINATION=bigquery,pubsub
 ```
 
 ### Pubsub Ordering (optional)
-If you want to order message in pubsub, set ```PUBSUB_ORDERING_BY``` env.
+If you want to order message in pubsub, set ```PUBSUB_ORDERING_BY``` env.<br>
+Specify the field name of one of the Change Streams.<br>
 https://cloud.google.com/pubsub/docs/ordering
 
 **NOTICE**
-ordering message can cause performance issues.
-
+ordering message can cause performance issues.<br>
 see https://medium.com/google-cloud/google-cloud-pub-sub-ordered-delivery-1e4181f60bc8
 
 ### BigQuery schema  (optional)

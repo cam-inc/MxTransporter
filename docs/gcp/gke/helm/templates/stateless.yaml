@@ -50,6 +50,18 @@ spec:
 #                secretKeyRef:
 #                  name: {{ $.Values.secrets.name }}
 #                  key: BIGQUERY_TABLE_{{ $collection }}
+#            # Optional
+#            - name: PUBSUB_TOPIC_NAME
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: PUBSUB_TOPIC_NAME{{ $collection }}
+#            # Optional
+#            - name: PUBSUB_ORDERING_BY
+#              valueFrom:
+#                secretKeyRef:
+#                  name: {{ $.Values.secrets.name }}
+#                  key: PUBSUB_ORDERING_BY{{ $collection }}
             - name: RESUME_TOKEN_VOLUME_DIR
               valueFrom:
                 secretKeyRef:
