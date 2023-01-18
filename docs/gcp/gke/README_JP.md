@@ -35,7 +35,7 @@ EXPORT_DESTINATION=bigquery,pubsub
 
 ### Pubsub Ordering (オプション)
 メッセージの順序指定を利用したい場合、環境変数```PUBSUB_ORDERING_BY```を設定する必要があります。<br>
-Change Streamsのいずれかのフィールド名を指定しましょう。<br>
+Change Streamsのいずれかのフィールド名を指定します。<br>
 https://cloud.google.com/pubsub/docs/ordering
 
 **注意**
