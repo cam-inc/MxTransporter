@@ -12,6 +12,7 @@ import (
 	"github.com/cam-inc/mxtransporter/config"
 	pconfig "github.com/cam-inc/mxtransporter/config/pubsub"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
+	interfaceForElasticsearch "github.com/cam-inc/mxtransporter/interfaces/elasticsearch"
 	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
@@ -19,6 +20,7 @@ import (
 	"github.com/cam-inc/mxtransporter/pkg/client"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
+	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,6 +34,7 @@ const (
 	BigQuery      agent = "bigquery"
 	CloudPubSub   agent = "pubsub"
 	KinesisStream agent = "kinesisStream"
+	Elasticsearch agent = "elasticsearch"
 	File          agent = "file"
 )
 
@@ -40,6 +43,7 @@ type (
 		newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
 		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
 		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
+		newElasticsearchClient(ctx context.Context) (*elasticsearch.TypedClient, error)
 		watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error)
 		newFileClient(ctx context.Context) (iff.Exporter, error)
 		setCsExporter(exporter ChangeStreamsExporterImpl)
@@ -80,6 +84,14 @@ func (*ChangeStreamsWatcherClientImpl) newKinesisClient(ctx context.Context) (*k
 		return nil, err
 	}
 	return ksClient, nil
+}
+
+func (*ChangeStreamsWatcherClientImpl) newElasticsearchClient(ctx context.Context) (*elasticsearch.TypedClient, error) {
+	esClient, err := client.NewElasticsearchClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return esClient, nil
 }
 
 func (*ChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
@@ -147,6 +159,7 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 		bqImpl interfaceForBigquery.BigqueryImpl
 		psImpl interfaceForPubsub.PubsubImpl
 		ksImpl interfaceForKinesisStream.KinesisStreamImpl
+		esImpl interfaceForElasticsearch.ElasticsearchImpl
 		fe     iff.Exporter
 	)
 
@@ -174,6 +187,13 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 			}
 			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
 			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
+		case Elasticsearch:
+			esClient, err := c.Watcher.newElasticsearchClient(ctx)
+			if err != nil {
+				return err
+			}
+			esClientImpl := &interfaceForElasticsearch.ElasticsearchClientImpl{esClient}
+			esImpl = interfaceForElasticsearch.ElasticsearchImpl{esClientImpl}
 		case File:
 			fCli, err := c.Watcher.newFileClient(ctx)
 			if err != nil {
@@ -190,6 +210,7 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 		bq:            bqImpl,
 		pubsub:        psImpl,
 		kinesisStream: ksImpl,
+		elasticsearch: esImpl,
 		fileExporter:  fe,
 		resumeToken:   c.resumeTokenManager,
 	}
@@ -215,6 +236,7 @@ type (
 		exportToBigquery(ctx context.Context, cs primitive.M) error
 		exportToPubsub(ctx context.Context, cs primitive.M) error
 		exportToKinesisStream(ctx context.Context, cs primitive.M) error
+		exportToElasticsearch(ctx context.Context, cs primitive.M) error
 		exportToFile(ctx context.Context, cs primitive.M) error
 		saveResumeToken(ctx context.Context, rt string) error
 		err() error
@@ -230,6 +252,7 @@ type (
 		bq            interfaceForBigquery.BigqueryImpl
 		pubsub        interfaceForPubsub.PubsubImpl
 		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
+		elasticsearch interfaceForElasticsearch.ElasticsearchImpl
 		fileExporter  iff.Exporter
 		resumeToken   irt.ResumeToken
 	}
@@ -262,6 +285,10 @@ func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs
 
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
+}
+
+func (c *changeStreamsExporterClientImpl) exportToElasticsearch(ctx context.Context, cs primitive.M) error {
+	return c.elasticsearch.ExportToElasticsearch(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
@@ -314,6 +341,10 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 					}
 				case KinesisStream:
 					if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
+						return err
+					}
+				case Elasticsearch:
+					if err := c.exporter.exportToElasticsearch(ctx, csMap); err != nil {
 						return err
 					}
 				case File:
