@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
-	"time"
 
 	opensearchConfig "github.com/cam-inc/mxtransporter/config/opensearch"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
@@ -60,7 +59,6 @@ type (
 
 	bulkIndexerConfig struct {
 		flushBytes         int
-		flushInterval      time.Duration
 		aggregationEnabled bool
 	}
 )
