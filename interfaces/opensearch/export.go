@@ -47,7 +47,6 @@ type (
 
 	openSearchBulkIndexerImpl struct {
 		osClient *opensearchapi.Client
-		queue    chan *bulkIndexerItem
 		idBufs   map[string][]*bytes.Buffer // The key is the object_id of the mongo doc.
 		config   bulkIndexerConfig
 	}
@@ -230,7 +229,6 @@ func (o *OpenSearchImpl) NewBulkIndexer(ctx context.Context, client *opensearcha
 
 	bi := openSearchBulkIndexerImpl{
 		osClient: client,
-		queue:    make(chan *bulkIndexerItem),
 		idBufs:   make(map[string][]*bytes.Buffer),
 		config:   biCfg,
 	}
