@@ -1,7 +1,3 @@
-// ctx の処理を再検討する。特に run の中での ctx の扱い。
-// エラー処理を再検討する。
-// _id を body から省く場合のチェック
-// item 系の構造体を渡すときはポインタで渡す
 package opensearch
 
 import (
