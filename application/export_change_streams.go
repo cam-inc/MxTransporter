@@ -10,15 +10,18 @@ import (
 	"cloud.google.com/go/pubsub"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/cam-inc/mxtransporter/config"
+	opensearchConfig "github.com/cam-inc/mxtransporter/config/opensearch"
 	pconfig "github.com/cam-inc/mxtransporter/config/pubsub"
 	interfaceForBigquery "github.com/cam-inc/mxtransporter/interfaces/bigquery"
 	iff "github.com/cam-inc/mxtransporter/interfaces/file"
 	interfaceForKinesisStream "github.com/cam-inc/mxtransporter/interfaces/kinesis-stream"
 	mongoConnection "github.com/cam-inc/mxtransporter/interfaces/mongo"
+	interfaceForOpenSearch "github.com/cam-inc/mxtransporter/interfaces/opensearch"
 	interfaceForPubsub "github.com/cam-inc/mxtransporter/interfaces/pubsub"
 	"github.com/cam-inc/mxtransporter/pkg/client"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	irt "github.com/cam-inc/mxtransporter/usecases/resume-token"
+	"github.com/opensearch-project/opensearch-go/v3/opensearchapi"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,6 +35,7 @@ const (
 	BigQuery      agent = "bigquery"
 	CloudPubSub   agent = "pubsub"
 	KinesisStream agent = "kinesisStream"
+	OpenSearch    agent = "opensearch"
 	File          agent = "file"
 )
 
@@ -40,6 +44,7 @@ type (
 		newBigqueryClient(ctx context.Context, projectID string) (*bigquery.Client, error)
 		newPubsubClient(ctx context.Context, projectID string) (*pubsub.Client, error)
 		newKinesisClient(ctx context.Context) (*kinesis.Client, error)
+		newOpenSearchClient(ctx context.Context) (*opensearchapi.Client, error)
 		watch(ctx context.Context, ops *options.ChangeStreamOptions) (*mongo.ChangeStream, error)
 		newFileClient(ctx context.Context) (iff.Exporter, error)
 		setCsExporter(exporter ChangeStreamsExporterImpl)
@@ -80,6 +85,14 @@ func (*ChangeStreamsWatcherClientImpl) newKinesisClient(ctx context.Context) (*k
 		return nil, err
 	}
 	return ksClient, nil
+}
+
+func (*ChangeStreamsWatcherClientImpl) newOpenSearchClient(ctx context.Context) (*opensearchapi.Client, error) {
+	osClient, err := client.NewOpenSearchClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return osClient, nil
 }
 
 func (*ChangeStreamsWatcherClientImpl) newFileClient(_ context.Context) (iff.Exporter, error) {
@@ -147,6 +160,7 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 		bqImpl interfaceForBigquery.BigqueryImpl
 		psImpl interfaceForPubsub.PubsubImpl
 		ksImpl interfaceForKinesisStream.KinesisStreamImpl
+		osImpl interfaceForOpenSearch.OpenSearchImpl
 		fe     iff.Exporter
 	)
 
@@ -158,22 +172,44 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 			if err != nil {
 				return err
 			}
-			bqClientImpl := &interfaceForBigquery.BigqueryClientImpl{bqClient}
-			bqImpl = interfaceForBigquery.BigqueryImpl{bqClientImpl}
+			bqClientImpl := &interfaceForBigquery.BigqueryClientImpl{BqClient: bqClient}
+			bqImpl = interfaceForBigquery.BigqueryImpl{Bq: bqClientImpl}
 		case CloudPubSub:
 			psClient, err := c.Watcher.newPubsubClient(ctx, projectID)
 			if err != nil {
 				return err
 			}
-			psClientImpl := &interfaceForPubsub.PubsubClientImpl{psClient, c.Log}
-			psImpl = interfaceForPubsub.PubsubImpl{psClientImpl, c.Log, pconfig.PubSubConfig().OrderingBy}
+			psClientImpl := &interfaceForPubsub.PubsubClientImpl{PubsubClient: psClient, Log: c.Log}
+			psImpl = interfaceForPubsub.PubsubImpl{Pubsub: psClientImpl, Log: c.Log, OrderingBy: pconfig.PubSubConfig().OrderingBy}
 		case KinesisStream:
 			ksClient, err := c.Watcher.newKinesisClient(ctx)
 			if err != nil {
 				return err
 			}
-			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{ksClient}
-			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{ksClientImpl}
+			ksClientImpl := &interfaceForKinesisStream.KinesisStreamClientImpl{KinesisStreamClient: ksClient}
+			ksImpl = interfaceForKinesisStream.KinesisStreamImpl{KinesisStream: ksClientImpl}
+		case OpenSearch:
+			osClient, err := c.Watcher.newOpenSearchClient(ctx)
+			if err != nil {
+				return err
+			}
+
+			osImpl = interfaceForOpenSearch.OpenSearchImpl{}
+
+			osCfg := opensearchConfig.OpenSearchConfig()
+			if osCfg.BulkEnabled {
+				bi, err := osImpl.NewBulkIndexer(ctx, osClient)
+				if err != nil {
+					return err
+				}
+				osImpl.OpenSearchBulkIndexer = bi
+			} else {
+				si, err := osImpl.NewSingleIndexer(osClient)
+				if err != nil {
+					return err
+				}
+				osImpl.OpenSearchSingleIndexer = si
+			}
 		case File:
 			fCli, err := c.Watcher.newFileClient(ctx)
 			if err != nil {
@@ -190,6 +226,7 @@ func (c *ChangeStreamsWatcherImpl) WatchChangeStreams(ctx context.Context) error
 		bq:            bqImpl,
 		pubsub:        psImpl,
 		kinesisStream: ksImpl,
+		opensearch:    osImpl,
 		fileExporter:  fe,
 		resumeToken:   c.resumeTokenManager,
 	}
@@ -215,6 +252,7 @@ type (
 		exportToBigquery(ctx context.Context, cs primitive.M) error
 		exportToPubsub(ctx context.Context, cs primitive.M) error
 		exportToKinesisStream(ctx context.Context, cs primitive.M) error
+		exportToOpenSearch(ctx context.Context, cs primitive.M) error
 		exportToFile(ctx context.Context, cs primitive.M) error
 		saveResumeToken(ctx context.Context, rt string) error
 		err() error
@@ -230,6 +268,7 @@ type (
 		bq            interfaceForBigquery.BigqueryImpl
 		pubsub        interfaceForPubsub.PubsubImpl
 		kinesisStream interfaceForKinesisStream.KinesisStreamImpl
+		opensearch    interfaceForOpenSearch.OpenSearchImpl
 		fileExporter  iff.Exporter
 		resumeToken   irt.ResumeToken
 	}
@@ -262,6 +301,10 @@ func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs
 
 func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
+}
+
+func (c *changeStreamsExporterClientImpl) exportToOpenSearch(ctx context.Context, cs primitive.M) error {
+	return c.opensearch.ExportToOpenSearch(ctx, cs)
 }
 
 func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
@@ -314,6 +357,10 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 					}
 				case KinesisStream:
 					if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
+						return err
+					}
+				case OpenSearch:
+					if err := c.exporter.exportToOpenSearch(ctx, csMap); err != nil {
 						return err
 					}
 				case File:

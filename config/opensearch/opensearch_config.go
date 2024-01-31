@@ -8,13 +8,15 @@ import (
 )
 
 type OpenSearch struct {
-	OpenSearchConnectionUrl    string
-	IndexName                  string
-	SyncEnabled                bool
-	BulkEnabled                bool
-	BulkFlushBytes             int
-	BulkFlushIntervalSeconds   int
-	BulkSyncAggregationEnabled bool
+	EndPoint                      string
+	IndexName                     string
+	SyncEnabled                   bool
+	BulkEnabled                   bool
+	BulkFlushBytes                int
+	BulkSyncAggregationEnabled    bool
+	UseAmazonOpenSearchService    bool
+	UseAmazonOpenSearchServerless bool
+	AwsRegion                     string
 }
 
 func getBoolEnvWithDefault(key string, defaultVal bool) bool {
@@ -47,12 +49,15 @@ func getIntEnvWithDefault(key string, defaultVal int) int {
 
 func OpenSearchConfig() OpenSearch {
 	var osCfg OpenSearch
-	osCfg.OpenSearchConnectionUrl = os.Getenv(constant.OPENSEARCH_HOST)
+	osCfg.EndPoint = os.Getenv(constant.OPENSEARCH_END_POINT)
 	osCfg.IndexName = os.Getenv(constant.OPENSEARCH_INDEX_NAME)
 	osCfg.SyncEnabled = getBoolEnvWithDefault(constant.OPENSEARCH_SYNC_ENABLED, false)
 	osCfg.BulkEnabled = getBoolEnvWithDefault(constant.OPENSEARCH_BULK_ENABLED, false)
 	osCfg.BulkFlushBytes = getIntEnvWithDefault(constant.OPENSEARCH_BULK_FLUSH_BYTES, 5e+6)
-	osCfg.BulkFlushIntervalSeconds = getIntEnvWithDefault(constant.OPENSEARCH_BULK_FLUSH_INTERVAL_SECONDS, 30)
 	osCfg.BulkSyncAggregationEnabled = getBoolEnvWithDefault(constant.OPENSEARCH_BULK_SYNC_AGGREGATION_ENABLED, false)
+	osCfg.UseAmazonOpenSearchService = getBoolEnvWithDefault(constant.OPENSEARCH_USE_AMAZON_OPENSEARCH_SERVICE, false)
+	osCfg.UseAmazonOpenSearchServerless = getBoolEnvWithDefault(constant.OPENSEARCH_USE_AMAZON_OPENSEARCH_SERVERLESS, false)
+	osCfg.AwsRegion = os.Getenv(constant.OPENSEARCH_AWS_REGION)
+
 	return osCfg
 }

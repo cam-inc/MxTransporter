@@ -8,10 +8,12 @@ import (
 type errType string
 
 const (
-	InternalServerError            = errType("500: internal server error")
-	InternalServerErrorEnvGet      = errType("500: environment variables get error")
-	InternalServerErrorClientGet   = errType("500: client get error")
-	InternalServerErrorJsonMarshal = errType("500: json marshal error")
+	InternalServerError              = errType("500: internal server error")
+	InternalServerErrorEnvGet        = errType("500: environment variables get error")
+	InternalServerErrorClientGet     = errType("500: client get error")
+	InternalServerErrorJsonMarshal   = errType("500: json marshal error")
+	InternalServerErrorMapKeyFind    = errType("500: map key not found or nil")
+	InternalServerErrorTypeAssertion = errType("500: type assertion failed")
 	// mongodb
 	InternalServerErrorMongoDbConnect = errType("500: mongodb connect error")
 	InternalServerErrorMongoDbOperate = errType("500: mongodb operate error")
@@ -24,9 +26,14 @@ const (
 	InvalidErrorPubSubOrderingKey    = errType("400: pubsub ordering key error")
 	// kinesis stream
 	InternalServerErrorKinesisStreamPut = errType("500: kinesis stream put error")
+	// opensearch
+	InternalServerErrorOpenSearchCreate = errType("500: open search create error")
+	InternalServerErrorOpenSearchUpdate = errType("500: open search update error")
+	InternalServerErrorOpenSearchDelete = errType("500: open search delete error")
+	InternalServerErrorOpenSearchAdd    = errType("500: open search add error")
+
 	// local storage file
 	InternalServerErrorFilePut = errType("500: file put error")
-
 	//// Storage
 	// gcs
 	InternalServerErrorGcsCreateNewReader = errType("500: gcs create new reader error")
