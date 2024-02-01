@@ -1,13 +1,14 @@
 package bigquery
 
 import (
-	"cloud.google.com/go/bigquery"
 	"context"
 	"encoding/json"
+	"time"
+
+	"cloud.google.com/go/bigquery"
 	bigqueryConfig "github.com/cam-inc/mxtransporter/config/bigquery"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"time"
 )
 
 type ChangeStreamTableSchema struct {
@@ -38,30 +39,32 @@ func (b *BigqueryClientImpl) putRecord(ctx context.Context, dataset string, tabl
 	return b.BqClient.Dataset(dataset).Table(table).Inserter().Put(ctx, csItems)
 }
 
-func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) error {
+// The return value, bool, indicates whether export was performed or not.
+// If export was not performed due to buffering or an error, false is returned.
+func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) (bool, error) {
 	bqCfg := bigqueryConfig.BigqueryConfig()
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
 	}
 
 	csItems := []ChangeStreamTableSchema{
@@ -77,8 +80,8 @@ func (b *BigqueryImpl) ExportToBigquery(ctx context.Context, cs primitive.M) err
 	}
 
 	if err := b.Bq.putRecord(ctx, bqCfg.DataSet, bqCfg.Table, csItems); err != nil {
-		return errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
+		return false, errors.InternalServerErrorBigqueryInsert.Wrap("Failed to insert record to Bigquery.", err)
 	}
 
-	return nil
+	return true, nil
 }

@@ -43,6 +43,7 @@ type (
 	openSearchBulkIndexerImpl struct {
 		osClient *opensearchapi.Client
 		idBufs   map[string][]*bytes.Buffer // The key is the object_id of the mongo doc.
+		didFlush bool
 		config   bulkIndexerConfig
 	}
 
@@ -59,18 +60,38 @@ type (
 	}
 )
 
-func (o *OpenSearchImpl) ExportToOpenSearch(ctx context.Context, cs primitive.M) error {
+// The return value, bool, indicates whether export was performed or not.
+// If export was not performed due to buffering or an error, false is returned.
+func (o *OpenSearchImpl) ExportToOpenSearch(ctx context.Context, cs primitive.M) (bool, error) {
 	switch {
 	case !osCfg.SyncEnabled && !osCfg.BulkEnabled:
-		return o.record(ctx, cs)
+		err := o.record(ctx, cs)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
 	case osCfg.SyncEnabled && !osCfg.BulkEnabled:
-		return o.sync(ctx, cs)
+		err := o.sync(ctx, cs)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
 	case !osCfg.SyncEnabled && osCfg.BulkEnabled:
-		return o.bulkRecord(ctx, cs)
+		err := o.bulkRecord(ctx, cs)
+		didFlush := o.OpenSearchBulkIndexer.(*openSearchBulkIndexerImpl).didFlush
+		if err != nil || !didFlush {
+			return false, err
+		}
+		return true, nil
 	case osCfg.SyncEnabled && osCfg.BulkEnabled:
-		return o.bulkSync(ctx, cs)
+		err := o.bulkSync(ctx, cs)
+		didFlush := o.OpenSearchBulkIndexer.(*openSearchBulkIndexerImpl).didFlush
+		if err != nil || !didFlush {
+			return false, err
+		}
+		return true, nil
 	}
-	return nil
+	return false, errors.InternalServerError.New("opensearch config is invalid")
 }
 
 func (o *OpenSearchImpl) NewSingleIndexer(client *opensearchapi.Client) (*openSearchSingleIndexerImpl, error) {
@@ -224,6 +245,7 @@ func (o *OpenSearchImpl) NewBulkIndexer(ctx context.Context, client *opensearcha
 	bi := openSearchBulkIndexerImpl{
 		osClient: client,
 		idBufs:   make(map[string][]*bytes.Buffer),
+		didFlush: false,
 		config:   biCfg,
 	}
 
@@ -273,7 +295,7 @@ func (o *OpenSearchImpl) bulkSync(ctx context.Context, cs primitive.M) error {
 func (item *bulkIndexerItem) writeMeta(buf *bytes.Buffer) error {
 	meta := map[string]map[string]string{
 		item.indexActionType: {
-			"Index": item.index,
+			"_index": item.index,
 		},
 	}
 	if osCfg.SyncEnabled {
@@ -405,6 +427,9 @@ func (bi *openSearchBulkIndexerImpl) add(ctx context.Context, item *bulkIndexerI
 		if err := bi.flush(ctx); err != nil {
 			return err
 		}
+		bi.didFlush = true
+	} else {
+		bi.didFlush = false
 	}
 
 	return nil

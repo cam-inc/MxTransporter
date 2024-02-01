@@ -249,11 +249,11 @@ type (
 		next(ctx context.Context) bool
 		decode() (primitive.M, error)
 		close(ctx context.Context) error
-		exportToBigquery(ctx context.Context, cs primitive.M) error
-		exportToPubsub(ctx context.Context, cs primitive.M) error
-		exportToKinesisStream(ctx context.Context, cs primitive.M) error
-		exportToOpenSearch(ctx context.Context, cs primitive.M) error
-		exportToFile(ctx context.Context, cs primitive.M) error
+		exportToBigquery(ctx context.Context, cs primitive.M) (bool, error)
+		exportToPubsub(ctx context.Context, cs primitive.M) (bool, error)
+		exportToKinesisStream(ctx context.Context, cs primitive.M) (bool, error)
+		exportToOpenSearch(ctx context.Context, cs primitive.M) (bool, error)
+		exportToFile(ctx context.Context, cs primitive.M) (bool, error)
 		saveResumeToken(ctx context.Context, rt string) error
 		err() error
 	}
@@ -291,23 +291,23 @@ func (c *changeStreamsExporterClientImpl) close(ctx context.Context) error {
 	return c.cs.Close(ctx)
 }
 
-func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) error {
+func (c *changeStreamsExporterClientImpl) exportToBigquery(ctx context.Context, cs primitive.M) (bool, error) {
 	return c.bq.ExportToBigquery(ctx, cs)
 }
 
-func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) error {
+func (c *changeStreamsExporterClientImpl) exportToPubsub(ctx context.Context, cs primitive.M) (bool, error) {
 	return c.pubsub.ExportToPubsub(ctx, cs)
 }
 
-func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) error {
+func (c *changeStreamsExporterClientImpl) exportToKinesisStream(ctx context.Context, cs primitive.M) (bool, error) {
 	return c.kinesisStream.ExportToKinesisStream(ctx, cs)
 }
 
-func (c *changeStreamsExporterClientImpl) exportToOpenSearch(ctx context.Context, cs primitive.M) error {
+func (c *changeStreamsExporterClientImpl) exportToOpenSearch(ctx context.Context, cs primitive.M) (bool, error) {
 	return c.opensearch.ExportToOpenSearch(ctx, cs)
 }
 
-func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) error {
+func (c *changeStreamsExporterClientImpl) exportToFile(ctx context.Context, cs primitive.M) (bool, error) {
 	return c.fileExporter.Export(ctx, cs)
 }
 
@@ -342,30 +342,41 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 
 		c.log.Infof("Success to get change-streams, database: %s, collection: %s, operationType: %s, updateTime: %s", csDb, csColl, csOpType, csClusterTimeInt)
 
+		saveRtFlags := make(chan bool, len(expDstList))
 		var eg errgroup.Group
 		for i := 0; i < len(expDstList); i++ {
 			eDst := expDstList[i]
 			eg.Go(func() error {
 				switch agent(eDst) {
 				case BigQuery:
-					if err := c.exporter.exportToBigquery(ctx, csMap); err != nil {
+					if saveRtFlag, err := c.exporter.exportToBigquery(ctx, csMap); err != nil {
 						return err
+					} else {
+						saveRtFlags <- saveRtFlag
 					}
 				case CloudPubSub:
-					if err := c.exporter.exportToPubsub(ctx, csMap); err != nil {
+					if saveRtFlag, err := c.exporter.exportToPubsub(ctx, csMap); err != nil {
 						return err
+					} else {
+						saveRtFlags <- saveRtFlag
 					}
 				case KinesisStream:
-					if err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
+					if saveRtFlag, err := c.exporter.exportToKinesisStream(ctx, csMap); err != nil {
 						return err
+					} else {
+						saveRtFlags <- saveRtFlag
 					}
 				case OpenSearch:
-					if err := c.exporter.exportToOpenSearch(ctx, csMap); err != nil {
+					if saveRtFlag, err := c.exporter.exportToOpenSearch(ctx, csMap); err != nil {
 						return err
+					} else {
+						saveRtFlags <- saveRtFlag
 					}
 				case File:
-					if err := c.exporter.exportToFile(ctx, csMap); err != nil {
+					if saveRtFlag, err := c.exporter.exportToFile(ctx, csMap); err != nil {
 						return err
+					} else {
+						saveRtFlags <- saveRtFlag
 					}
 				default:
 					return errors.InternalServerError.Wrap("The export destination is wrong.", fmt.Errorf("you need to set the export destination in the environment variable correctly. you set %s", eDst))
@@ -375,13 +386,25 @@ func (c *ChangeStreamsExporterImpl) exportChangeStreams(ctx context.Context) err
 		}
 
 		if err := eg.Wait(); err != nil {
+			close(saveRtFlags)
 			return err
 		}
+		close(saveRtFlags)
 
-		csRt := csMap["_id"].(primitive.M)["_data"].(string)
+		// Save only when all flags are true.
+		skipSave := false
+		for saveRtFlag := range saveRtFlags {
+			if !saveRtFlag {
+				skipSave = true
+				break
+			}
+		}
 
-		if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
-			return err
+		if !skipSave {
+			csRt := csMap["_id"].(primitive.M)["_data"].(string)
+			if err := c.exporter.saveResumeToken(ctx, csRt); err != nil {
+				return err
+			}
 		}
 	}
 
