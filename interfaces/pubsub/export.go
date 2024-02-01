@@ -73,13 +73,15 @@ func (p *PubsubClientImpl) publishMessage(ctx context.Context, topicID string, c
 	return nil
 }
 
-func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
+// The return value, bool, indicates whether export was performed or not.
+// If export was not performed due to buffering or an error, false is returned.
+func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) (bool, error) {
 	psCfg := pubsubConfig.PubSubConfig()
 
 	topicID := psCfg.TopicName
 	topicExistence, err := p.Pubsub.topicExists(ctx, topicID)
 	if err != nil {
-		return errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
+		return false, errors.InternalServerErrorPubSubFind.Wrap("Failed to check topic existence.", err)
 	}
 	if !topicExistence {
 		p.Log.Info("Topic is not exists. Creating a topic.")
@@ -87,32 +89,32 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 		var err error
 		_, err = p.Pubsub.createTopic(ctx, topicID)
 		if err != nil {
-			return errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
+			return false, errors.InternalServerErrorPubSubCreate.Wrap("Failed to create topic.", err)
 		}
 		p.Log.Info("Successed to create topic. ")
 	}
 
 	id, err := json.Marshal(cs["_id"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json _id parameter.", err)
 	}
 	opType := cs["operationType"].(string)
 	clusterTime := cs["clusterTime"].(primitive.Timestamp).T
 	fullDoc, err := json.Marshal(cs["fullDocument"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json fullDocument parameter.", err)
 	}
 	ns, err := json.Marshal(cs["ns"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json ns parameter.", err)
 	}
 	docKey, err := json.Marshal(cs["documentKey"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json documentKey parameter.", err)
 	}
 	updDesc, err := json.Marshal(cs["updateDescription"])
 	if err != nil {
-		return errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
+		return false, errors.InternalServerErrorJsonMarshal.Wrap("Failed to marshal change streams json updateDescription parameter.", err)
 	}
 
 	r := []string{
@@ -128,12 +130,23 @@ func (p *PubsubImpl) ExportToPubsub(ctx context.Context, cs primitive.M) error {
 	if p.OrderingBy != "" {
 		key, err := p.orderingKey(cs)
 		if err != nil {
-			return err
+			// TODO: error handling
+			return false, err
 		}
-		return p.Pubsub.publishMessage(ctx, topicID, r, withOrderingKey(key))
+		err = p.Pubsub.publishMessage(ctx, topicID, r, withOrderingKey(key))
+		if err != nil {
+			// TODO: error handling
+			return false, err
+		}
+		return true, nil
 	}
 
-	return p.Pubsub.publishMessage(ctx, topicID, r)
+	err = p.Pubsub.publishMessage(ctx, topicID, r)
+	if err != nil {
+		// TODO: error handling
+		return false, err
+	}
+	return true, nil
 }
 
 func (p *PubsubImpl) orderingKey(cs primitive.M) (string, error) {

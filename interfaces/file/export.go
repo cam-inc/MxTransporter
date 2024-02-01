@@ -3,17 +3,18 @@ package file
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"os"
-	"time"
 )
 
 type (
 	Exporter interface {
-		Export(ctx context.Context, cs primitive.M) error
+		Export(ctx context.Context, cs primitive.M) (bool, error)
 	}
 
 	WriterType   string
@@ -81,19 +82,21 @@ func (t *timestamp) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (f *fileExporter) Export(_ context.Context, cs primitive.M) error {
+// The return value, bool, indicates whether export was performed or not.
+// If export was not performed due to buffering or an error, false is returned.
+func (f *fileExporter) Export(_ context.Context, cs primitive.M) (bool, error) {
 	doc := &csDoc{}
 	byteArray, err := json.Marshal(cs)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := json.Unmarshal(byteArray, doc); err != nil {
-		return err
+		return false, err
 	}
 
 	f.log.Info("", zap.String("logType", f.config.LogType), zap.Any(f.config.ChangeStreamKey, doc))
 
-	return nil
+	return true, nil
 }
 
 func New(cfg *ExporterConfig) Exporter {
