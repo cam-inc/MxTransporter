@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   mxt:
     build:
       context: '.'
@@ -21,12 +20,12 @@ services:
     extends:
       file: docker-compose.mongo-replica.yml
       service: mongodb-primary
-  
+
   mongodb-secondary:
     extends:
       file: docker-compose.mongo-replica.yml
       service: mongodb-secondary
-  
+
   mongodb-arbiter:
     extends:
       file: docker-compose.mongo-replica.yml
