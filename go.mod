@@ -1,6 +1,6 @@
 module github.com/cam-inc/mxtransporter
 
-go 1.17
+go 1.22
 
 require (
 	cloud.google.com/go/bigquery v1.18.0

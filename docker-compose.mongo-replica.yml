@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-
   mongodb-primary:
     image: mongo
     command:
@@ -22,7 +21,7 @@ services:
 
   mongodb-secondary:
     image: mongo
-    command: 
+    command:
       - --replSet
       - rs0
     volumes:
@@ -39,4 +38,3 @@ services:
     expose:
       - 27017
     restart: always
-
