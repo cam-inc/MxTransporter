@@ -2,6 +2,8 @@
 
 MxTransporter は MongoDB の Change Streams を正確に、リアルタイムで送信先に運ぶミドルウェアです。MxTransporter は、用意された Dockerfile からコンテナイメージを作成し、お好きな環境へデプロイすることで簡単に利用することができます。
 
+また、[GitHub Container Registry](https://github.com/cam-inc/MxTransporter/pkgs/container/mxtransporter) 上にコンテナイメージを公開しているため、ビルドすることなく、コンテナイメージを取得して利用することも可能です。
+
 MxTransporterにより、データ活用側でリアルタイムなデータを再現、保持でき、データ活用がより一層活発になるでしょう。
 
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
@@ -268,8 +270,8 @@ Change Streams をエクスポート先に送る前にフォーマットを整�
 <br>
 
 # Contributors
-| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br />   |
-| :---: | :---: |
+| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br /> | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br /> |
+| :---------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
 <br>
 
 
