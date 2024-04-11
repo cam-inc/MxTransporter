@@ -2,12 +2,17 @@
 
 MxTransporter is a middleware that accurately carries change streams of MongoDB in real time. For infrastructure, you can easily use this middleware by creating a container image with Dockerfile on any platform and deploying it.
 
+It is also possible to download and use container image without having to build them, as they are published on the [GitHub Container Registry](https://github.com/cam-inc/MxTransporter/pkgs/container/mxtransporter).
+
 With MxTransporter, real-time data can be reproduced and retained on the data utilization side, and data utilization will become even more active.
 
 :jp: Japanese version of the README is [here](/README_JP.md).
 
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=cam-inc_MxTransporter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=cam-inc_MxTransporter)
+[![CI](https://github.com/cam-inc/MxTransporter/actions/workflows/ci.yml/badge.svg)](https://github.com/cam-inc/MxTransporter/actions/workflows/ci.yml)
+[![Release](https://github.com/cam-inc/MxTransporter/actions/workflows/release.yaml/badge.svg)](https://github.com/cam-inc/MxTransporter/actions/workflows/release.yaml)
+[![GitHub release](https://img.shields.io/github/release/cam-inc/MxTransporter.svg?style=flat-square)](https://github.com/cam-inc/MxTransporter/releases/latest)
 <br>
 
 # Features
@@ -269,8 +274,8 @@ It is basic JSON. It is possible to change the key of ChangeStream, add a Time f
 <br>
 
 # Contributors
-| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br />   | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br />   |
-| :---: | :---: |
+| [<img src="https://avatars.githubusercontent.com/KenFujimoto12" width="130px;"/><br />Kenshirou](https://github.com/KenFujimoto12) <br /> | [<img src="https://avatars.githubusercontent.com/syama666" width="130px;"/><br />Yoshinori Sugiyama](https://github.com/syama666) <br /> |
+| :---------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------------: |
 <br>
 
 
