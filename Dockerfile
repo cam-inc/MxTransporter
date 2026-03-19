@@ -1,7 +1,7 @@
 ##
 ## Build
 ##
-FROM golang:1.22.1-bookworm as build
+FROM golang:1.26.0-bookworm as build
 
 LABEL org.opencontainers.image.source="https://github.com/cam-inc/MxTransporter"
 
