@@ -11,9 +11,10 @@ COPY . ./
 
 RUN go mod download
 
+ARG TARGETARCH
 ARG CGO_ENABLED=0
 ARG GOOS=linux
-ARG GOARCH=amd64
+ARG GOARCH=${TARGETARCH}
 
 RUN go build -o /go/bin/main -ldflags '-s -w' ./cmd/main.go
 RUN go install ./cmd/main.go
