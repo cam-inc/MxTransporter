@@ -1,16 +1,19 @@
 package client
 
 import (
+	"context"
+
 	"cloud.google.com/go/bigquery"
 	"cloud.google.com/go/pubsub"
 	"cloud.google.com/go/storage"
-	"context"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	elasticsearchConfig "github.com/cam-inc/mxtransporter/config/elasticsearch"
 	kinesisConfig "github.com/cam-inc/mxtransporter/config/kinesis-stream"
 	mongoConfig "github.com/cam-inc/mxtransporter/config/mongodb"
 	"github.com/cam-inc/mxtransporter/pkg/errors"
+	elasticsearch "github.com/elastic/go-elasticsearch/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -39,6 +42,21 @@ func NewKinesisClient(ctx context.Context) (*kinesis.Client, error) {
 	}
 
 	c := kinesis.NewFromConfig(cfg)
+
+	return c, nil
+}
+
+func NewElasticsearchClient(ctx context.Context) (*elasticsearch.TypedClient, error) {
+	esCfg := elasticsearchConfig.ElasticsearchConfig()
+	cfg := elasticsearch.Config{
+		Addresses: []string{
+			esCfg.ElasticsearchConnectionUrl,
+		},
+	}
+	c, err := elasticsearch.NewTypedClient(cfg)
+	if err != nil {
+		return nil, errors.InternalServerErrorClientGet.Wrap("elasticsearch client connection refused", err)
+	}
 
 	return c, nil
 }
