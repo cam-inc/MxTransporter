@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/cam-inc/mxtransporter/application"
 	"github.com/cam-inc/mxtransporter/config"
 	"github.com/cam-inc/mxtransporter/pkg/client"
@@ -17,6 +18,7 @@ func main() {
 
 	logCfg := config.LogConfig()
 	l = logger.New(logCfg)
+	l.Info("MxTransporter starting.")
 
 	mClient, err := client.NewMongoClient(ctx)
 	if err != nil {
